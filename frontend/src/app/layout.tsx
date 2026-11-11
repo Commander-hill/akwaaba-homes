@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+
 import './globals.css';
 import Providers from '../providers/Providers';
 import Navbar from '../components/Navbar';
 import MobileBottomNav from '../components/MobileBottomNav';
-import PwaRegister from '../components/PwaRegister';
-import PwaInstallPrompt from '../components/PwaInstallPrompt';
+import PostLoadPwa from '../components/PostLoadPwa';
+
 import MaintenanceGuard from '../components/MaintenanceGuard';
 
 // Suppress React 19 false-positive warning for next-themes' SSR inline script
@@ -22,11 +22,11 @@ if (typeof console !== 'undefined') {
   };
 }
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
+// System humanist geometric font stack configured in globals.css (@theme --font-sans)
+
+
+
+
 
 export const viewport: Viewport = {
   themeColor: '#16A34A',
@@ -55,10 +55,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased bg-white text-[#242925] dark:bg-[#0B0D12] dark:text-[#F4F4F5]" suppressHydrationWarning>
         <Providers>
-          <PwaRegister />
           <MaintenanceGuard>
             <Navbar />
             <main className="pt-16 pb-16 md:pb-0 min-h-screen">
@@ -66,7 +65,8 @@ export default function RootLayout({
             </main>
             <MobileBottomNav />
           </MaintenanceGuard>
-          <PwaInstallPrompt />
+          <PostLoadPwa />
+
         </Providers>
       </body>
     </html>

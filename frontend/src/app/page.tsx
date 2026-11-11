@@ -1,83 +1,22 @@
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import {
-  Search,
-  MapPin,
   Building2,
   Home,
   BedDouble,
   GraduationCap,
   ShieldCheck,
-  Heart,
   CheckCircle2,
-  Wifi,
-  Wind,
   Plus,
   ArrowRight,
-  Zap,
   Phone,
+  Zap,
   ChevronDown,
 } from 'lucide-react';
-import api from '@/lib/axios';
-import toast from 'react-hot-toast';
 import PublicFooter from '@/components/tenant-ui/PublicFooter';
-
-// ── SHOWCASE PROPERTY CARDS ──
-const SHOWCASE_PROPERTIES = [
-  {
-    id: 'glacier-studio',
-    title: 'Glacier Studio',
-    location: 'Legon, Accra',
-    price: 2500,
-    rooms: 1,
-    type: 'Studio',
-    badge: 'Verified',
-    badgeColor: 'green',
-    image: '/images/home/glacier-living.jpg',
-    href: '/properties/glacier-studio',
-  },
-  {
-    id: 'aduana-apartment',
-    title: 'Aduana Apartment',
-    location: 'Kumasi',
-    price: 1800,
-    rooms: 2,
-    type: 'Apartment',
-    badge: 'Verified',
-    badgeColor: 'green',
-    image: '/images/home/aduana-bedroom.jpg',
-    href: '/properties/aduana-apartment',
-  },
-  {
-    id: 'executive-studio',
-    title: 'Executive Studio',
-    location: 'Airport Residential, Accra',
-    price: 4000,
-    rooms: 1,
-    type: 'Studio',
-    badge: 'Popular',
-    badgeColor: 'orange',
-    image: '/images/home/executive-living.jpg',
-    href: '/properties/executive-studio',
-  },
-  {
-    id: 'seaside-apartments',
-    title: 'Seaside Apartments',
-    location: 'Cape Coast',
-    price: 2000,
-    rooms: 2,
-    type: 'Apartment',
-    badge: 'Verified',
-    badgeColor: 'green',
-    image: '/images/home/seaside-exterior.jpg',
-    href: '/properties/seaside-apartments',
-  },
-];
+import HomeSearchForm from '@/components/home/HomeSearchForm';
+import HomeFeaturedListings from '@/components/home/HomeFeaturedListings';
 
 const CATEGORY_PILLS = [
   { label: 'Hostels', subtitle: 'Comfortable & Affordable', icon: BedDouble, href: '/search?type=HOSTEL' },
@@ -110,97 +49,24 @@ const TRUST_PILLARS = [
   },
 ];
 
-const PROPERTY_TYPES = [
-  { value: '', label: 'All Types' },
-  { value: 'HOSTEL', label: 'Hostel' },
-  { value: 'APARTMENT', label: 'Apartment' },
-  { value: 'STUDIO', label: 'Studio' },
-  { value: 'HOUSE', label: 'House' },
-  { value: 'SINGLE_ROOM', label: 'Single Room' },
-];
-
-const BUDGET_OPTIONS = [
-  { value: '', label: 'Any Budget' },
-  { value: '1000', label: 'GH₵ 1,000' },
-  { value: '2000', label: 'GH₵ 2,000' },
-  { value: '3000', label: 'GH₵ 3,000' },
-  { value: '5000', label: 'GH₵ 5,000' },
-  { value: '10000', label: 'GH₵ 10,000+' },
-];
-
-export default function HomePage() {
-  const router = useRouter();
-  const [searchLocation, setSearchLocation] = useState('');
-  const [searchType, setSearchType] = useState('');
-  const [searchMaxPrice, setSearchMaxPrice] = useState('');
-  const [wishlist, setWishlist] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('akwaaba_wishlist');
-        return saved ? JSON.parse(saved) : [];
-      } catch {
-        return [];
-      }
-    }
+async function getInitialFeaturedListings(): Promise<any[]> {
+  try {
+    const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1').replace(/\/$/, '');
+    const res = await fetch(`${apiBase}/properties?limit=8&sort=newest`, {
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(1200),
+    });
+    if (!res.ok) return [];
+    const payload = await res.json();
+    const rawList = payload?.data || payload?.properties || [];
+    return rawList.map((item: any) => ({ id: item.id, title: item.title }));
+  } catch {
     return [];
-  });
+  }
+}
 
-  const { data: propertiesResponse } = useQuery({
-    queryKey: ['homepage-properties'],
-    queryFn: async () => {
-      try {
-        const { data } = await api.get('/properties', { params: { limit: 8, sort: 'newest' } });
-        return data;
-      } catch {
-        return null;
-      }
-    },
-  });
-
-  const liveListings: any[] = propertiesResponse?.data || propertiesResponse?.properties || [];
-
-  const featuredCards = SHOWCASE_PROPERTIES.map((prop, index) => {
-    const matchedLive =
-      liveListings.find((l) => l.title?.toLowerCase().includes(prop.title.split(' ')[0].toLowerCase())) ||
-      liveListings[index];
-    return {
-      ...prop,
-      href: matchedLive?.id ? `/properties/${matchedLive.id}` : prop.href,
-      liveId: matchedLive?.id || prop.id,
-    };
-  });
-
-  const handleSearchSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchLocation.trim()) params.set('location', searchLocation.trim());
-    if (searchType) params.set('type', searchType);
-    if (searchMaxPrice) params.set('maxPrice', searchMaxPrice);
-    router.push(`/search${params.toString() ? `?${params.toString()}` : ''}`);
-  };
-
-  const toggleWishlist = async (id: string, title?: string) => {
-    const isRemoving = wishlist.includes(id);
-    const updated = isRemoving ? wishlist.filter((x) => x !== id) : [...wishlist, id];
-    setWishlist(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('akwaaba_wishlist', JSON.stringify(updated));
-    }
-    toast.success(
-      isRemoving
-        ? `Removed ${title || 'property'} from saved homes`
-        : `Saved ${title || 'property'} to your wishlist`
-    );
-    try {
-      if (isRemoving) {
-        await api.delete(`/wishlist/${id}`);
-      } else {
-        await api.post(`/wishlist/${id}`);
-      }
-    } catch {
-      // Guest user wishlist is persisted in localStorage
-    }
-  };
+export default async function HomePage() {
+  const initialLiveListings = await getInitialFeaturedListings();
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
@@ -210,13 +76,15 @@ export default function HomePage() {
         {/* Background: Building Photo on right */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/resident/hero-building-clean.jpg"
+            src="/images/resident/hero-building-clean.webp"
             alt="Modern apartment building in Ghana"
             fill
             priority
+            fetchPriority="high"
+
             className="object-cover object-right"
-            sizes="(max-width: 768px) 100vw, 256px"
-/>
+            sizes="100vw" quality={65}
+          />
           {/* Green wavy gradient overlay on left (matching reference) */}
           <div
             className="absolute inset-0"
@@ -235,17 +103,16 @@ export default function HomePage() {
             {/* Left: Text + Search Bar */}
             <div className="lg:col-span-8 space-y-5">
               {/* Trusted Partner Pill */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-xs border border-white/20 text-white text-xs font-semibold">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/20 text-white text-xs font-semibold">
                 <Home className="w-3.5 h-3.5 text-emerald-300" />
                 <span>Ghana's Trusted Housing Partner</span>
               </div>
 
               {/* Headline */}
-              <div className="space-y-1">
-                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-white leading-tight tracking-tight">
+              <div>
+                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-white leading-[1.15] tracking-tight">
                   Find a place that
-                </h1>
-                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-white leading-tight tracking-tight">
+                  <br />
                   feels like{' '}
                   <em
                     className="not-italic"
@@ -267,70 +134,7 @@ export default function HomePage() {
               </p>
 
               {/* Search Bar */}
-              <form
-                onSubmit={handleSearchSubmit}
-                className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200/60 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-0 overflow-hidden"
-              >
-                {/* Location */}
-                <div className="flex items-center gap-2.5 px-4 py-3 flex-1 min-w-0 border-b sm:border-b-0 sm:border-r border-zinc-100 dark:border-zinc-800">
-                  <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Location</p>
-                    <input
-                      type="text"
-                      placeholder="e.g. Accra, Kumasi..."
-                      value={searchLocation}
-                      onChange={(e) => setSearchLocation(e.target.value)}
-                      className="w-full text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 bg-transparent focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Property Type */}
-                <div className="flex items-center gap-2.5 px-4 py-3 flex-1 min-w-0 border-b sm:border-b-0 sm:border-r border-zinc-100 dark:border-zinc-800">
-                  <Building2 className="w-4 h-4 text-zinc-400 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Property Type</p>
-                    <select
-                      value={searchType}
-                      onChange={(e) => setSearchType(e.target.value)}
-                      className="w-full text-xs font-medium text-zinc-900 dark:text-white bg-transparent focus:outline-none cursor-pointer"
-                    >
-                      {PROPERTY_TYPES.map((t) => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Max Budget */}
-                <div className="flex items-center gap-2.5 px-4 py-3 flex-1 min-w-0 border-b sm:border-b-0 sm:border-r border-zinc-100 dark:border-zinc-800">
-                  <span className="text-zinc-400 text-sm shrink-0 font-bold">₵</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Max Budget (GH₵)</p>
-                    <select
-                      value={searchMaxPrice}
-                      onChange={(e) => setSearchMaxPrice(e.target.value)}
-                      className="w-full text-xs font-medium text-zinc-900 dark:text-white bg-transparent focus:outline-none cursor-pointer"
-                    >
-                      {BUDGET_OPTIONS.map((b) => (
-                        <option key={b.value} value={b.value}>{b.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Search Button */}
-                <div className="p-2">
-                  <button
-                    type="submit"
-                    className="w-full sm:w-auto h-10 px-6 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
-                  >
-                    <Search className="w-4 h-4" />
-                    <span>Search</span>
-                  </button>
-                </div>
-              </form>
+              <HomeSearchForm />
             </div>
 
             {/* Right: 10K+ Trust Card */}
@@ -342,7 +146,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <p className="text-xs font-black text-zinc-950 dark:text-white leading-tight">Verified Listings</p>
-                    <p className="text-[10px] text-zinc-400">Book with confidence</p>
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-300">Book with confidence</p>
                   </div>
                 </div>
 
@@ -363,12 +167,11 @@ export default function HomePage() {
                       className="w-8 h-8 rounded-full overflow-hidden border-2 border-white dark:border-zinc-900 relative bg-zinc-100"
                       style={{ marginLeft: i === 0 ? 0 : '-8px', zIndex: 3 - i }}
                     >
-                      <Image src={src} alt="Resident" fill className="object-cover"   sizes="(max-width: 768px) 100vw, 256px"
-/>
+                      <Image src={src} alt="Resident" fill loading="lazy" fetchPriority="low" className="object-cover" sizes="32px" />
                     </div>
                   ))}
                   <div
-                    className="w-8 h-8 rounded-full bg-[#16A34A] border-2 border-white dark:border-zinc-900 flex items-center justify-center"
+                    className="w-8 h-8 rounded-full bg-[#15803D] border-2 border-white dark:border-zinc-900 flex items-center justify-center"
                     style={{ marginLeft: '-8px' }}
                   >
                     <Plus className="w-3.5 h-3.5 text-white" />
@@ -387,16 +190,16 @@ export default function HomePage() {
             {CATEGORY_PILLS.map((cat) => {
               const Icon = cat.icon;
               return (
-                <Link
+                <Link prefetch={false}
                   key={cat.label}
                   href={cat.href}
-                  className="flex flex-col items-center gap-1.5 min-w-fit px-3 py-2 group cursor-pointer hover:text-[#16A34A] transition"
+                  className="flex flex-col items-center gap-1.5 min-w-fit px-3 py-2 group cursor-pointer hover:text-[#15803D] dark:text-emerald-400 transition"
                 >
-                  <Icon className="w-5 h-5 text-zinc-400 group-hover:text-[#16A34A] transition" />
-                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-[#16A34A] whitespace-nowrap transition">
+                  <Icon className="w-5 h-5 text-zinc-400 group-hover:text-[#15803D] dark:text-emerald-400 transition" />
+                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-[#15803D] dark:text-emerald-400 whitespace-nowrap transition">
                     {cat.label}
                   </span>
-                  <span className="text-[10px] text-zinc-400 whitespace-nowrap">{cat.subtitle}</span>
+                  <span className="text-[10px] text-zinc-600 dark:text-zinc-300 whitespace-nowrap">{cat.subtitle}</span>
                 </Link>
               );
             })}
@@ -405,22 +208,22 @@ export default function HomePage() {
       </div>
 
       {/* ── 3. FEATURED LISTINGS ("Handpicked for you") ── */}
-      <section className="py-10 sm:py-12 bg-white dark:bg-[#0D100E]">
+      <section className="py-10 sm:py-12 bg-white dark:bg-[#0D100E]" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 650px' }}>
         <div className="container-akwaaba space-y-6">
           {/* Section Header */}
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="w-4 h-0.5 bg-[#16A34A]" />
-                <span className="text-xs font-bold text-[#16A34A] uppercase tracking-wider">Featured Listings</span>
+                <span className="text-xs font-bold text-[#15803D] dark:text-emerald-400 uppercase tracking-wider">Featured Listings</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
                 Handpicked for you
               </h2>
             </div>
-            <Link
+            <Link prefetch={false}
               href="/properties"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] whitespace-nowrap transition"
+              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-[#15803D] dark:text-emerald-400 hover:text-[#15803D] whitespace-nowrap transition"
             >
               <span>View all properties</span>
               <ArrowRight className="w-4 h-4" />
@@ -428,101 +231,13 @@ export default function HomePage() {
           </div>
 
           {/* 4 Property Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {featuredCards.map((prop) => (
-              <Link
-                key={prop.id}
-                href={prop.href}
-                className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/70 dark:border-zinc-800 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group"
-              >
-                {/* Card Image */}
-                <div className="relative h-44 overflow-hidden">
-                  <Image
-                    src={prop.image}
-                    alt={prop.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={() => {}}
-                    sizes="(max-width: 768px) 100vw, 256px"
-/>
-
-                  {/* Badge (top left) */}
-                  <div
-                    className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-xs text-white ${
-                      prop.badgeColor === 'orange'
-                        ? 'bg-[#F59E0B]'
-                        : 'bg-[#16A34A]'
-                    }`}
-                  >
-                    {prop.badgeColor === 'orange' ? (
-                      <Zap className="w-3 h-3" />
-                    ) : (
-                      <Home className="w-3 h-3" />
-                    )}
-                    <span>{prop.badge}</span>
-                  </div>
-
-                  {/* Wishlist Heart (top right) */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleWishlist(prop.liveId, prop.title);
-                    }}
-                    className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xs flex items-center justify-center shadow-xs hover:scale-110 transition cursor-pointer"
-                  >
-                    <Heart
-                      className={`w-3.5 h-3.5 transition ${
-                        wishlist.includes(prop.liveId)
-                          ? 'fill-rose-500 text-rose-500'
-                          : 'text-zinc-500'
-                      }`}
-                    />
-                  </button>
-
-                  {/* Location + Price Bottom Bar */}
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2 flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-white text-[10px]">
-                      <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span className="truncate">{prop.location}</span>
-                    </div>
-                    <span className="text-white text-[11px] font-black whitespace-nowrap">
-                      GH₵ {Number(prop.price).toLocaleString()}<span className="text-[10px] font-normal opacity-80">/mo</span>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Card Info */}
-                <div className="p-3.5 space-y-2">
-                  <h3 className="font-black text-sm text-zinc-950 dark:text-white leading-tight">
-                    {prop.title}
-                  </h3>
-
-                  {/* Specs */}
-                  <div className="flex items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400">
-                    <span className="flex items-center gap-1">
-                      <BedDouble className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      {prop.rooms} {prop.rooms === 1 ? 'room' : 'rooms'}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Wifi className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      Wi-Fi
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Wind className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      AC
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <HomeFeaturedListings initialLiveListings={initialLiveListings} />
 
           {/* Mobile View All Link */}
           <div className="sm:hidden flex justify-center">
-            <Link
+            <Link prefetch={false}
               href="/properties"
-              className="flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D]"
+              className="flex items-center gap-1.5 text-xs font-bold text-[#15803D] dark:text-emerald-400 hover:text-[#15803D]"
             >
               <span>View all properties</span>
               <ArrowRight className="w-4 h-4" />
@@ -532,13 +247,13 @@ export default function HomePage() {
       </section>
 
       {/* ── 4. WHY CHOOSE AKWAABAHOMES ── */}
-      <section className="py-4 pb-10 bg-white dark:bg-[#0D100E]">
+      <section className="py-4 pb-10 bg-white dark:bg-[#0D100E]" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 240px' }}>
         <div className="container-akwaaba">
           <div className="bg-[#F0FDF4] dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl px-6 sm:px-8 py-6 sm:py-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               {/* Left: Headline & Description */}
               <div className="lg:col-span-4 space-y-2">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-[#16A34A]">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#15803D] dark:text-emerald-400">
                   WHY CHOOSE AKWAABAHOMES
                 </p>
                 <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
@@ -555,14 +270,14 @@ export default function HomePage() {
                   const Icon = pillar.icon;
                   return (
                     <div key={pillar.label} className="flex flex-col items-center text-center gap-2">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-2xs flex items-center justify-center text-[#16A34A]">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-2xs flex items-center justify-center text-[#15803D] dark:text-emerald-400">
                         <Icon className="w-5 h-5" />
                       </div>
                       <div>
                         <p className="text-xs font-black text-zinc-900 dark:text-white leading-tight">
                           {pillar.label}
                         </p>
-                        <p className="text-[10px] text-zinc-400 mt-0.5">{pillar.desc}</p>
+                        <p className="text-[10px] text-zinc-600 dark:text-zinc-300 mt-0.5">{pillar.desc}</p>
                       </div>
                     </div>
                   );
@@ -571,11 +286,11 @@ export default function HomePage() {
 
               {/* Far Right: CTA */}
               <div className="lg:col-span-2 flex justify-end">
-                <Link
+                <Link prefetch={false}
                   href="/about"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-xs transition whitespace-nowrap"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold shadow-xs transition whitespace-nowrap"
                 >
-                  <span>Learn More</span>
+                  <span>Learn more about us</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -585,16 +300,17 @@ export default function HomePage() {
       </section>
 
       {/* ── 5. BOTTOM CTA BANNER ("Ready to find your next home?") ── */}
-      <section className="relative overflow-hidden rounded-none min-h-[120px]" style={{ background: 'linear-gradient(105deg, #0A3826 0%, #0F5A3E 60%, #0A3826 100%)' }}>
+      <section className="relative overflow-hidden rounded-none min-h-[120px]" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 160px', background: 'linear-gradient(105deg, #0A3826 0%, #0F5A3E 60%, #0A3826 100%)' }}>
         {/* Independence Arch photo blended on right */}
         <div className="absolute inset-y-0 right-0 w-1/2 z-0 opacity-30">
           <Image
             src="/images/home/arch-blended.jpg"
             alt="Independence Arch, Ghana"
             fill
+            loading="lazy"
             className="object-cover object-left"
-            sizes="(max-width: 768px) 100vw, 256px"
-/>
+            sizes="(max-width: 768px) 50vw, 40vw"
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0A3826] via-[#0A3826]/60 to-transparent" />
         </div>
 
@@ -632,7 +348,7 @@ export default function HomePage() {
             </div>
 
             {/* CTA Button */}
-            <Link
+            <Link prefetch={false}
               href="/properties"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white hover:bg-zinc-50 text-[#0A3826] text-sm font-black shadow-xs transition whitespace-nowrap shrink-0"
             >
@@ -644,7 +360,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <PublicFooter />
+      <div style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 380px' }}><PublicFooter /></div>
     </div>
   );
 }

@@ -1,9 +1,10 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
-import api from '@/lib/axios';
-import MaintenanceScreen from './MaintenanceScreen';
+import { usePublicResource, publicGet } from '@/lib/publicFetch';
+import dynamic from 'next/dynamic';
+
+const MaintenanceScreen = dynamic(() => import('./MaintenanceScreen'), { ssr: false });
 
 // Deterministic SSR-safe default so server HTML and initial client hydration match 100%
 const DEFAULT_PUBLIC_CONFIG = { maintenanceMode: false };
@@ -16,39 +17,33 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
   const isExemptRoute = isLoginRoute || pathname === '/button-preview' || pathname?.startsWith('/button-preview');
 
   // ── 1. Fetch public system config non-blockingly so SSR & LCP render at 0ms ──
-  const { data: config } = useQuery({
-    queryKey: ['public-config'],
-    queryFn: async () => {
+  const { data: config } = usePublicResource(
+    'public-config',
+    async () => {
       try {
-        const res = await api.get('/config/public');
-        return res.data;
+        return await publicGet('/config/public');
       } catch {
         return DEFAULT_PUBLIC_CONFIG;
       }
     },
-    placeholderData: DEFAULT_PUBLIC_CONFIG,
-    refetchInterval: 15000,
-    staleTime: 10000,
-    refetchOnWindowFocus: false,
-  });
+    { placeholderData: DEFAULT_PUBLIC_CONFIG, refetchInterval: 15000, staleTime: 10000 }
+  );
 
   const isMaintenanceActive = Boolean(config?.maintenanceMode);
 
   // ── 2. Only check session role in MaintenanceGuard if maintenance mode is active ──
-  const { data: currentUser } = useQuery({
-    queryKey: ['session'],
-    queryFn: async () => {
+  const { data: currentUserRes } = usePublicResource(
+    'auth/session',
+    async () => {
       try {
-        const res = await api.get('/auth/me');
-        return res.data.user;
+        return await publicGet('/auth/session');
       } catch {
-        return null;
+        return { user: null };
       }
     },
-    enabled: isMaintenanceActive && !isAdminRoute && !isExemptRoute,
-    staleTime: 60000,
-    refetchOnWindowFocus: false,
-  });
+    { enabled: isMaintenanceActive && !isAdminRoute && !isExemptRoute, staleTime: 5 * 60 * 1000 }
+  );
+  const currentUser = currentUserRes?.user;
 
   const isAdminUser = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
 

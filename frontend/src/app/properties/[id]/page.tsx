@@ -1,9 +1,11 @@
 'use client';
+import '@/app/secondary.css';
 
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import QueryProvider from '@/providers/QueryProvider';
 import {
   MapPin,
   CheckCircle2,
@@ -61,7 +63,7 @@ function cleanText(text: string | null | undefined): string {
     .replace(/&#39;/g, "'");
 }
 
-export default function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+function PropertyDetailsContent({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const unwrappedParams = use(params);
   const propertyId = unwrappedParams.id;
@@ -1735,5 +1737,13 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
       <PublicFooter />
     </div>
+  );
+}
+
+export default function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <QueryProvider>
+      <PropertyDetailsContent params={params} />
+    </QueryProvider>
   );
 }

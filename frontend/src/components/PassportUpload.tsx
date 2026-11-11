@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
 import {
   Upload,
   X,
@@ -42,6 +42,7 @@ export default function PassportUpload({
   optional = false,
   required = true,
 }: PassportUploadProps) {
+  const uploadId = useId();
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentUrl ? getImageUrl(currentUrl) : null);
   const [isUploading, setIsUploading] = useState(false);
@@ -334,7 +335,7 @@ export default function PassportUpload({
         type="file"
         ref={fileInputRef}
         className="hidden"
-        accept="image/png, image/jpeg, image/jpg, image/webp"
+        id={`${uploadId}-file`} name="passportPhoto" aria-label={label} accept="image/png, image/jpeg, image/jpg, image/webp"
         onChange={handleFileSelect}
       />
 
@@ -425,7 +426,7 @@ export default function PassportUpload({
               )}
             </div>
 
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-sm">
+            <p className="text-[11px] text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-sm">
               {description}
             </p>
 
@@ -472,7 +473,7 @@ export default function PassportUpload({
                 </button>
               )}
 
-              <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono self-center">
+              <span className="text-[10px] text-zinc-600 dark:text-zinc-300 font-mono self-center">
                 JPG, PNG, WebP up to 10MB
               </span>
             </div>
@@ -588,7 +589,7 @@ export default function PassportUpload({
                 )}
               </div>
 
-              <div className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] font-medium text-zinc-400">
+              <div className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
                 <Move className="w-3 h-3 text-emerald-400" />
                 <span>Drag photo to reposition • Output: 800×800 HD WebP</span>
               </div>
@@ -612,7 +613,7 @@ export default function PassportUpload({
                     type="range"
                     min={1}
                     max={3}
-                    step={0.02}
+                    id={`${uploadId}-zoom`} name="zoom" aria-label="Zoom level" step={0.02}
                     value={zoom}
                     onChange={(e) => handleZoomChange( parseFloat(e.target.value) )}
                     className="w-full accent-[#16A34A] cursor-pointer h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg"

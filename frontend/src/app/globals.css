@@ -1,6 +1,6 @@
 
 /* ── LEAFLET INTERACTIVE MAP SYSTEM FIX ── */
-@import "leaflet/dist/leaflet.css";
+/* Base Leaflet styles imported lazily inside MapComponent.tsx */
 
 .leaflet-container {
   width: 100% !important;
@@ -28,12 +28,49 @@
   visibility: inherit !important;
 }
 
-@import "tailwindcss";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" source(none);
 @custom-variant dark (&:is(.dark *));
+@source "../app/layout.tsx";
+@source "../app/loading.tsx";
+@source "../app/error.tsx";
+@source "../app/global-error.tsx";
+@source "../app/not-found.tsx";
+@source "../app/page.tsx";
+
+@source "../components/AlertBanner.tsx";
+@source "../components/BrandLoader.tsx";
+@source "../components/DeferredToaster.tsx";
+@source "../components/EmeraldToast.tsx";
+@source "../components/MaintenanceGuard.tsx";
+
+@source "../components/MobileBottomNav.tsx";
+@source "../components/Navbar.tsx";
+@source "../components/NotificationBell.tsx";
+@source "../components/PostLoadPwa.tsx";
+@source "../components/PwaInstallPrompt.tsx";
+@source "../components/PwaRegister.tsx";
+
+@source "../components/ThemeToggle.tsx";
+@source "../components/home";
+@source "../components/tenant-ui/PublicFooter.tsx";
+@source "../app/login/page.tsx";
+@source "../app/forgot-password/page.tsx";
+@source "../app/properties/page.tsx";
+@source "../app/properties/loading.tsx";
+@source "../app/search/page.tsx";
+@source "../components/properties";
+@source "../components/tenant-ui/PropertyCard.tsx";
+@source "../components/tenant-ui/primitives.tsx";
+@source "../components/ui/Button.tsx";
+@source "../components/ui/PageSkeletons.tsx";
+@source "../components/WishlistButton.tsx";
+@source "../components/PropertyImage.tsx";
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-serif: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 @layer base {

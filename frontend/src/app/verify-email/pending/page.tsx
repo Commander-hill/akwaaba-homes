@@ -1,4 +1,5 @@
 'use client';
+import '@/app/secondary.css';
 
 import Link from 'next/link';
 import Image from 'next/image';

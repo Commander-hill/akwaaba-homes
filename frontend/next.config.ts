@@ -11,10 +11,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: false, // Prevents duplicate renders/network calls in dev mode
   experimental: {
+    cpus: 2,
     optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion', 'recharts', 'clsx'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
+    qualities: [65, 75],
     minimumCacheTTL: 31536000,
     remotePatterns: [
       {

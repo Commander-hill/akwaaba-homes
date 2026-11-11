@@ -1,4 +1,5 @@
 'use client';
+import '@/app/secondary.css';
 
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -6,6 +7,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
+import QueryProvider from '@/providers/QueryProvider';
 import {
   ShieldCheck,
   CalendarCheck,
@@ -51,7 +53,7 @@ const SERVICE_CARDS = [
   },
 ];
 
-export default function ServicesPage() {
+function ServicesContent() {
   const journeyRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
@@ -616,5 +618,13 @@ export default function ServicesPage() {
         </footer>
       </div>
     </div>
+  );
+}
+
+export default function ServicesPage() {
+  return (
+    <QueryProvider>
+      <ServicesContent />
+    </QueryProvider>
   );
 }

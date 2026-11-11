@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
-import api from '@/lib/axios';
-import toast from 'react-hot-toast';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { invalidatePublicResource, publicGet, usePublicResource } from '@/lib/publicFetch';
+import { getRegisteredQueryClient } from '@/lib/queryRegistry';
 
 const GUEST_WISHLIST_KEY = 'akwaaba_guest_wishlist';
 
@@ -43,31 +42,29 @@ export default function WishlistButton({
   showText = false,
   className = '',
 }: WishlistButtonProps) {
-  const queryClient = useQueryClient();
+  const invalidateWishlist = () => {
+    invalidatePublicResource('wishlist');
+    getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['wishlist'] });
+  };
   const [isSaved, setIsSaved] = useState(initialIsSaved);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: userResponse } = useQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: async () => {
-      const { data } = await api.get('/auth/me');
-      return data;
-    },
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: userResponse } = usePublicResource(
+    'auth/session',
+    () => publicGet('/auth/session'),
+    { staleTime: 5 * 60 * 1000 },
+  );
 
   const isAuthenticated = Boolean(userResponse?.user);
 
-  const { data: wishlistData } = useQuery({
-    queryKey: ['wishlist'],
-    queryFn: async () => {
-      const res = await api.get('/wishlist');
-      return res.data;
+  const { data: wishlistData } = usePublicResource(
+    'wishlist',
+    () => publicGet('/wishlist'),
+    {
+      enabled: isAuthenticated,
+      staleTime: 60_000,
     },
-    enabled: isAuthenticated,
-    staleTime: 60_000,
-  });
+  );
 
   useEffect(() => {
     if (isAuthenticated && wishlistData?.savedPropertyIds) {
@@ -86,6 +83,7 @@ export default function WishlistButton({
   const handleToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const { toast } = await import('react-hot-toast');
 
     if (!isAuthenticated) {
       const currentIds = getGuestWishlistIds();
@@ -95,6 +93,7 @@ export default function WishlistButton({
         : [...currentIds, propertyId];
       setGuestWishlistIds(nextIds);
       setIsSaved(!exists);
+
       toast.success(
         exists
           ? 'Removed from saved homes'
@@ -107,11 +106,14 @@ export default function WishlistButton({
     setIsSaved(!isSaved);
     setIsLoading(true);
 
+
     try {
+      const { default: api } = await import('@/lib/axios');
       const res = await api.post('/wishlist/toggle', { propertyId });
       setIsSaved(res.data.isSaved);
+
       toast.success(res.data.isSaved ? 'Saved to your wishlist' : 'Removed from wishlist');
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      invalidateWishlist();
     } catch (error: any) {
       setIsSaved(previousState);
       toast.error(error?.response?.data?.message || 'Failed to update saved properties');

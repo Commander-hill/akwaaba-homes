@@ -1,4 +1,5 @@
 'use client';
+import '@/app/secondary.css';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,8 +21,9 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeToggle from '@/components/ThemeToggle';
+import QueryProvider from '@/providers/QueryProvider';
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter();
 
   // Fetch current user details to prefill known data
@@ -454,5 +456,13 @@ export default function OnboardingPage() {
       </footer>
 
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <QueryProvider>
+      <OnboardingContent />
+    </QueryProvider>
   );
 }

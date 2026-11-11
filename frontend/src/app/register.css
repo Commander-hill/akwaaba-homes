@@ -1,0 +1,13 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" source(none);
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@source "../app/register/page.tsx";
+@source "../components/PassportUpload.tsx";
+@source "../components/ui/Button.tsx";
+@source "../components/ui/GhanaCarrierLogo.tsx";

@@ -1,4 +1,5 @@
 'use client';
+import '@/app/register.css';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
@@ -37,11 +38,12 @@ import {
 } from 'lucide-react';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
-import { useQuery } from '@tanstack/react-query';
+import { publicGet, usePublicResource } from '@/lib/publicFetch';
 import AlertBanner from '@/components/AlertBanner';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/Button';
 import PassportUpload from '@/components/PassportUpload';
+
 import { getImageUrl } from '@/lib/utils';
 import GhanaCarrierLogo from '@/components/ui/GhanaCarrierLogo';
 
@@ -153,19 +155,18 @@ export default function RegisterPage() {
   const router = useRouter();
 
   // Check if user is already logged in
-  const { data: sessionData, isLoading: isCheckingAuth } = useQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: async () => {
+  const { data: sessionData } = usePublicResource(
+    'auth/session',
+    async () => {
       try {
-        const { data } = await api.get('/auth/me');
+        const data = await publicGet('/auth/session');
         return data?.user || null;
       } catch {
         return null;
       }
     },
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
+    { staleTime: 5 * 60 * 1000 },
+  );
 
   const redirectByRole = (user: any) => {
     if (user.role === 'ADMIN') {
@@ -840,16 +841,6 @@ export default function RegisterPage() {
   const inputClass = "w-full h-11 px-3.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#16A34A] focus:ring-4 focus:ring-[#16A34A]/10 outline-none transition";
   const labelClass = "block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5";
 
-  // Active Session Fallback
-  if (isCheckingAuth) {
-    return (
-      <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex flex-col items-center justify-center bg-white dark:bg-[#0E1210] text-[#242925] dark:text-zinc-100 p-6 space-y-4">
-        <Loader2 className="w-7 h-7 animate-spin text-[#16A34A] dark:text-emerald-400" />
-        <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Verifying session...</p>
-      </div>
-    );
-  }
-
   if (sessionData) {
     const roleTitle = sessionData.role === 'LANDLORD' 
       ? 'Landlord Dashboard' 
@@ -862,7 +853,7 @@ export default function RegisterPage() {
     return (
       <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex items-center justify-center bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-white p-6">
         <div className="w-full max-w-md bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-6 shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#15803D] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
             <CheckCircle2 className="w-7 h-7" />
           </div>
 
@@ -880,7 +871,7 @@ export default function RegisterPage() {
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => redirectByRole(sessionData)}
-              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
+              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
             >
               <span>Continue to {roleTitle}</span>
               <ArrowRight className="w-4 h-4" />
@@ -921,11 +912,11 @@ export default function RegisterPage() {
               src="/images/auth/register-hero-exact.webp"
               alt="Find. Book. Live. With Confidence. - AkwaabaHomes verified accommodations"
               fill
-              sizes="(min-width: 1024px) 60vw, 100vw"
+              loading="lazy"
+              sizes="(min-width: 1024px) 60vw, 1px"
               className={`object-cover object-center transition-opacity duration-700 ease-out select-none ${
                 isHost ? 'opacity-0 pointer-events-none' : 'opacity-100'
               }`}
-              priority
             />
 
             {/* 2. Landlord/Host View: Host architecture imagery */}
@@ -933,16 +924,16 @@ export default function RegisterPage() {
               src="/images/hero_accra_apartment.png"
               alt="Verified apartments, houses, and residences managed by Akwaaba hosts"
               fill
-              sizes="(min-width: 1024px) 60vw, 100vw"
+              loading="lazy"
+              sizes="(min-width: 1024px) 60vw, 1px"
               className={`object-cover object-center transition-opacity duration-700 ease-out select-none ${
                 isHost ? 'opacity-100' : 'opacity-0 pointer-events-none'
               }`}
-              priority
             />
 
             {/* Invisible clickable home link overlay matching top-left logo location in the artwork */}
             {!isHost && (
-              <Link
+              <Link prefetch={false}
                 href="/"
                 title="AkwaabaHomes Home"
                 className="absolute top-6 left-6 w-56 h-16 z-20 focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-lg cursor-pointer"
@@ -953,7 +944,7 @@ export default function RegisterPage() {
             {/* Top-Right Floating "Already registered? Sign in" glass pill for Tenant view */}
             {!isHost && (
               <div className="absolute top-8 right-8 z-20">
-                <Link
+                <Link prefetch={false}
                   href="/login"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
                 >
@@ -971,7 +962,7 @@ export default function RegisterPage() {
             {/* Top-Left Floating Action for Host view */}
             {isHost && (
               <div className="absolute top-8 left-8 z-10">
-                <Link
+                <Link prefetch={false}
                   href="/login"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
                 >
@@ -1042,7 +1033,7 @@ export default function RegisterPage() {
         
         {/* Top Header: Brand + Theme Toggle + Sign In */}
         <div className="flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-2.5 group">
+          <Link prefetch={false} href="/" className="inline-flex items-center gap-2.5 group">
             <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
               <Image
                 src="/logo.png"
@@ -1050,7 +1041,6 @@ export default function RegisterPage() {
                 width={44}
                 height={44}
                 className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
-                priority
               />
               <Image
                 src="/logo-light.png"
@@ -1058,7 +1048,6 @@ export default function RegisterPage() {
                 width={44}
                 height={44}
                 className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
-                priority
               />
             </div>
             <div className="flex flex-col">
@@ -1073,9 +1062,9 @@ export default function RegisterPage() {
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Link 
+            <Link prefetch={false} 
               href="/login" 
-              className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
+              className="text-xs font-bold text-[#15803D] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
             >
               Sign in
             </Link>
@@ -1088,7 +1077,7 @@ export default function RegisterPage() {
           {/* Header & Step Indicator */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#16A34A] dark:text-emerald-400">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#15803D] dark:text-emerald-400">
                 Step {currentStep} of 3 &bull;{' '}
                 {currentStep === 1
                   ? 'Personal Profile'
@@ -1100,7 +1089,7 @@ export default function RegisterPage() {
                     : 'Credentials & Verification'
                   : 'Review & Confirm'}
               </span>
-              <span className="text-[10px] font-mono font-bold text-zinc-400">
+              <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-400">
                 {currentStep === 1
                   ? '33%'
                   : currentStep === 2
@@ -1166,7 +1155,7 @@ export default function RegisterPage() {
               
               {/* Role Cards */}
               <div className="space-y-1.5">
-                <label className={labelClass}>How will you use AkwaabaHomes? *</label>
+                <p className={labelClass}>How will you use AkwaabaHomes? *</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   
                   {/* Tenant / Student Card */}
@@ -1179,13 +1168,13 @@ export default function RegisterPage() {
                         : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/30'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center mb-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-400 flex items-center justify-center mb-2.5">
                       <User className="w-4 h-4" />
                     </div>
                     <div className="text-xs font-bold text-zinc-950 dark:text-white">
                       Tenant &amp; Student
                     </div>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-300 mt-0.5 leading-snug">
                       Find and book verified campus hostels or residential apartments.
                     </p>
                   </button>
@@ -1200,13 +1189,13 @@ export default function RegisterPage() {
                         : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/30'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center mb-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-400 flex items-center justify-center mb-2.5">
                       <Building2 className="w-4 h-4" />
                     </div>
                     <div className="text-xs font-bold text-zinc-950 dark:text-white">
                       Landlord &amp; Host
                     </div>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-300 mt-0.5 leading-snug">
                       List properties, manage room units, and receive rent payouts.
                     </p>
                   </button>
@@ -1218,14 +1207,14 @@ export default function RegisterPage() {
               {formData.role === 'TENANT' && (
                 <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-400 flex items-center justify-center shrink-0">
                       <GraduationCap className="w-4 h-4" />
                     </div>
                     <div>
                       <span className="text-xs font-bold text-zinc-950 dark:text-white block">
                         University Student?
                       </span>
-                      <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      <span className="text-[11px] text-zinc-600 dark:text-zinc-300">
                         Access campus hostel quotas and student rates
                       </span>
                     </div>
@@ -1236,7 +1225,7 @@ export default function RegisterPage() {
                       onClick={() => setFormData({ ...formData, isStudent: true })}
                       className={`px-3 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
                         formData.isStudent 
-                          ? 'bg-[#16A34A] text-white shadow-2xs' 
+                          ? 'bg-[#15803D] text-white shadow-2xs' 
                           : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
                       }`}
                     >
@@ -1247,7 +1236,7 @@ export default function RegisterPage() {
                       onClick={() => setFormData({ ...formData, isStudent: false })}
                       className={`px-3 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
                         !formData.isStudent 
-                          ? 'bg-[#16A34A] text-white shadow-2xs' 
+                          ? 'bg-[#15803D] text-white shadow-2xs' 
                           : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
                       }`}
                     >
@@ -1259,7 +1248,7 @@ export default function RegisterPage() {
 
               {/* Profile Photo Uploader */}
               <div className="space-y-1.5">
-                <label className={labelClass}>Profile Photo *</label>
+                <p className={labelClass}>Profile Photo *</p>
                 <PassportUpload
                   currentUrl={formData.avatarUrl}
                   onUploadSuccess={(url) => {
@@ -1283,8 +1272,8 @@ export default function RegisterPage() {
               {/* Personal Details Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className={labelClass}>First Name *</label>
-                  <input 
+                  <label htmlFor="reg-first-name" className={labelClass}>First Name *</label>
+                  <input id="reg-first-name" name="firstName" 
                     type="text" 
                     required 
                     autoCapitalize="characters"
@@ -1298,8 +1287,8 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Last Name *</label>
-                  <input 
+                  <label htmlFor="reg-last-name" className={labelClass}>Last Name *</label>
+                  <input id="reg-last-name" name="lastName" 
                     type="text" 
                     required 
                     autoCapitalize="characters"
@@ -1313,8 +1302,8 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className={labelClass}>Other Names (Optional)</label>
-                  <input 
+                  <label htmlFor="reg-other-names" className={labelClass}>Other Names (Optional)</label>
+                  <input id="reg-other-names" name="otherNames" 
                     type="text" 
                     autoCapitalize="characters"
                     autoComplete="additional-name"
@@ -1329,13 +1318,13 @@ export default function RegisterPage() {
                 {/* User Phone Number with Ghanaian Carrier Detection */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className={labelClass}>Phone Number *</label>
+                    <label htmlFor="reg-phone" className={labelClass}>Phone Number *</label>
                   </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
                       <span className="text-xs mr-1 select-none">🇬🇭</span>
                     </div>
-                    <input 
+                    <input id="reg-phone" name="phoneNumber" 
                       type="tel" 
                       inputMode="numeric"
                       pattern="[0-9]*"
@@ -1372,8 +1361,8 @@ export default function RegisterPage() {
                   </p>
                 </div>
                 <div>
-                  <label className={labelClass}>Gender *</label>
-                  <select 
+                  <label htmlFor="reg-gender" className={labelClass}>Gender *</label>
+                  <select id="reg-gender" name="gender" 
                     required 
                     onKeyDown={(e) => handleInputKeyDown(e)}
                     className={`${inputClass} appearance-none cursor-pointer`} 
@@ -1386,8 +1375,8 @@ export default function RegisterPage() {
                 </div>
                 {formData.role === 'TENANT' && (
                   <div>
-                    <label className={labelClass}>Date of Birth *</label>
-                    <input 
+                    <label htmlFor="reg-dob" className={labelClass}>Date of Birth *</label>
+                    <input id="reg-dob" name="dateOfBirth" 
                       type="date" 
                       required 
                       autoComplete="bday"
@@ -1400,8 +1389,8 @@ export default function RegisterPage() {
                   </div>
                 )}
                 <div className={formData.role === 'TENANT' ? '' : 'sm:col-span-2'}>
-                  <label className={labelClass}>Nationality *</label>
-                  <input 
+                  <label htmlFor="reg-nationality" className={labelClass}>Nationality *</label>
+                  <input id="reg-nationality" name="nationality" 
                     type="text" 
                     required 
                     autoCapitalize="characters"
@@ -1446,7 +1435,7 @@ export default function RegisterPage() {
                     onClick={() => setLandlordSubStep(1)}
                     className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       landlordSubStep === 1
-                        ? 'bg-white dark:bg-zinc-900 text-[#16A34A] dark:text-emerald-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700'
+                        ? 'bg-white dark:bg-zinc-900 text-[#15803D] dark:text-emerald-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700'
                         : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
                     }`}
                   >
@@ -1456,7 +1445,7 @@ export default function RegisterPage() {
                         : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'
                     }`}>1</span>
                     <span>Security &amp; Credentials</span>
-                    {isLandlordCredentialsValid && <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />}
+                    {isLandlordCredentialsValid && <CheckCircle2 className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400 shrink-0" />}
                   </button>
                   <button
                     type="button"
@@ -1469,7 +1458,7 @@ export default function RegisterPage() {
                     }}
                     className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       landlordSubStep === 2
-                        ? 'bg-white dark:bg-zinc-900 text-[#16A34A] dark:text-emerald-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700'
+                        ? 'bg-white dark:bg-zinc-900 text-[#15803D] dark:text-emerald-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700'
                         : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
                     }`}
                   >
@@ -1479,7 +1468,7 @@ export default function RegisterPage() {
                         : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'
                     }`}>2</span>
                     <span>Host Portfolio &amp; Payout</span>
-                    {isLandlordPortfolioValid && <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />}
+                    {isLandlordPortfolioValid && <CheckCircle2 className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400 shrink-0" />}
                   </button>
                 </div>
               )}
@@ -1488,7 +1477,7 @@ export default function RegisterPage() {
               {(formData.role === 'TENANT' || (formData.role === 'LANDLORD' && landlordSubStep === 1)) && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className={labelClass}>Email Address *</label>
+                  <label htmlFor="reg-email" className={labelClass}>Email Address *</label>
                   {emailCheckStatus === 'CHECKING' && (
                     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-400">
                       <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
@@ -1512,7 +1501,7 @@ export default function RegisterPage() {
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
                     <Mail className="w-4 h-4" />
                   </div>
-                  <input 
+                  <input id="reg-email" name="email" 
                     type="email" 
                     required 
                     autoComplete="email"
@@ -1550,7 +1539,7 @@ export default function RegisterPage() {
                 {emailCheckStatus === 'EXISTS' ? (
                   <div className="rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 p-2.5 text-[11px] text-rose-700 dark:text-rose-300 flex items-center justify-between gap-2 animate-in fade-in">
                     <span>This email is already associated with an AkwaabaHomes account.</span>
-                    <Link
+                    <Link prefetch={false}
                       href="/login"
                       className="font-bold underline text-rose-800 dark:text-rose-200 hover:text-rose-950 shrink-0"
                     >
@@ -1573,14 +1562,14 @@ export default function RegisterPage() {
               {formData.role === 'TENANT' && formData.isStudent && (
                 <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-3.5">
                   <div className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-[#16A34A] dark:text-emerald-400" />
+                    <GraduationCap className="w-4 h-4 text-[#15803D] dark:text-emerald-400" />
                     <span>Student Enrollment Verification</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="sm:col-span-2">
-                      <label className={labelClass}>Campus / University *</label>
-                      <select 
+                      <label htmlFor="reg-campus" className={labelClass}>Campus / University *</label>
+                      <select id="reg-campus" name="campus" 
                         required 
                         className={`${inputClass} appearance-none cursor-pointer`} 
                         value={formData.campus} 
@@ -1597,8 +1586,8 @@ export default function RegisterPage() {
                     </div>
 
                     <div>
-                      <label className={labelClass}>Student ID / Index No *</label>
-                      <input 
+                      <label htmlFor="reg-student-id" className={labelClass}>Student ID / Index No *</label>
+                      <input id="reg-student-id" name="studentId" 
                         type="text" 
                         required 
                         autoCapitalize="characters"
@@ -1612,8 +1601,8 @@ export default function RegisterPage() {
                     </div>
 
                     <div>
-                      <label className={labelClass}>Year of Study *</label>
-                      <select 
+                      <label htmlFor="reg-year" className={labelClass}>Year of Study *</label>
+                      <select id="reg-year" name="yearOfStudy" 
                         required 
                         className={`${inputClass} appearance-none cursor-pointer`} 
                         value={formData.yearOfStudy} 
@@ -1628,8 +1617,8 @@ export default function RegisterPage() {
                     </div>
 
                     <div>
-                      <label className={labelClass}>Date of Admission *</label>
-                      <input 
+                      <label htmlFor="reg-admission-date" className={labelClass}>Date of Admission *</label>
+                      <input id="reg-admission-date" name="dateOfAdmission" 
                         type="date" 
                         required 
                         className={inputClass} 
@@ -1641,8 +1630,8 @@ export default function RegisterPage() {
                     </div>
 
                     <div>
-                      <label className={labelClass}>Degree / Programme *</label>
-                      <input 
+                      <label htmlFor="reg-programme" className={labelClass}>Degree / Programme *</label>
+                      <input id="reg-programme" name="programmeOfStudy" 
                         type="text" 
                         required 
                         autoCapitalize="characters"
@@ -1657,8 +1646,8 @@ export default function RegisterPage() {
 
                     <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                       <div>
-                        <label className={labelClass}>Guardian / Emergency Contact *</label>
-                        <input 
+                        <label htmlFor="reg-guardian-name" className={labelClass}>Guardian / Emergency Contact *</label>
+                        <input id="reg-guardian-name" name="guardianName" 
                           type="text" 
                           required 
                           autoCapitalize="characters"
@@ -1673,13 +1662,13 @@ export default function RegisterPage() {
                       {/* Guardian Phone Number with Carrier Detection */}
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className={labelClass}>Guardian Phone Number *</label>
+                          <label htmlFor="reg-guardian-phone" className={labelClass}>Guardian Phone Number *</label>
                         </div>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
                             <span className="text-xs mr-1 select-none">🇬🇭</span>
                           </div>
-                          <input 
+                          <input id="reg-guardian-phone" name="guardianPhone" 
                             type="tel" 
                             inputMode="numeric"
                             pattern="[0-9]*"
@@ -1725,10 +1714,10 @@ export default function RegisterPage() {
                 <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-3.5">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-[#16A34A] dark:text-emerald-400" />
+                      <Building2 className="w-4 h-4 text-[#15803D] dark:text-emerald-400" />
                       <span>Host &amp; Property Portfolio Profile</span>
                     </div>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100/80 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100/80 dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                       Host Onboarding
                     </span>
                   </div>
@@ -1771,7 +1760,7 @@ export default function RegisterPage() {
                                 {item.title}
                               </span>
                               {isSelected && (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400 shrink-0" />
                               )}
                             </div>
                             <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-tight">
@@ -1787,7 +1776,7 @@ export default function RegisterPage() {
                     {/* Business / Hostel Brand Name */}
                     <div className="sm:col-span-2">
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                        <label htmlFor="reg-business-name" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
                           Property / Real Estate Brand Name{' '}
                           {formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY' ? '*' : ''}
                         </label>
@@ -1797,7 +1786,7 @@ export default function RegisterPage() {
                             : 'Optional'}
                         </span>
                       </div>
-                      <input
+                      <input id="reg-business-name" name="businessName"
                         type="text"
                         required={formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY'}
                         autoCapitalize="characters"
@@ -1812,8 +1801,8 @@ export default function RegisterPage() {
 
                     {/* Primary Operating City / Campus Zone */}
                     <div>
-                      <label className={labelClass}>Primary Operating Zone *</label>
-                      <select
+                      <label htmlFor="reg-primary-region" className={labelClass}>Primary Operating Zone *</label>
+                      <select id="reg-primary-region" name="primaryRegion"
                         required
                         className={`${inputClass} appearance-none cursor-pointer`}
                         value={formData.primaryRegion}
@@ -1832,8 +1821,8 @@ export default function RegisterPage() {
 
                     {/* Estimated Portfolio Size */}
                     <div>
-                      <label className={labelClass}>Estimated Portfolio Size *</label>
-                      <select
+                      <label htmlFor="reg-portfolio-size" className={labelClass}>Estimated Portfolio Size *</label>
+                      <select id="reg-portfolio-size" name="portfolioSize"
                         required
                         className={`${inputClass} appearance-none cursor-pointer`}
                         value={formData.portfolioSize}
@@ -1863,8 +1852,8 @@ export default function RegisterPage() {
                           className="w-full flex items-center justify-between text-left cursor-pointer group"
                         >
                           <div className="flex items-center gap-2">
-                            <Building2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
-                            <span className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-[#16A34A] transition-colors">
+                            <Building2 className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400" />
+                            <span className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-[#15803D] transition-colors">
                               Business Registration &amp; Tax ID (ORC / GRA TIN)
                             </span>
                           </div>
@@ -1886,12 +1875,12 @@ export default function RegisterPage() {
                               {/* ORC Registration No */}
                               <div>
                                 <div className="flex items-center justify-between mb-1.5">
-                                  <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                                  <label htmlFor="reg-orc-number" className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
                                     Registrar General (ORC) No.
                                   </label>
                                   <span className="text-[9.5px] font-mono text-zinc-400">e.g. CS123452021 / BN-4491</span>
                                 </div>
-                                <input
+                                <input id="reg-orc-number" name="businessRegistrationNumber"
                                   type="text"
                                   autoCapitalize="characters"
                                   className={`${inputClass} font-mono uppercase`}
@@ -1906,12 +1895,12 @@ export default function RegisterPage() {
                               {/* GRA TIN */}
                               <div>
                                 <div className="flex items-center justify-between mb-1.5">
-                                  <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                                  <label htmlFor="reg-tin-number" className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
                                     GRA Taxpayer ID (TIN)
                                   </label>
                                   <span className="text-[9.5px] font-mono text-zinc-400">e.g. P0012345678 / C00...</span>
                                 </div>
-                                <input
+                                <input id="reg-tin-number" name="tinNumber"
                                   type="text"
                                   autoCapitalize="characters"
                                   className={`${inputClass} font-mono uppercase`}
@@ -1925,7 +1914,7 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
-                              <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                              <ShieldCheck className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400 shrink-0" />
                               <span>Accelerates corporate verified badge &amp; statutory Rent Act (Act 220) withholding tax receipts.</span>
                             </div>
                           </div>
@@ -1938,12 +1927,12 @@ export default function RegisterPage() {
                   <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Wallet className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
+                        <Wallet className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400" />
                         <span className="text-xs font-bold text-zinc-900 dark:text-white">
                           Preferred Escrow Payout Settlement
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono font-bold text-[#16A34A] dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/40 px-2 py-0.5 rounded-md">
+                      <span className="text-[10px] font-mono font-bold text-[#15803D] dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/40 px-2 py-0.5 rounded-md">
                         T+0 Instant Release
                       </span>
                     </div>
@@ -1965,14 +1954,14 @@ export default function RegisterPage() {
                             : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700'
                         }`}
                       >
-                        <Phone className="w-4 h-4 text-[#16A34A] dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <Phone className="w-4 h-4 text-[#15803D] dark:text-emerald-400 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-[11px] font-bold text-zinc-900 dark:text-white">
                               Instant Mobile Money
                             </span>
                             {formData.payoutMethod === 'MOMO' && (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                              <CheckCircle2 className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400 shrink-0" />
                             )}
                           </div>
                           <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-tight">
@@ -2001,14 +1990,14 @@ export default function RegisterPage() {
                             : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700'
                         }`}
                       >
-                        <Landmark className="w-4 h-4 text-[#16A34A] dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <Landmark className="w-4 h-4 text-[#15803D] dark:text-emerald-400 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-[11px] font-bold text-zinc-900 dark:text-white">
                               Commercial Bank GH
                             </span>
                             {formData.payoutMethod === 'BANK_TRANSFER' && (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                              <CheckCircle2 className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400 shrink-0" />
                             )}
                           </div>
                           <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-tight">
@@ -2021,9 +2010,9 @@ export default function RegisterPage() {
                     {/* Conditional Sub-Fields for MoMo vs Bank Transfer */}
                     {formData.payoutMethod === 'MOMO' ? (
                       <div className="space-y-2.5 bg-white/80 dark:bg-zinc-950/50 border border-zinc-200/80 dark:border-zinc-800 rounded-xl p-3">
-                        <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
+                        <label htmlFor="reg-momo-same" className="flex items-center justify-between gap-2 cursor-pointer select-none">
                           <div className="flex items-center gap-2">
-                            <input
+                            <input id="reg-momo-same" name="useRegisteredPhoneForMoMo"
                               type="checkbox"
                               checked={formData.useRegisteredPhoneForMoMo}
                               onChange={(e) =>
@@ -2032,7 +2021,7 @@ export default function RegisterPage() {
                                   useRegisteredPhoneForMoMo: e.target.checked,
                                 })
                               }
-                              className="w-4 h-4 rounded border-zinc-300 text-[#16A34A] focus:ring-[#16A34A] cursor-pointer"
+                              className="w-4 h-4 rounded border-zinc-300 text-[#15803D] focus:ring-[#16A34A] cursor-pointer"
                             />
                             <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
                               Use my registered phone number ({formData.phoneNumber || 'from Step 1'})
@@ -2050,7 +2039,7 @@ export default function RegisterPage() {
                         {!formData.useRegisteredPhoneForMoMo && (
                           <div className="pt-1">
                             <div className="flex items-center justify-between mb-1">
-                              <label className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                              <label htmlFor="reg-momo-phone" className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
                                 Dedicated MoMo Settlement Number
                               </label>
                             </div>
@@ -2058,7 +2047,7 @@ export default function RegisterPage() {
                               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
                                 <span className="text-xs mr-1 select-none">🇬🇭</span>
                               </div>
-                              <input
+                              <input id="reg-momo-phone" name="momoSettlementNumber"
                                 type="tel"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
@@ -2081,10 +2070,10 @@ export default function RegisterPage() {
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-white/80 dark:bg-zinc-950/50 border border-zinc-200/80 dark:border-zinc-800 rounded-xl p-3">
                         <div>
-                          <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                          <label htmlFor="reg-settlement-bank" className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
                             Settlement Bank (Ghana) *
                           </label>
-                          <select
+                          <select id="reg-settlement-bank" name="settlementBank"
                             className={`${inputClass} appearance-none cursor-pointer`}
                             value={ghanaBankLabels[formData.payoutProvider] ? formData.payoutProvider : 'GCB'}
                             onChange={(e) => setFormData({ ...formData, payoutProvider: e.target.value })}
@@ -2098,12 +2087,12 @@ export default function RegisterPage() {
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                            <label htmlFor="reg-bank-account" className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
                               Account Number
                             </label>
                             <span className="text-[10px] font-mono text-zinc-400">Optional now</span>
                           </div>
-                          <input
+                          <input id="reg-bank-account" name="bankAccountNumber"
                             type="text"
                             className={`${inputClass} font-mono`}
                             value={formData.payoutAccountNumber}
@@ -2158,7 +2147,7 @@ export default function RegisterPage() {
                                 </div>
                                 <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 truncate">
                                   Est. Net Payout:{' '}
-                                  <strong className="font-mono text-[#16A34A] dark:text-emerald-400">
+                                  <strong className="font-mono text-[#15803D] dark:text-emerald-400">
                                     GH₵ {netInstantPayout.toLocaleString()}
                                   </strong>{' '}
                                   (100% of listed rent)
@@ -2166,7 +2155,7 @@ export default function RegisterPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[10px] font-bold text-[#16A34A] dark:text-emerald-400 hidden sm:inline">
+                              <span className="text-[10px] font-bold text-[#15803D] dark:text-emerald-400 hidden sm:inline">
                                 {showEarningsPreview ? 'Hide' : 'Simulate'}
                               </span>
                               {showEarningsPreview ? (
@@ -2193,7 +2182,7 @@ export default function RegisterPage() {
                                     }}
                                     className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
                                       earningsCycle === 'ACADEMIC_YEAR'
-                                        ? 'bg-white dark:bg-zinc-900 text-[#16A34A] dark:text-emerald-400 shadow-xs'
+                                        ? 'bg-white dark:bg-zinc-900 text-[#15803D] dark:text-emerald-400 shadow-xs'
                                         : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                                     }`}
                                   >
@@ -2207,7 +2196,7 @@ export default function RegisterPage() {
                                     }}
                                     className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
                                       earningsCycle === 'SIX_MONTH_LEASE'
-                                        ? 'bg-white dark:bg-zinc-900 text-[#16A34A] dark:text-emerald-400 shadow-xs'
+                                        ? 'bg-white dark:bg-zinc-900 text-[#15803D] dark:text-emerald-400 shadow-xs'
                                         : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                                     }`}
                                   >
@@ -2221,16 +2210,16 @@ export default function RegisterPage() {
                                 {/* Rate per Room / Bed */}
                                 <div className="bg-white/90 dark:bg-zinc-950/60 border border-zinc-200/80 dark:border-zinc-800 rounded-lg p-2.5 space-y-1.5">
                                   <div className="flex items-center justify-between">
-                                    <label className="text-[10.5px] font-bold text-zinc-600 dark:text-zinc-400">
+                                    <label htmlFor="reg-earnings-rate" className="text-[10.5px] font-bold text-zinc-600 dark:text-zinc-400">
                                       {earningsCycle === 'ACADEMIC_YEAR'
                                         ? 'Rent per Unit (Annual)'
                                         : '6-Mo Advance per Unit'}
                                     </label>
-                                    <span className="text-xs font-mono font-extrabold text-[#16A34A] dark:text-emerald-400">
+                                    <span className="text-xs font-mono font-extrabold text-[#15803D] dark:text-emerald-400">
                                       GH₵ {earningsRatePerUnit.toLocaleString()}
                                     </span>
                                   </div>
-                                  <input
+                                  <input id="reg-earnings-rate" name="earningsRatePerUnit"
                                     type="range"
                                     min={1500}
                                     max={30000}
@@ -2263,7 +2252,7 @@ export default function RegisterPage() {
                                 {/* Number of Occupied Rooms / Beds */}
                                 <div className="bg-white/90 dark:bg-zinc-950/60 border border-zinc-200/80 dark:border-zinc-800 rounded-lg p-2.5 space-y-1.5">
                                   <div className="flex items-center justify-between">
-                                    <label className="text-[10.5px] font-bold text-zinc-600 dark:text-zinc-400">
+                                    <label htmlFor="reg-earnings-units" className="text-[10.5px] font-bold text-zinc-600 dark:text-zinc-400">
                                       Occupied Rental Units
                                     </label>
                                     <span className="text-xs font-mono font-extrabold text-zinc-900 dark:text-white">
@@ -2277,7 +2266,7 @@ export default function RegisterPage() {
                                         : 'Units'}
                                     </span>
                                   </div>
-                                  <input
+                                  <input id="reg-earnings-units" name="earningsUnitCount"
                                     type="range"
                                     min={1}
                                     max={60}
@@ -2338,7 +2327,7 @@ export default function RegisterPage() {
                                       Disbursed automatically at T+0 upon tenant QR check-in verification
                                     </span>
                                   </div>
-                                  <span className="text-sm sm:text-base font-mono font-black text-[#16A34A] dark:text-emerald-400">
+                                  <span className="text-sm sm:text-base font-mono font-black text-[#15803D] dark:text-emerald-400">
                                     GH₵ {netInstantPayout.toLocaleString()}
                                   </span>
                                 </div>
@@ -2365,7 +2354,7 @@ export default function RegisterPage() {
 
                   {/* Host Profile Helper Footnote */}
                   <div className="pt-1 border-t border-zinc-200/70 dark:border-zinc-800/80 flex items-start gap-2 text-[10.5px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0 mt-0.5" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400 shrink-0 mt-0.5" />
                     <span>
                       Your portfolio profile & escrow settlement rail pre-configure your landlord console, Rent Act (Act 220) digital lease templates, and instant rent release upon tenant check-in.
                     </span>
@@ -2378,9 +2367,9 @@ export default function RegisterPage() {
               <div className="space-y-3 pt-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className={labelClass}>Password *</label>
+                    <label htmlFor="reg-password" className={labelClass}>Password *</label>
                     <div className="relative">
-                      <input 
+                      <input id="reg-password" name="password" 
                         type={showPassword ? 'text' : 'password'} 
                         required 
                         autoComplete="new-password" 
@@ -2403,9 +2392,9 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className={labelClass}>Confirm Password *</label>
+                    <label htmlFor="reg-confirm-password" className={labelClass}>Confirm Password *</label>
                     <div className="relative">
-                      <input 
+                      <input id="reg-confirm-password" name="confirmPassword" 
                         type={showConfirmPassword ? 'text' : 'password'} 
                         required 
                         autoComplete="new-password" 
@@ -2602,11 +2591,11 @@ export default function RegisterPage() {
               <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
                 <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
+                    <User className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400" />
                     <span className="text-xs font-bold text-zinc-950 dark:text-white">
                       Personal Identity
                     </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-100/80 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-100/80 dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
                       {formData.role === 'LANDLORD'
                         ? 'Landlord & Host'
                         : formData.isStudent
@@ -2617,7 +2606,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
-                    className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
+                    className="text-[11px] font-bold text-[#15803D] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
                   >
                     Edit
                   </button>
@@ -2691,7 +2680,7 @@ export default function RegisterPage() {
               <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
                 <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400" />
                     <span className="text-xs font-bold text-zinc-950 dark:text-white">
                       {formData.role === 'LANDLORD'
                         ? 'Credentials & Host Portfolio'
@@ -2703,7 +2692,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
+                    className="text-[11px] font-bold text-[#15803D] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
                   >
                     Edit
                   </button>
@@ -2757,7 +2746,7 @@ export default function RegisterPage() {
                             {formData.businessRegistrationNumber.trim() && (
                               <span className="flex items-center gap-1">
                                 <span className="text-[10.5px] font-sans font-medium text-zinc-500 dark:text-zinc-400">ORC No:</span>
-                                <strong className="text-[#16A34A] dark:text-emerald-400">{formData.businessRegistrationNumber.trim()}</strong>
+                                <strong className="text-[#15803D] dark:text-emerald-400">{formData.businessRegistrationNumber.trim()}</strong>
                               </span>
                             )}
                             {formData.tinNumber.trim() && (
@@ -2810,14 +2799,14 @@ export default function RegisterPage() {
                       <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80 flex items-center justify-between gap-2 flex-wrap">
                         <div>
                           <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Simulated Net Escrow Yield</dt>
-                          <dd className="font-mono font-extrabold text-[#16A34A] dark:text-emerald-400">
+                          <dd className="font-mono font-extrabold text-[#15803D] dark:text-emerald-400">
                             GH₵ {(earningsRatePerUnit * earningsUnitCount).toLocaleString()}{' '}
                             <span className="text-[10.5px] font-sans font-medium text-zinc-500 dark:text-zinc-400">
                               ({earningsUnitCount} × GH₵ {earningsRatePerUnit.toLocaleString()})
                             </span>
                           </dd>
                         </div>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-[#16A34A] dark:text-emerald-300 text-[10px] font-mono font-extrabold border border-emerald-300/70 dark:border-emerald-800">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-[#15803D] dark:text-emerald-300 text-[10px] font-mono font-extrabold border border-emerald-300/70 dark:border-emerald-800">
                           0% Host Fee • 100% Remitted
                         </span>
                       </div>
@@ -2969,7 +2958,7 @@ export default function RegisterPage() {
                   <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#16A34A] dark:text-emerald-400 shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#15803D] dark:text-emerald-400 shrink-0">
                           <ClipboardCheck className="w-4 h-4" />
                         </div>
                         <div>
@@ -2984,7 +2973,7 @@ export default function RegisterPage() {
                       <button
                         type="button"
                         onClick={downloadChecklist}
-                        className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 flex items-center gap-1 shrink-0 cursor-pointer"
+                        className="text-[11px] font-bold text-[#15803D] hover:text-[#15803D] dark:text-emerald-400 flex items-center gap-1 shrink-0 cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">Save list</span>
@@ -3028,13 +3017,13 @@ export default function RegisterPage() {
                                   : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700'
                               }`}
                             >
-                              <input
+                              <input id={`reg-deed-${item.id}`} name={`deed-${item.id}`}
                                 type="checkbox"
                                 checked={checked}
                                 onChange={(e) =>
                                   setDeedChecklist((prev) => ({ ...prev, [item.id]: e.target.checked }))
                                 }
-                                className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-[#16A34A] focus:ring-[#16A34A] cursor-pointer shrink-0"
+                                className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-[#15803D] focus:ring-[#16A34A] cursor-pointer shrink-0"
                               />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -3078,7 +3067,7 @@ export default function RegisterPage() {
               <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#16A34A] dark:text-emerald-400 shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#15803D] dark:text-emerald-400 shrink-0">
                       <Gift className="w-4 h-4" />
                     </div>
                     <div>
@@ -3096,7 +3085,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPromoField(!showPromoField)}
-                      className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 flex items-center gap-1 transition cursor-pointer"
+                      className="text-xs font-bold text-[#15803D] hover:text-[#15803D] dark:text-emerald-400 flex items-center gap-1 transition cursor-pointer"
                     >
                       <span>{showPromoField ? 'Hide' : 'Add Code'}</span>
                       {showPromoField ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -3143,7 +3132,8 @@ export default function RegisterPage() {
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                        <input
+                        <label htmlFor="reg-promo-code" className="sr-only">Promo code</label>
+                        <input id="reg-promo-code" name="promoCode"
                           type="text"
                           value={promoInput}
                           onChange={(e) => {
@@ -3196,7 +3186,7 @@ export default function RegisterPage() {
                             setPromoInput(chip);
                             verifyPromo(chip);
                           }}
-                          className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-white dark:bg-zinc-800 text-zinc-600 hover:text-[#16A34A] dark:text-zinc-300 dark:hover:text-emerald-300 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 transition cursor-pointer"
+                          className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-white dark:bg-zinc-800 text-zinc-600 hover:text-[#15803D] dark:text-zinc-300 dark:hover:text-emerald-300 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 transition cursor-pointer"
                         >
                           +{chip}
                         </button>
@@ -3210,7 +3200,7 @@ export default function RegisterPage() {
               <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-linear-to-b from-zinc-50/80 to-zinc-100/40 dark:from-zinc-900/60 dark:to-zinc-950/40 p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 uppercase tracking-wider">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400" />
                     <span>Statutory Compliance & Escrow Protection</span>
                   </span>
                   <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-300/60 dark:border-emerald-800/60">
@@ -3223,7 +3213,7 @@ export default function RegisterPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {/* Seal 1: Act 843 Privacy */}
                   <div className="p-2.5 rounded-lg border border-emerald-200/80 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-950/30 flex items-start gap-2">
-                    <div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-[#16A34A] dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-[#15803D] dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
                       <ShieldCheck className="w-3.5 h-3.5" />
                     </div>
                     <div className="min-w-0">
@@ -3280,7 +3270,7 @@ export default function RegisterPage() {
               {/* "What Happens Next?" Post-Registration Expectations Roadmap (#7) */}
               <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#16A34A] dark:text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-[#15803D] dark:text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider">
                     <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>What Happens After You Submit?</span>
                   </span>
@@ -3296,7 +3286,7 @@ export default function RegisterPage() {
                       <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#16A34A] text-white text-[10px] font-bold font-mono">
                         1
                       </span>
-                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950/80 text-[#16A34A] dark:text-emerald-300">
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950/80 text-[#15803D] dark:text-emerald-300">
                         ~1 min
                       </span>
                     </div>
@@ -3378,16 +3368,16 @@ export default function RegisterPage() {
                     required 
                     checked={formData.acceptTerms} 
                     onChange={(e) => setFormData({ ...formData, acceptTerms: e.target.checked })} 
-                    className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#16A34A] focus:ring-[#16A34A] accent-[#16A34A] cursor-pointer" 
+                    className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#15803D] focus:ring-[#16A34A] accent-[#16A34A] cursor-pointer" 
                   />
                   <span className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     I confirm that the details above are accurate, consent to lawful data processing under the{' '}
                     <strong className="text-zinc-800 dark:text-zinc-200 font-semibold">Ghana Data Protection Act (Act 843)</strong>, and agree to the{' '}
-                    <Link href="/terms" target="_blank" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">
+                    <Link prefetch={false} href="/terms" target="_blank" className="font-bold text-[#15803D] hover:text-[#15803D] dark:text-emerald-400 hover:underline">
                       Terms of Service
                     </Link>{' '}
                     and{' '}
-                    <Link href="/privacy" target="_blank" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">
+                    <Link prefetch={false} href="/privacy" target="_blank" className="font-bold text-[#15803D] hover:text-[#15803D] dark:text-emerald-400 hover:underline">
                       Privacy Policy
                     </Link>
                     .
@@ -3426,9 +3416,9 @@ export default function RegisterPage() {
           {/* Bottom Switch to Sign In */}
           <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 text-center text-xs text-zinc-500 dark:text-zinc-400">
             Already have an account?{' '}
-            <Link 
+            <Link prefetch={false} 
               href="/login" 
-              className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
+              className="font-bold text-[#15803D] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
             >
               Sign in
             </Link>
@@ -3437,7 +3427,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Bottom Footer */}
-        <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-400 gap-2">
+        <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-600 dark:text-zinc-400 gap-2">
           <div className="flex items-center gap-2">
             <span>&copy; {new Date().getFullYear()} Akwaaba Homes Ghana Ltd.</span>
             <span>•</span>
@@ -3446,11 +3436,11 @@ export default function RegisterPage() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/terms" className="hover:text-zinc-950 dark:hover:text-white transition">Terms</Link>
+            <Link prefetch={false} href="/terms" className="hover:text-zinc-950 dark:hover:text-white transition">Terms</Link>
             <span>•</span>
-            <Link href="/privacy" className="hover:text-zinc-950 dark:hover:text-white transition">Privacy</Link>
+            <Link prefetch={false} href="/privacy" className="hover:text-zinc-950 dark:hover:text-white transition">Privacy</Link>
             <span>•</span>
-            <Link href="/support" className="hover:text-zinc-950 dark:hover:text-white transition">Support</Link>
+            <Link prefetch={false} href="/support" className="hover:text-zinc-950 dark:hover:text-white transition">Support</Link>
           </div>
         </div>
 

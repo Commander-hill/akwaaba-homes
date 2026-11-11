@@ -17,7 +17,7 @@ import {
   Clock,
   Home,
 } from 'lucide-react';
-import api from '@/lib/axios';
+
 
 const NAV_LINKS = [
   { name: 'Home', href: '/' },
@@ -63,6 +63,7 @@ export default function ForgotPasswordPage() {
     setError('');
 
     try {
+      const { default: api } = await import('@/lib/axios');
       await api.post('/auth/forgot-password', { email: email.trim().toLowerCase() });
       setSuccess(true);
       setResendCooldown(60);
@@ -87,11 +88,11 @@ export default function ForgotPasswordPage() {
     <div className="-mt-16 min-h-screen w-full flex flex-col justify-between bg-[#FAF9F5] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans relative overflow-x-hidden pt-16">
 
       {/* ── 1. TOP NAVBAR ── */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-white/95 dark:bg-[#141A17]/95 backdrop-blur-md border-b border-zinc-200/70 dark:border-zinc-800 z-30">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-white/95 dark:bg-[#141A17]/95 border-b border-zinc-200/70 dark:border-zinc-800 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
           {/* Left: Brand Identity */}
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link prefetch={false} href="/" className="flex items-center gap-2.5 group">
             <div className="w-10 h-10 flex items-center justify-center shrink-0">
               <Image
                 src="/logo-light.png"
@@ -99,15 +100,15 @@ export default function ForgotPasswordPage() {
                 width={40}
                 height={40}
                 className="w-full h-full object-contain dark:hidden transition-transform duration-300 group-hover:scale-105"
-                priority
               />
               <Image
                 src="/logo.png"
                 alt="AkwaabaHomes"
+                loading="lazy"
+                fetchPriority="low"
                 width={40}
                 height={40}
                 className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
-                priority
               />
             </div>
             <div className="flex flex-col leading-none">
@@ -123,10 +124,10 @@ export default function ForgotPasswordPage() {
           {/* Center: Navigation Links (Desktop) */}
           <nav className="hidden md:flex items-center gap-5">
             {NAV_LINKS.map((link) => (
-              <Link
+              <Link prefetch={false}
                 key={link.name}
                 href={link.href}
-                className="inline-flex items-center gap-0.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
+                className="inline-flex items-center gap-0.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-[#15803D] dark:hover:text-emerald-400 transition"
               >
                 <span>{link.name}</span>
                 {link.hasDropdown && <ChevronDown className="w-3 h-3 opacity-60" />}
@@ -151,8 +152,9 @@ export default function ForgotPasswordPage() {
 
             {/* Back to Sign In */}
             <Link
+              prefetch={false}
               href="/login"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] transition"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#15803D] hover:text-[#15803D] transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to sign in</span>
@@ -162,12 +164,12 @@ export default function ForgotPasswordPage() {
       </header>
 
       {/* ── 2. MAIN CONTENT ── */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 z-10 flex flex-col justify-center">
+      <div className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 z-10 flex flex-col justify-center">
 
         {/* ── Centered Header ── */}
         <div className="text-center space-y-3 mb-8 sm:mb-10">
           {/* Breadcrumb Pill */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF7EE] dark:bg-emerald-950/40 border border-[#CDEED5] dark:border-emerald-800/40 text-[#16A34A] dark:text-emerald-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF7EE] dark:bg-emerald-950/40 border border-[#CDEED5] dark:border-emerald-800/40 text-[#15803D] dark:text-emerald-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
             <Home className="w-3.5 h-3.5" />
             <span>ACCOUNT / PASSWORD RECOVERY</span>
           </div>
@@ -208,9 +210,11 @@ export default function ForgotPasswordPage() {
                 alt="AkwaabaHomes Secure Recovery"
                 fill
                 priority
+                fetchPriority="high"
+
                 className="object-cover object-center"
-                sizes="(max-width: 768px) 100vw, 256px"
-/>
+                sizes="(max-width: 640px) 420px, 560px" quality={65}
+              />
             </div>
 
             {/* Bottom 3-Pillar Security Strip */}
@@ -219,33 +223,33 @@ export default function ForgotPasswordPage() {
                 {/* Pillar 1 */}
                 <div className="flex items-center justify-center sm:justify-start gap-2.5 px-2">
                   <div className="w-7 h-7 rounded-full bg-[#16A34A] flex items-center justify-center shrink-0 text-white shadow-2xs">
-                    <CheckCircle2 className="w-4 h-4 fill-white text-[#16A34A]" />
+                    <CheckCircle2 className="w-4 h-4 fill-white text-[#15803D]" />
                   </div>
                   <div className="leading-tight text-left">
                     <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">Private recovery</p>
-                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">process</p>
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-300">process</p>
                   </div>
                 </div>
 
                 {/* Pillar 2 */}
                 <div className="flex items-center justify-center sm:justify-start gap-2.5 px-2 pl-3">
-                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0 text-[#16A34A]">
+                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0 text-[#15803D]">
                     <Zap className="w-4 h-4 fill-[#16A34A]" />
                   </div>
                   <div className="leading-tight text-left">
                     <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">Single-use</p>
-                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">reset link</p>
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-300">reset link</p>
                   </div>
                 </div>
 
                 {/* Pillar 3 */}
                 <div className="flex items-center justify-center sm:justify-start gap-2.5 px-2 pl-3">
-                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0 text-[#16A34A]">
+                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0 text-[#15803D]">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div className="leading-tight text-left">
                     <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">15-minute</p>
-                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">link expiry</p>
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-300">link expiry</p>
                   </div>
                 </div>
               </div>
@@ -257,7 +261,7 @@ export default function ForgotPasswordPage() {
             {success ? (
               /* Success Confirmation View */
               <div className="py-6 space-y-5 text-center my-auto">
-                <div className="w-14 h-14 rounded-2xl bg-[#EBF7EE] dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto shadow-2xs">
+                <div className="w-14 h-14 rounded-2xl bg-[#EBF7EE] dark:bg-emerald-950/60 text-[#15803D] flex items-center justify-center mx-auto shadow-2xs">
                   <CheckCircle2 className="w-7 h-7" />
                 </div>
 
@@ -275,12 +279,12 @@ export default function ForgotPasswordPage() {
                     type="button"
                     onClick={() => { setSuccess(false); }}
                     disabled={resendCooldown > 0}
-                    className="w-full h-11 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                    className="w-full h-11 rounded-xl bg-[#15803D] hover:bg-[#166534] disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
                   >
                     {resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : 'Resend link'}
                   </button>
 
-                  <Link
+                  <Link prefetch={false}
                     href="/login"
                     className="block text-xs font-semibold text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition"
                   >
@@ -293,11 +297,11 @@ export default function ForgotPasswordPage() {
               <div className="space-y-5">
                 {/* Card Header: Icon + Badge + Title */}
                 <div className="flex items-start gap-3.5">
-                  <div className="w-11 h-11 rounded-2xl bg-[#EBF7EE] dark:bg-emerald-950/60 flex items-center justify-center shrink-0 border border-[#CDEED5] dark:border-emerald-800/40 text-[#16A34A]">
+                  <div className="w-11 h-11 rounded-2xl bg-[#EBF7EE] dark:bg-emerald-950/60 flex items-center justify-center shrink-0 border border-[#CDEED5] dark:border-emerald-800/40 text-[#15803D]">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#EBF7EE] dark:bg-emerald-950/40 text-[#16A34A] dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#EBF7EE] dark:bg-emerald-950/40 text-[#15803D] dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
                       ACCOUNT RECOVERY
                     </span>
                     <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white tracking-tight mt-0.5">
@@ -317,13 +321,16 @@ export default function ForgotPasswordPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Email Input */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                    <label htmlFor="recovery-email" className="block text-xs font-bold text-zinc-800 dark:text-zinc-200">
                       Email address
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <input
+                        id="recovery-email"
+                        name="email"
                         type="email"
+                        autoComplete="email"
                         placeholder="name@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -337,7 +344,7 @@ export default function ForgotPasswordPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full h-11 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
+                    className="w-full h-11 rounded-xl bg-[#15803D] hover:bg-[#166534] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
                   >
                     {isLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -354,9 +361,9 @@ export default function ForgotPasswordPage() {
                 <div className="pt-2 text-center border-t border-zinc-100 dark:border-zinc-800">
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">
                     Remembered your password?{' '}
-                    <Link
+                    <Link prefetch={false}
                       href="/login"
-                      className="font-bold text-[#16A34A] hover:text-[#15803D] transition"
+                      className="font-bold text-[#15803D] hover:text-[#15803D] transition"
                     >
                       Sign in
                     </Link>
@@ -365,14 +372,14 @@ export default function ForgotPasswordPage() {
 
                 {/* Security Footnote */}
                 <div className="pt-3 flex items-center justify-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#15803D] shrink-0" />
                   <span>We'll only use this address to verify your account.</span>
                 </div>
               </div>
             )}
           </div>
         </div>
-      </main>
+      </div>
 
       {/* ── 3. ATMOSPHERIC SKYLINE BACKGROUND (At base) ── */}
       <div className="relative w-full h-24 pointer-events-none select-none opacity-40 dark:opacity-20">
@@ -380,9 +387,11 @@ export default function ForgotPasswordPage() {
           src="/images/auth/recovery-skyline-bg.png"
           alt="Ghana skyline"
           fill
+          loading="lazy"
+                fetchPriority="low"
           className="object-cover object-bottom"
-          sizes="(max-width: 768px) 100vw, 256px"
-/>
+          sizes="100vw"
+        />
       </div>
 
       {/* ── 4. FOOTER ── */}
@@ -390,15 +399,15 @@ export default function ForgotPasswordPage() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
           <div>© 2026 AkwaabaHomes Ghana</div>
           <div className="flex items-center gap-4">
-            <Link href="/help" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">
+            <Link prefetch={false} href="/help" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">
               Help Centre
             </Link>
             <span>|</span>
-            <Link href="/privacy" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">
+            <Link prefetch={false} href="/privacy" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">
               Privacy
             </Link>
             <span>|</span>
-            <Link href="/terms" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">
+            <Link prefetch={false} href="/terms" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">
               Terms
             </Link>
           </div>

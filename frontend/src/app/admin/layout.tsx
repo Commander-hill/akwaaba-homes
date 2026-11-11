@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import '../dashboard-admin.css';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import api from '@/lib/axios';
@@ -8,10 +9,13 @@ import BrandLoader from '@/components/BrandLoader';
 import AdminShell from '@/components/admin/AdminShell';
 import AdminInactivityLock from '@/components/admin/AdminInactivityLock';
 import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
+import QueryProvider from '@/providers/QueryProvider';
+import { clearPublicResources } from '@/lib/publicFetch';
+import { getRegisteredQueryClient } from '@/lib/queryRegistry';
 
 const USER_CACHE_KEY = 'akwaaba_cached_user_v1';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [hydrated, setHydrated] = useState(false);
@@ -102,6 +106,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       sessionStorage.removeItem(USER_CACHE_KEY);
       localStorage.removeItem(USER_CACHE_KEY);
     } catch {}
+    clearPublicResources();
+    getRegisteredQueryClient()?.clear();
     window.location.href = '/admin/login';
   };
 
@@ -115,5 +121,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <AdminPwaInstallPrompt />
       </AdminShell>
     </AdminInactivityLock>
+  );
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </QueryProvider>
   );
 }

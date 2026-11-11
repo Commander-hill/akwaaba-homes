@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import '../dashboard-admin.css';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { 
@@ -15,10 +16,13 @@ import NotificationBell from '@/components/NotificationBell';
 import BrandLoader from '@/components/BrandLoader';
 import TenantShell from '@/components/tenant-ui/TenantShell';
 import LandlordShell from '@/components/landlord-ui/LandlordShell';
+import QueryProvider from '@/providers/QueryProvider';
+import { clearPublicResources } from '@/lib/publicFetch';
+import { getRegisteredQueryClient } from '@/lib/queryRegistry';
 
 const USER_CACHE_KEY = 'akwaaba_cached_user_v1';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() || '';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -142,6 +146,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       localStorage.removeItem('akwaaba_access_token');
       localStorage.removeItem('akwaaba_refresh_token');
     } catch {}
+    clearPublicResources();
+    getRegisteredQueryClient()?.clear();
     window.location.href = '/login';
   };
 
@@ -236,5 +242,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </QueryProvider>
   );
 }

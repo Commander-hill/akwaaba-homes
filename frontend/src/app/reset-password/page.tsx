@@ -1,10 +1,12 @@
 'use client';
+import '@/app/secondary.css';
 
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import QueryProvider from '@/providers/QueryProvider';
 import { 
   Lock, 
   ArrowRight, 
@@ -720,7 +722,9 @@ export default function ResetPasswordPage() {
         </div>
       }
     >
-      <ResetPasswordForm />
+      <QueryProvider>
+        <ResetPasswordForm />
+      </QueryProvider>
     </Suspense>
   );
 }

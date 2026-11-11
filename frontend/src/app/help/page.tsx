@@ -1,4 +1,5 @@
 'use client';
+import '@/app/secondary.css';
 
 import React, { useState } from 'react';
 import Link from 'next/link';

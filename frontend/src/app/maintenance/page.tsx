@@ -1,4 +1,5 @@
 'use client';
+import '@/app/secondary.css';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -21,8 +22,9 @@ import {
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import toast from 'react-hot-toast';
+import QueryProvider from '@/providers/QueryProvider';
 
-export default function PublicMaintenancePage() {
+function PublicMaintenanceContent() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -383,5 +385,13 @@ export default function PublicMaintenancePage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function PublicMaintenancePage() {
+  return (
+    <QueryProvider>
+      <PublicMaintenanceContent />
+    </QueryProvider>
   );
 }

@@ -1,19 +1,27 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  UserCircle, Menu, X, AlertTriangle, CalendarCheck,
-  ChevronDown, Moon, Sun, Bell
-} from 'lucide-react';
+type IconProps = { className?: string };
+const UserCircle = ({ className }: IconProps) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>);
+const Menu = ({ className }: IconProps) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>);
+const X = ({ className }: IconProps) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>);
+const AlertTriangle = ({ className }: IconProps) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>);
+const CalendarCheck = ({ className }: IconProps) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>);
+const ChevronDown = ({ className }: IconProps) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>);
+const Moon = ({ className }: IconProps) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>);
+const Sun = ({ className }: IconProps) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>);
+const Bell = ({ className }: IconProps) => (<svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>);
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { useTheme } from 'next-themes';
-import api from '@/lib/axios';
-import { getImageUrl } from '@/lib/utils';
-import NotificationBell from './NotificationBell';
+import { publicGet, usePublicResource } from '@/lib/publicFetch';
+import { getImageUrl } from '@/lib/imageUrl';
+
+const NotificationBell = dynamic(() => import('./NotificationBell'), { ssr: false });
+const NavbarMobileDrawer = dynamic(() => import('./NavbarMobileDrawer'), { ssr: false });
 
 const PUBLIC_NAV_LINKS = [
   { name: 'Home', href: '/' },
@@ -60,25 +68,23 @@ export default function Navbar() {
     pathname.startsWith('/support') ||
     pathname.startsWith('/help');
 
-  const { data: userResponse } = useQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: async () => {
-      const { data } = await api.get('/auth/me');
-      return data;
+  const { data: userResponse } = usePublicResource(
+    'auth/session',
+    () => publicGet('/auth/session'),
+    {
+      enabled: !isHiddenRoute,
+      staleTime: 5 * 60 * 1000,
     },
-    enabled: !isHiddenRoute,
-    retry: false,
-  });
+  );
 
-  const { data: publicConfig } = useQuery({
-    queryKey: ['public-config'],
-    queryFn: async () => {
-      const { data } = await api.get('/config/public');
-      return data;
+  const { data: publicConfig } = usePublicResource(
+    'public-config',
+    () => publicGet('/config/public'),
+    {
+      enabled: !isHiddenRoute,
+      refetchInterval: 60000,
     },
-    enabled: !isHiddenRoute,
-    refetchInterval: 60000,
-  });
+  );
 
   const user = userResponse?.user;
   const isAuthenticated = !!user;
@@ -136,7 +142,7 @@ export default function Navbar() {
           <div className="flex justify-between h-16 items-center">
             {/* Left: Brand Identity */}
             <div className="flex items-center gap-6">
-              <Link
+              <Link prefetch={false}
                 href="/"
                 className={clsx(
                   'items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] rounded-lg',
@@ -149,8 +155,8 @@ export default function Navbar() {
                     alt="AkwaabaHomes"
                     width={44}
                     height={44}
+                    loading="lazy"
                     className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
-                    priority
                   />
                   <Image
                     src="/logo-light.png"
@@ -158,7 +164,6 @@ export default function Navbar() {
                     width={44}
                     height={44}
                     className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
-                    priority
                   />
                 </div>
                 <div className="flex flex-col">
@@ -178,14 +183,14 @@ export default function Navbar() {
                     pathname === link.href ||
                     (link.href === '/saved' && (pathname === '/saved' || pathname === '/dashboard/wishlist'));
                   return (
-                    <Link
+                    <Link prefetch={false}
                       key={link.name}
                       href={link.href}
                       aria-current={isActive ? 'page' : undefined}
                       className={clsx(
                         'inline-flex items-center gap-0.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
                         isActive
-                          ? 'text-[#16A34A] dark:text-emerald-400 bg-[#EDF6F0] dark:bg-emerald-950/40 border border-[#16A34A]/30'
+                          ? 'text-[#15803D] dark:text-emerald-400 bg-[#EDF6F0] dark:bg-emerald-950/40 border border-[#16A34A]/30'
                           : 'text-[#5E645E] hover:text-[#242925] dark:text-[#9EA69F] dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-[#1B211E]'
                       )}
                     >
@@ -220,7 +225,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-2">
                   {/* Bookings Button */}
                   {(role === 'TENANT' || !role) && (
-                    <Link
+                    <Link prefetch={false}
                       href="/bookings"
                       className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-[#242925] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                     >
@@ -233,9 +238,9 @@ export default function Navbar() {
                   <NotificationBell />
 
                   {/* My Account Button with Avatar */}
-                  <Link
+                  <Link prefetch={false}
                     href={dashboardHref}
-                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors shadow-xs"
+                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#15803D] hover:bg-[#166534] text-white transition-colors shadow-xs"
                   >
                     {user?.avatarUrl || role === 'TENANT' || role === 'LANDLORD' ? (
                       <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20 shrink-0 relative">
@@ -255,7 +260,7 @@ export default function Navbar() {
               ) : (
                 <div className="flex items-center gap-2">
                   {/* Bookings Button (guest) */}
-                  <Link
+                  <Link prefetch={false}
                     href="/bookings"
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-[#242925] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                   >
@@ -264,7 +269,7 @@ export default function Navbar() {
                   </Link>
 
                   {/* Notification Bell */}
-                  <Link
+                  <Link prefetch={false}
                     href="/login"
                     className="relative p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition"
                     title="Notifications"
@@ -276,9 +281,9 @@ export default function Navbar() {
                   </Link>
 
                   {/* My Account button */}
-                  <Link
+                  <Link prefetch={false}
                     href="/login"
-                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors shadow-xs"
+                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#15803D] hover:bg-[#166534] text-white transition-colors shadow-xs"
                   >
                     <UserCircle className="w-4 h-4" />
                     <span>My Account</span>
@@ -318,69 +323,13 @@ export default function Navbar() {
 
         {/* Mobile Navigation Menu */}
         {isMenuOpen && (
-          <div className="md:hidden fixed inset-0 top-16 z-50 flex flex-col">
-            <div
-              className="fixed inset-0 top-16 bg-black/40 backdrop-blur-xs"
-              onClick={() => setIsMenuOpen(false)}
-            />
-            <div className="relative bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-5 pt-4 pb-6 space-y-4 shadow-xl">
-              <div className="space-y-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={clsx(
-                      'block px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-colors',
-                      pathname === link.href
-                        ? 'bg-[#EDF6F0] text-[#16A34A] dark:bg-emerald-950/40 dark:text-emerald-400'
-                        : 'text-[#242925] dark:text-white hover:bg-zinc-50 dark:hover:bg-[#1B211E]'
-                    )}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
-
-              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                {isAuthenticated ? (
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <Link
-                      href={dashboardHref}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg"
-                    >
-                      My Account
-                    </Link>
-                    <Link
-                      href="/bookings"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-[#242925] dark:text-white border border-zinc-200 dark:border-zinc-800 rounded-lg"
-                    >
-                      My Bookings
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <Link
-                      href="/login"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-[#242925] dark:text-white border border-zinc-200 dark:border-zinc-800 rounded-lg"
-                    >
-                      Sign in
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg"
-                    >
-                      Create account
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <NavbarMobileDrawer
+            navLinks={navLinks}
+            pathname={pathname}
+            isAuthenticated={isAuthenticated}
+            dashboardHref={dashboardHref}
+            onClose={() => setIsMenuOpen(false)}
+          />
         )}
       </nav>
     </header>

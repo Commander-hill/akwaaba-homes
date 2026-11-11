@@ -88,11 +88,13 @@ export default function PropertyCard({
   initialIsSaved,
   onRemoveWishlist,
   footerSlot,
+  priority = false,
 }: {
   property: PropertyCardData;
   initialIsSaved?: boolean;
   onRemoveWishlist?: (id: string) => void;
   footerSlot?: React.ReactNode;
+  priority?: boolean;
 }) {
   const images = parseStringArray(property.images);
   const primaryImage = images[0] || '';
@@ -128,7 +130,7 @@ export default function PropertyCard({
         />
       </div>
 
-      <Link
+      <Link prefetch={false}
         href={`/properties/${property.id}`}
         className="flex flex-col flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#173D32]"
       >
@@ -137,12 +139,13 @@ export default function PropertyCard({
           <PropertyImage
             src={primaryImage}
             alt={`${property.title} in ${property.location}`}
+            priority={priority}
             className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
           />
 
           {/* Subtle Top-Left Accommodation Type Pill */}
           <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
-            <span className="px-2.5 py-1 rounded-md bg-white/95 dark:bg-[#141816]/95 backdrop-blur-xs text-[#242925] dark:text-[#F2F2EE] text-[11px] font-semibold border border-zinc-200 dark:border-zinc-800 shadow-2xs">
+            <span className="px-2.5 py-1 rounded-md bg-white/95 dark:bg-[#141816]/95 text-[#242925] dark:text-[#F2F2EE] text-[11px] font-semibold border border-zinc-200 dark:border-zinc-800 shadow-2xs">
               {formatPropertyTypeLabel(property.type)}
             </span>
           </div>
@@ -150,7 +153,7 @@ export default function PropertyCard({
           {/* Bottom-Left Availability Status */}
           <div className="absolute bottom-3 left-3 z-10">
             {isPropertyAvailable ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#173D32]/90 backdrop-blur-xs text-white text-[11px] font-medium">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#173D32]/95 text-white text-[11px] font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#74C69D]" />
                 {availableRooms.length > 0
                   ? `${availableRooms.length} ${availableRooms.length === 1 ? 'unit' : 'units'} open`

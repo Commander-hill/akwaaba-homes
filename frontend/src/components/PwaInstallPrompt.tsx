@@ -59,7 +59,7 @@ export default function PwaInstallPrompt() {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h4 className="font-extrabold text-sm text-white">Install Akwaaba Homes</h4>
+                <p className="font-extrabold text-sm text-white">Install Akwaaba Homes</p>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 flex items-center gap-0.5">
                   <Smartphone className="w-2.5 h-2.5" /> App
                 </span>

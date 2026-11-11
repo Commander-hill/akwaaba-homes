@@ -1,9 +1,11 @@
 'use client';
+import '@/app/secondary.css';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTheme } from 'next-themes';
+import QueryProvider from '@/providers/QueryProvider';
 import {
   AlertTriangle,
   ArrowRight,
@@ -146,7 +148,7 @@ const RIGHT_FAQS = [
   },
 ];
 
-export default function SupportHelpCentrePage() {
+function SupportHelpCentreContent() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const formSectionRef = useRef<HTMLDivElement | null>(null);
@@ -1476,5 +1478,13 @@ export default function SupportHelpCentrePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SupportHelpCentrePage() {
+  return (
+    <QueryProvider>
+      <SupportHelpCentreContent />
+    </QueryProvider>
   );
 }

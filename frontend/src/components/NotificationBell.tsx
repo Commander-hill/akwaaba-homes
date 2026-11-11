@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
 import { Bell, Check, Loader2, Megaphone, Home, CreditCard, ListTodo, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
@@ -9,36 +8,47 @@ import clsx from 'clsx';
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: async () => {
+  const fetchNotifications = useCallback(async () => {
+    try {
       const res = await api.get('/notifications');
-      return res.data;
-    },
-    refetchInterval: 60000, // Poll every minute
-  });
+      setData(res.data);
+    } catch {
+      // Ignore transient notification fetch errors
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  const markAsReadMutation = useMutation({
-    mutationFn: async (id: string) => {
+  useEffect(() => {
+    void fetchNotifications();
+    const timer = setInterval(() => {
+      void fetchNotifications();
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [fetchNotifications]);
+
+  const markAsRead = async (id: string) => {
+    try {
       await api.put(`/notifications/${id}/read`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      await fetchNotifications();
+    } catch {
+      // Ignore transient error
     }
-  });
+  };
 
-  const markAllAsReadMutation = useMutation({
-    mutationFn: async () => {
+  const markAllAsRead = async () => {
+    try {
       await api.put('/notifications/read-all/all');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      await fetchNotifications();
       setIsOpen(false);
+    } catch {
+      // Ignore transient error
     }
-  });
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -89,7 +99,7 @@ export default function NotificationBell() {
             <h3 className="font-bold text-[var(--foreground)]">Notifications</h3>
             {unreadCount > 0 && (
               <button 
-                onClick={() => markAllAsReadMutation.mutate()}
+                onClick={() => void markAllAsRead()}
                 className="text-xs text-[var(--primary)] hover:underline font-medium flex items-center gap-1"
               >
                 <Check className="w-3 h-3" /> Mark all read
@@ -124,7 +134,7 @@ export default function NotificationBell() {
                           </h4>
                           {!notif.isRead && (
                             <button 
-                              onClick={() => markAsReadMutation.mutate(notif.id)}
+                              onClick={() => void markAsRead(notif.id)}
                               className="w-2 h-2 bg-[var(--primary)] rounded-full shrink-0"
                               title="Mark as read"
                             />
@@ -137,7 +147,7 @@ export default function NotificationBell() {
                             <Link 
                               href={notif.link}
                               onClick={() => {
-                                if (!notif.isRead) markAsReadMutation.mutate(notif.id);
+                                if (!notif.isRead) void markAsRead(notif.id);
                                 setIsOpen(false);
                               }}
                               className="text-xs text-[var(--primary)] font-semibold hover:underline"

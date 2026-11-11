@@ -1,4 +1,5 @@
 'use client';
+import '@/app/secondary.css';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,8 +8,9 @@ import api from '@/lib/axios';
 import DashboardLayout from '@/app/dashboard/layout';
 import TenantBookingsOverviewPage from '@/app/dashboard/tenant/bookings/page';
 import LandlordBookingsPage from '@/app/dashboard/landlord/bookings/page';
+import QueryProvider from '@/providers/QueryProvider';
 
-export default function BookingsRoutePage() {
+function BookingsRouteContent() {
   const router = useRouter();
   const { data: userResponse } = useQuery({
     queryKey: ['auth', 'me'],
@@ -35,5 +37,13 @@ export default function BookingsRoutePage() {
     <DashboardLayout>
       {role === 'LANDLORD' ? <LandlordBookingsPage /> : <TenantBookingsOverviewPage />}
     </DashboardLayout>
+  );
+}
+
+export default function BookingsRoutePage() {
+  return (
+    <QueryProvider>
+      <BookingsRouteContent />
+    </QueryProvider>
   );
 }

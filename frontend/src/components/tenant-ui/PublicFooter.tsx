@@ -11,7 +11,7 @@ export default function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-[#1E3329] dark:border-[#182620]">
           {/* Column 1: Brand & Mission (4 cols) */}
           <div className="lg:col-span-4 space-y-4">
-            <Link href="/" className="inline-flex items-center gap-3 group">
+            <Link prefetch={false} href="/" className="inline-flex items-center gap-3 group">
               <div className="w-11 h-11 flex items-center justify-center shrink-0">
                 <Image
                   src="/logo.png"
@@ -42,27 +42,27 @@ export default function PublicFooter() {
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-sm text-[#9FB0A7]">
               <li>
-                <Link href="/search" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/search" className="hover:text-[#6EE7B7] transition-colors">
                   All Properties
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=HOSTEL" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/search?type=HOSTEL" className="hover:text-[#6EE7B7] transition-colors">
                   Hostels &amp; Co-Living Spaces
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=APARTMENT" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/search?type=APARTMENT" className="hover:text-[#6EE7B7] transition-colors">
                   Apartments &amp; Studios
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=SINGLE_ROOM" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/search?type=SINGLE_ROOM" className="hover:text-[#6EE7B7] transition-colors">
                   Private &amp; Shared Rooms
                 </Link>
               </li>
               <li>
-                <Link href="/saved" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/saved" className="hover:text-[#6EE7B7] transition-colors">
                   Saved Properties
                 </Link>
               </li>
@@ -76,27 +76,27 @@ export default function PublicFooter() {
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-sm text-[#9FB0A7]">
               <li>
-                <Link href="/dashboard/tenant" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/dashboard/tenant" className="hover:text-[#6EE7B7] transition-colors">
                   Resident Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="/bookings" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/bookings" className="hover:text-[#6EE7B7] transition-colors">
                   My Bookings
                 </Link>
               </li>
               <li>
-                <Link href="/profile" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/profile" className="hover:text-[#6EE7B7] transition-colors">
                   Account &amp; Profile Settings
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/login" className="hover:text-[#6EE7B7] transition-colors">
                   Sign In
                 </Link>
               </li>
               <li>
-                <Link href="/register" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/register" className="hover:text-[#6EE7B7] transition-colors">
                   Create an Account
                 </Link>
               </li>
@@ -110,27 +110,27 @@ export default function PublicFooter() {
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-sm text-[#9FB0A7]">
               <li>
-                <Link href="/support" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/support" className="hover:text-[#6EE7B7] transition-colors">
                   Support &amp; Issue Reporting
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/help" className="hover:text-[#6EE7B7] transition-colors">
                   Help Center &amp; FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/about" className="hover:text-[#6EE7B7] transition-colors">
                   About Akwaaba Homes
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/terms" className="hover:text-[#6EE7B7] transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-[#6EE7B7] transition-colors">
+                <Link prefetch={false} href="/privacy" className="hover:text-[#6EE7B7] transition-colors">
                   Privacy Policy
                 </Link>
               </li>
@@ -142,7 +142,7 @@ export default function PublicFooter() {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#7D9187]">
           <p>&copy; {new Date().getFullYear()} Akwaaba Homes Ghana. All rights reserved.</p>
           <p className="flex flex-wrap items-center justify-center gap-2">
-            <span className="text-[#9FB0A7]">All prices displayed in Ghanaian Cedis (GH₵)</span>
+            <span className="text-[#9FB0A7]">All prices displayed in Ghanaian Cedis (GH<span style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>₵</span>)</span>
             <span className="text-[#3A5247]">&bull;</span>
             <span>Accra &bull; Kumasi &bull; Cape Coast &bull; Takoradi</span>
           </p>

@@ -53,7 +53,6 @@ export default function BrandLoader({
               width={112}
               height={112}
               className="w-full h-full object-contain hidden dark:block transition-transform duration-300"
-              priority
             />
             <Image
               src="/logo-light.png"
@@ -61,7 +60,6 @@ export default function BrandLoader({
               width={112}
               height={112}
               className="w-full h-full object-contain block dark:hidden transition-transform duration-300"
-              priority
             />
           </div>
         </div>

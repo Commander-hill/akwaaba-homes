@@ -285,7 +285,13 @@ export function PriceDisplay({
   return (
     <div className={clsx('inline-flex items-baseline gap-1.5', className)}>
       <span className={clsx('text-[#242925] dark:text-[#F2F2EE] tracking-tight', sizeMap[size].price)}>
-        {formatted}
+        {formatted.startsWith('GH₵') ? (
+          <>
+            GH<span style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>₵</span>{formatted.slice(3)}
+          </>
+        ) : (
+          formatted
+        )}
       </span>
       <span className={clsx('text-[#6F756F] dark:text-[#9EA69F] font-normal', sizeMap[size].period)}>
         {period}
@@ -474,6 +480,7 @@ export function BreadcrumbNav({ items }: { items: BreadcrumbItem[] }) {
             {index > 0 && <ChevronRight className="w-3.5 h-3.5 text-[#6F756F]/60 shrink-0" aria-hidden="true" />}
             {item.href && !isLast ? (
               <Link
+                prefetch={false}
                 href={item.href}
                 className="hover:text-[#16A34A] dark:hover:text-emerald-400 transition-colors font-medium"
               >
@@ -542,6 +549,7 @@ export function EmptyState({
       ) : (actionLabel && actionHref) ? (
         <div className="mt-6">
           <Link
+            prefetch={false}
             href={actionHref}
             className="inline-flex items-center justify-center h-10 px-5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold transition-colors"
           >

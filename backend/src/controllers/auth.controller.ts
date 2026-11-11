@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import prisma from '../utils/prisma';
-import { generateAccessToken, generateRefreshToken, generateStepUpToken } from '../utils/jwt';
+import { generateAccessToken, generateRefreshToken, generateStepUpToken, verifyAccessToken } from '../utils/jwt';
 import { encryptData, decryptData, maskGhanaCardNumber } from '../utils/crypto';
 import { generateSignedDocumentUrl } from '../utils/security.service';
 import { logAudit } from '../utils/auditLogger';
@@ -1032,94 +1032,132 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const loadAuthenticatedUserProfile = async (userId: string) => {
+  const cacheKey = `user:me:${userId}`;
+  const cached = appCache.get(cacheKey);
+  if (cached) return cached;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      firstName: true,
+      lastName: true,
+      isEmailVerified: true,
+      ghanaCardNumber: true,
+      ghanaCardStatus: true,
+      ghanaCardFrontUrl: true,
+      ghanaCardBackUrl: true,
+      ghanaCardRejectionReason: true,
+      ghanaCardReviewedAt: true,
+      landlordDocUrl: true,
+      isVerifiedLandlord: true,
+      landlordVerificationStatus: true,
+      hostEntityType: true,
+      businessName: true,
+      primaryRegion: true,
+      portfolioSize: true,
+      payoutMethod: true,
+      payoutProvider: true,
+      payoutAccountNumber: true,
+      tinNumber: true,
+      businessRegistrationNumber: true,
+      otherNames: true,
+      phoneNumber: true,
+      gender: true,
+      dateOfBirth: true,
+      nationality: true,
+      guardianName: true,
+      guardianPhone: true,
+      avatarUrl: true,
+      campus: true,
+      studentId: true,
+      dateOfAdmission: true,
+      programmeOfStudy: true,
+      yearOfStudy: true,
+      studentType: true,
+      reputationScore: true,
+      isProfileLocked: true,
+      profileUnlockRequested: true,
+      profileUnlockReason: true,
+      _count: {
+        select: { properties: true }
+      }
+    }
+  });
+
+  if (!user) return null;
+
+  if (user.ghanaCardNumber) {
+    const decrypted = decryptData(user.ghanaCardNumber);
+    user.ghanaCardNumber = maskGhanaCardNumber(decrypted);
+  }
+  if (user.ghanaCardFrontUrl) {
+    user.ghanaCardFrontUrl = generateSignedDocumentUrl(user.ghanaCardFrontUrl);
+  }
+  if (user.ghanaCardBackUrl) {
+    user.ghanaCardBackUrl = generateSignedDocumentUrl(user.ghanaCardBackUrl);
+  }
+  if (user.landlordDocUrl) {
+    user.landlordDocUrl = generateSignedDocumentUrl(user.landlordDocUrl);
+  }
+
+  const hasProperty = (user._count?.properties || 0) > 0;
+  const responsePayload = { user: { ...user, hasProperty } };
+  appCache.set(cacheKey, responsePayload, 60);
+  return responsePayload;
+};
+
+/**
+ * Passive session probe for public and auth routes; returns HTTP 200 without 401 console errors when unauthenticated.
+ */
+export const getSession = async (req: Request, res: Response): Promise<void> => {
+  try {
+    let token = req.cookies?.accessToken;
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) {
+      res.status(200).json({ authenticated: false, user: null });
+      return;
+    }
+
+    const decoded = verifyAccessToken(token) as any;
+    if (!decoded?.id) {
+      res.status(200).json({ authenticated: false, user: null });
+      return;
+    }
+
+    const tokenCheck = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { isSuspended: true, tokenVersion: true }
+    });
+    if (!tokenCheck || tokenCheck.isSuspended || (tokenCheck.tokenVersion || 0) !== (decoded.tokenVersion || 0)) {
+      res.status(200).json({ authenticated: false, user: null });
+      return;
+    }
+
+    const payload = await loadAuthenticatedUserProfile(decoded.id);
+    if (!payload) {
+      res.status(200).json({ authenticated: false, user: null });
+      return;
+    }
+    res.status(200).json({ authenticated: true, ...payload });
+  } catch {
+    res.status(200).json({ authenticated: false, user: null });
+  }
+};
+
 export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const cacheKey = `user:me:${userId}`;
-
-    // Serve from cache if available (60-second TTL)
-    const cached = appCache.get(cacheKey);
-    if (cached) {
-      res.status(200).json(cached);
-      return;
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        firstName: true,
-        lastName: true,
-        isEmailVerified: true,
-        ghanaCardNumber: true,
-        ghanaCardStatus: true,
-        ghanaCardFrontUrl: true,
-        ghanaCardBackUrl: true,
-        ghanaCardRejectionReason: true,
-        ghanaCardReviewedAt: true,
-        landlordDocUrl: true,
-        isVerifiedLandlord: true,
-        landlordVerificationStatus: true,
-        hostEntityType: true,
-        businessName: true,
-        primaryRegion: true,
-        portfolioSize: true,
-        payoutMethod: true,
-        payoutProvider: true,
-        payoutAccountNumber: true,
-        tinNumber: true,
-        businessRegistrationNumber: true,
-        otherNames: true,
-        phoneNumber: true,
-        gender: true,
-        dateOfBirth: true,
-        nationality: true,
-        guardianName: true,
-        guardianPhone: true,
-        avatarUrl: true,
-        campus: true,
-        studentId: true,
-        dateOfAdmission: true,
-        programmeOfStudy: true,
-        yearOfStudy: true,
-        studentType: true,
-        reputationScore: true,
-        isProfileLocked: true,
-        profileUnlockRequested: true,
-        profileUnlockReason: true,
-        _count: {
-          select: { properties: true }
-        }
-      }
-    });
-
-    if (!user) {
+    const responsePayload = await loadAuthenticatedUserProfile(userId);
+    if (!responsePayload) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
-
-    if (user.ghanaCardNumber) {
-      const decrypted = decryptData(user.ghanaCardNumber);
-      user.ghanaCardNumber = maskGhanaCardNumber(decrypted);
-    }
-    if (user.ghanaCardFrontUrl) {
-      user.ghanaCardFrontUrl = generateSignedDocumentUrl(user.ghanaCardFrontUrl);
-    }
-    if (user.ghanaCardBackUrl) {
-      user.ghanaCardBackUrl = generateSignedDocumentUrl(user.ghanaCardBackUrl);
-    }
-    if (user.landlordDocUrl) {
-      user.landlordDocUrl = generateSignedDocumentUrl(user.landlordDocUrl);
-    }
-
-    const hasProperty = (user._count?.properties || 0) > 0;
-    const responsePayload = { user: { ...user, hasProperty } };
-
-    // Cache for 60 seconds
-    appCache.set(cacheKey, responsePayload, 60);
-
     res.status(200).json(responsePayload);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });

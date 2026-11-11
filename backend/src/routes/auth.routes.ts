@@ -17,6 +17,7 @@ import {
   refresh,
   verifyEmail,
   getMe,
+  getSession,
   submitGhanaCard,
   submitLandlordVerification,
   submitStudentVerification,
@@ -62,6 +63,7 @@ router.post('/2fa/sms/verify', authenticate, verify2FASMS);
 router.post('/2fa/recovery-codes/regenerate', authenticate, regenerateRecoveryCodes);
 
 // Protected routes
+router.get('/session', getSession);
 router.get('/me', authenticate, getMe);
 router.put('/profile', authenticate, updateProfile);
 router.post('/request-unlock', authenticate, requestProfileUnlock);

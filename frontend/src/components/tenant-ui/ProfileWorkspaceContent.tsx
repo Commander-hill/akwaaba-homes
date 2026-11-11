@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import QueryProvider from '@/providers/QueryProvider';
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
@@ -44,7 +45,7 @@ import {
   Camera,
 } from 'lucide-react';
 
-export function ProfileWorkspaceContent({
+function ProfileWorkspaceInner({
   defaultTab = 'basic',
 }: {
   defaultTab?: 'basic' | 'school' | 'security';
@@ -2001,5 +2002,17 @@ export function ProfileWorkspaceContent({
         </div>
       )}
     </div>
+  );
+}
+
+export function ProfileWorkspaceContent({
+  defaultTab = 'basic',
+}: {
+  defaultTab?: 'basic' | 'school' | 'security';
+}) {
+  return (
+    <QueryProvider>
+      <ProfileWorkspaceInner defaultTab={defaultTab} />
+    </QueryProvider>
   );
 }

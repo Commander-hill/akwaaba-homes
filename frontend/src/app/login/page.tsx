@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import {
   ArrowRight,
   Loader2,
@@ -21,8 +20,7 @@ import {
   User,
 } from 'lucide-react';
 import Image from 'next/image';
-import api from '@/lib/axios';
-import { useQuery } from '@tanstack/react-query';
+import { publicGet, usePublicResource } from '@/lib/publicFetch';
 
 // ── BRAND SVG ICONS ──
 function GoogleIcon() {
@@ -48,10 +46,22 @@ function MicrosoftIcon() {
 }
 
 function LoginForm() {
-  const searchParams = useSearchParams();
-  const isTimeout = searchParams.get('reason') === 'timeout';
-  const isRegistered = searchParams.get('registered') === 'true';
-  const redirectParam = searchParams.get('redirect');
+  const [searchMeta, setSearchMeta] = useState<{
+    isTimeout: boolean;
+    isRegistered: boolean;
+    redirectParam: string | null;
+  }>({ isTimeout: false, isRegistered: false, redirectParam: null });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSearchMeta({
+      isTimeout: params.get('reason') === 'timeout',
+      isRegistered: params.get('registered') === 'true',
+      redirectParam: params.get('redirect'),
+    });
+  }, []);
+
+  const { isTimeout, isRegistered, redirectParam } = searchMeta;
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -62,24 +72,23 @@ function LoginForm() {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Check if user is already logged in
-  const { data: sessionData } = useQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: async () => {
+  const { data: sessionData } = usePublicResource(
+    'auth/session',
+    async () => {
       try {
-        const { data } = await api.get('/auth/me');
+        const data = await publicGet('/auth/session');
         return data?.user || null;
       } catch {
         return null;
       }
     },
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
+    { staleTime: 5 * 60 * 1000 },
+  );
 
   const redirectByRole = (user: any) => {
     if (user.role === 'ADMIN') {
       (async () => {
-        try { await api.post('/auth/logout'); } catch {}
+        try { const { default: api } = await import('@/lib/axios'); await api.post('/auth/logout'); } catch {}
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
       })();
@@ -109,7 +118,7 @@ function LoginForm() {
     if (sessionData && !isTimeout) {
       if (sessionData.role === 'ADMIN') {
         (async () => {
-          try { await api.post('/auth/logout'); } catch {}
+          try { const { default: api } = await import('@/lib/axios'); await api.post('/auth/logout'); } catch {}
           localStorage.removeItem('akwaaba_access_token');
           localStorage.removeItem('akwaaba_refresh_token');
         })();
@@ -157,6 +166,7 @@ function LoginForm() {
     setError('');
 
     try {
+      const { default: api } = await import('@/lib/axios');
       const response = await api.post('/auth/login', {
         email: identifier.trim(),
         identifier: identifier.trim(),
@@ -171,7 +181,7 @@ function LoginForm() {
       }
 
       if (response.data?.user?.role === 'ADMIN') {
-        try { await api.post('/auth/logout'); } catch {}
+        try { const { default: api } = await import('@/lib/axios'); await api.post('/auth/logout'); } catch {}
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
         setError('ADMIN_PORTAL_REQUIRED');
@@ -189,7 +199,7 @@ function LoginForm() {
         err.response?.data?.code === 'ADMIN_PORTAL_REQUIRED' ||
         err.response?.data?.message?.includes('Administrator accounts cannot sign in')
       ) {
-        try { await api.post('/auth/logout'); } catch {}
+        try { const { default: api } = await import('@/lib/axios'); await api.post('/auth/logout'); } catch {}
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
         setError('ADMIN_PORTAL_REQUIRED');
@@ -210,13 +220,14 @@ function LoginForm() {
     setError('');
 
     try {
+      const { default: api } = await import('@/lib/axios');
       const response = await api.post('/auth/login/2fa', {
         tempToken,
         code: twoFactorCode.trim(),
       });
 
       if (response.data?.user?.role === 'ADMIN') {
-        try { await api.post('/auth/logout'); } catch {}
+        try { const { default: api } = await import('@/lib/axios'); await api.post('/auth/logout'); } catch {}
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
         setError('ADMIN_PORTAL_REQUIRED');
@@ -245,7 +256,7 @@ function LoginForm() {
   };
 
   // ── FORM INTERIOR COMPONENT ──
-  const renderCardForm = () => (
+  const renderCardForm = (formPrefix: 'desktop' | 'mobile') => (
     <div className="flex flex-col h-full justify-between px-[7.5%] pt-[8%] pb-0">
       {/* Top & Middle Form Content */}
       <div className="flex-1 flex flex-col justify-between pb-2">
@@ -285,12 +296,15 @@ function LoginForm() {
         {/* 2FA Mode */}
         {requireTwoFactor ? (
           <form onSubmit={handle2FASubmit} className="space-y-3 my-auto">
-            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+            <label htmlFor={`${formPrefix}-login-2fa`} className="block text-xs text-zinc-600 dark:text-zinc-300">
               Enter 6-digit authenticator code:
-            </p>
+            </label>
             <input
+              id={`${formPrefix}-login-2fa`}
+              name="twoFactorCode"
               type="text"
               inputMode="numeric"
+              autoComplete="one-time-code"
               maxLength={6}
               placeholder="000000"
               value={twoFactorCode}
@@ -301,14 +315,14 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading || twoFactorCode.length < 6}
-              className="w-full h-10 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+              className="w-full h-10 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Verify Code <ArrowRight className="w-3.5 h-3.5" /></>}
             </button>
             <button
               type="button"
               onClick={() => { setRequireTwoFactor(false); setTwoFactorCode(''); }}
-              className="w-full text-center text-[11px] text-zinc-400 hover:text-zinc-600 transition cursor-pointer"
+              className="w-full text-center text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 transition cursor-pointer"
             >
               ← Cancel
             </button>
@@ -339,7 +353,7 @@ function LoginForm() {
             {/* "or" Divider */}
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-zinc-200/80 dark:bg-zinc-700" />
-              <span className="text-[11px] text-zinc-400 font-medium lowercase">or</span>
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium lowercase">or</span>
               <div className="flex-1 h-px bg-zinc-200/80 dark:bg-zinc-700" />
             </div>
 
@@ -354,32 +368,39 @@ function LoginForm() {
                 ) : (
                   <Mail className="w-3.5 h-3.5 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" />
                 )}
+                <label htmlFor={`${formPrefix}-login-identifier`} className="sr-only">Email or phone number</label>
                 <input
+                  id={`${formPrefix}-login-identifier`}
+                  name="identifier"
                   type="text"
                   placeholder="Email or phone number"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   required
                   autoComplete="username"
-                  className="w-full h-9 xl:h-10 pl-9 pr-3 text-xs rounded-lg border border-zinc-200/90 dark:border-zinc-700 bg-[#F7F8FA] dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                  className="w-full h-9 xl:h-10 pl-9 pr-3 text-xs rounded-lg border border-zinc-200/90 dark:border-zinc-700 bg-[#F7F8FA] dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
                 />
               </div>
 
               {/* Password */}
               <div className="relative">
                 <Lock className="w-3.5 h-3.5 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <label htmlFor={`${formPrefix}-login-password`} className="sr-only">Password</label>
                 <input
+                  id={`${formPrefix}-login-password`}
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full h-9 xl:h-10 pl-9 pr-9 text-xs rounded-lg border border-zinc-200/90 dark:border-zinc-700 bg-[#F7F8FA] dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                  autoComplete="current-password"
+                  className="w-full h-9 xl:h-10 pl-9 pr-9 text-xs rounded-lg border border-zinc-200/90 dark:border-zinc-700 bg-[#F7F8FA] dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer p-0.5"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center rounded-md"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -388,8 +409,10 @@ function LoginForm() {
 
               {/* Remember Me + Forgot Password */}
               <div className="flex items-center justify-between pt-0.5">
-                <label className="flex items-center gap-1.5 cursor-pointer">
+                <label htmlFor={`${formPrefix}-login-remember`} className="flex items-center gap-1.5 cursor-pointer">
                   <input
+                    id={`${formPrefix}-login-remember`}
+                    name="rememberMe"
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
@@ -397,7 +420,7 @@ function LoginForm() {
                   />
                   <span className="text-[11px] xl:text-xs text-zinc-700 dark:text-zinc-300 font-medium">Remember me</span>
                 </label>
-                <Link
+                <Link prefetch={false}
                   href="/forgot-password"
                   className="text-[11px] xl:text-xs font-semibold text-[#0F6848] dark:text-[#16A34A] hover:underline transition"
                 >
@@ -409,7 +432,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-9 xl:h-10 rounded-lg bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer mt-1"
+                className="w-full h-9 xl:h-10 rounded-lg bg-[#15803D] hover:bg-[#166534] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer mt-1"
               >
                 {isLoading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -425,7 +448,7 @@ function LoginForm() {
             {/* Create Account Link */}
             <p className="text-center text-[11px] xl:text-xs text-zinc-600 dark:text-zinc-400">
               Don't have an account?{' '}
-              <Link
+              <Link prefetch={false}
                 href="/register"
                 className="font-bold text-[#0F6848] dark:text-[#16A34A] hover:underline transition"
               >
@@ -441,8 +464,11 @@ function LoginForm() {
         <Image
           src="/images/auth/login-skyline-exact.png"
           alt="Accra Ghana Skyline"
-          width={420}
+          width={420} sizes="(max-width: 1024px) 92vw, 420px"
           height={90}
+          loading="lazy"
+          fetchPriority="low"
+
           className="w-full h-[68px] xl:h-[82px] object-cover object-top"
         />
       </div>
@@ -456,6 +482,89 @@ function LoginForm() {
           DESKTOP VIEW (Exact Full-Viewport Reference Match - Zero Overzoom, Zero Whitespace)
           Visible on lg: (1024px and wider screens)
          ──────────────────────────────────────────────────────────────── */}
+      <div className="lg:hidden flex flex-col w-full min-h-screen bg-white dark:bg-[#0D100E] pt-16">
+        {/* Mobile Top Header (Stationary & Blurred) */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 sticky top-0 bg-white dark:bg-[#0D100E] z-30">
+          <Link prefetch={false} href="/" className="flex items-center gap-2.5">
+            <Image
+              src="/logo-light.png"
+              alt="AkwaabaHomes"
+              width={36}
+              height={36}
+              className="dark:hidden"
+            />
+            <Image
+              src="/logo.png"
+              loading="lazy"
+          fetchPriority="low"
+              alt="AkwaabaHomes"
+              width={36}
+              height={36}
+              className="hidden dark:block"
+            />
+            <div className="flex flex-col leading-none">
+              <span className="font-black text-base text-[#141816] dark:text-white">AkwaabaHomes</span>
+              <span className="text-[10px] font-medium text-[#3B6E5C] dark:text-emerald-400 mt-0.5">Live Well. Feel at Home.</span>
+            </div>
+          </Link>
+
+          {/* Mobile Theme Toggle */}
+          <button
+            type="button"
+            onClick={() => toggleTheme(!isDarkMode)}
+            aria-label="Toggle theme"
+            className="p-2 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+          >
+            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {/* Mobile Hero Banner */}
+        <div className="relative h-56 w-full overflow-hidden">
+          <Image
+            src="/images/auth/login-hero-woman-scene-v5.webp"
+            alt="AkwaabaHomes Resident"
+            fill
+            priority
+            fetchPriority="high"
+
+            className="object-cover object-center"
+            sizes="(max-width: 640px) 420px, 750px" quality={65}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4 text-white">
+            <h1 className="text-lg font-black leading-tight drop-shadow-sm">
+              Your Next Home is Just a Sign-In Away
+            </h1>
+            <p className="text-[11px] text-white/90 mt-0.5 font-medium">
+              Discover verified homes across Ghana.
+            </p>
+          </div>
+        </div>
+
+        {/* Mobile Standout Features Strip */}
+        <div className="px-4 pt-3 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900/80 px-2.5 py-1.5 rounded-xl border border-zinc-200/60 dark:border-zinc-800 shrink-0 shadow-2xs">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" />
+            <span className="text-[11px] font-bold text-zinc-900 dark:text-white">Verified Listings</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900/80 px-2.5 py-1.5 rounded-xl border border-zinc-200/60 dark:border-zinc-800 shrink-0 shadow-2xs">
+            <Headphones className="w-3.5 h-3.5 text-[#16A34A]" />
+            <span className="text-[11px] font-bold text-zinc-900 dark:text-white">24/7 Support</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900/80 px-2.5 py-1.5 rounded-xl border border-zinc-200/60 dark:border-zinc-800 shrink-0 shadow-2xs">
+            <Handshake className="w-3.5 h-3.5 text-[#16A34A]" />
+            <span className="text-[11px] font-bold text-zinc-900 dark:text-white">Trusted</span>
+          </div>
+        </div>
+
+        {/* Mobile Card Form */}
+        <div className="flex-1 px-4 py-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-lg overflow-hidden">
+            {renderCardForm('mobile')}
+          </div>
+        </div>
+      </div>
       <div className="hidden lg:block w-full h-full max-h-screen overflow-hidden relative bg-white dark:bg-[#0D100E]">
         <div className="relative w-full h-full overflow-hidden">
 
@@ -464,13 +573,16 @@ function LoginForm() {
             src="/images/auth/login-hero-scene-v5.jpg"
             alt="AkwaabaHomes Sign In"
             fill
-            priority
+            loading="lazy"
+          fetchPriority="low"
+
             className="object-fill pointer-events-none select-none"
-            sizes="(max-width: 768px) 100vw, 256px"
-/>
+            sizes="(min-width: 1024px) 60vw, 1px"
+          />
 
           {/* 2. Interactive Logo Link Overlay (top-left) */}
           <Link
+            prefetch={false}
             href="/"
             title="AkwaabaHomes Home"
             className="absolute flex items-center gap-2.5 group rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A34A] z-20"
@@ -486,7 +598,6 @@ function LoginForm() {
                 width={44}
                 height={44}
                 className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-                priority
               />
             </div>
             <div className="flex flex-col leading-none">
@@ -617,6 +728,7 @@ function LoginForm() {
 
           {/* 4. Interactive Bottom-Left Arch Card */}
           <Link
+            prefetch={false}
             href="/properties"
             title="Explore Ghana accommodations"
             className="absolute z-20 flex items-center gap-3.5 bg-white/40 dark:bg-black/30 backdrop-blur-md rounded-2xl p-2.5 xl:p-3 border border-white/60 dark:border-zinc-700/60 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all group focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
@@ -632,9 +744,12 @@ function LoginForm() {
                 src="/images/auth/login-arch-photo.jpg"
                 alt="Independence Arch Ghana"
                 fill
+                loading="lazy"
+          fetchPriority="low"
+
                 className="object-cover group-hover:scale-105 transition duration-300"
-                sizes="(max-width: 768px) 100vw, 256px"
-/>
+                sizes="(min-width: 1024px) 128px, 1px"
+              />
             </div>
             <div className="flex flex-col justify-center min-w-0 pr-2">
               <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
@@ -657,7 +772,7 @@ function LoginForm() {
               height: '81.94%',
             }}
           >
-            {renderCardForm()}
+            {renderCardForm('desktop')}
           </div>
         </div>
       </div>
@@ -666,99 +781,10 @@ function LoginForm() {
           MOBILE / TABLET RESPONSIVE VIEW (< 1024px)
           Provides beautiful full scrolling experience on phones/tablets
          ──────────────────────────────────────────────────────────────── */}
-      <div className="lg:hidden flex flex-col w-full min-h-screen bg-white dark:bg-[#0D100E] pt-16">
-        {/* Mobile Top Header (Stationary & Blurred) */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 sticky top-0 bg-white/95 dark:bg-[#0D100E]/95 backdrop-blur-md z-30">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Image
-              src="/logo-light.png"
-              alt="AkwaabaHomes"
-              width={36}
-              height={36}
-              className="dark:hidden"
-            />
-            <Image
-              src="/logo.png"
-              alt="AkwaabaHomes"
-              width={36}
-              height={36}
-              className="hidden dark:block"
-            />
-            <div className="flex flex-col leading-none">
-              <span className="font-black text-base text-[#141816] dark:text-white">AkwaabaHomes</span>
-              <span className="text-[10px] font-medium text-[#3B6E5C] dark:text-emerald-400 mt-0.5">Live Well. Feel at Home.</span>
-            </div>
-          </Link>
-
-          {/* Mobile Theme Toggle */}
-          <button
-            type="button"
-            onClick={() => toggleTheme(!isDarkMode)}
-            className="p-2 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
-          >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
-          </button>
-        </div>
-
-        {/* Mobile Hero Banner */}
-        <div className="relative h-56 w-full overflow-hidden">
-          <Image
-            src="/images/auth/login-hero-woman-scene-v5.jpg"
-            alt="AkwaabaHomes Resident"
-            fill
-            priority
-            className="object-cover object-center"
-            sizes="(max-width: 768px) 100vw, 256px"
-/>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-          <div className="absolute bottom-3 left-4 right-4 text-white">
-            <h1 className="text-lg font-black leading-tight drop-shadow-sm">
-              Your Next Home is Just a Sign-In Away
-            </h1>
-            <p className="text-[11px] text-white/90 mt-0.5 font-medium">
-              Discover verified homes across Ghana.
-            </p>
-          </div>
-        </div>
-
-        {/* Mobile Standout Features Strip */}
-        <div className="px-4 pt-3 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900/80 px-2.5 py-1.5 rounded-xl border border-zinc-200/60 dark:border-zinc-800 shrink-0 shadow-2xs">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" />
-            <span className="text-[11px] font-bold text-zinc-900 dark:text-white">Verified Listings</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900/80 px-2.5 py-1.5 rounded-xl border border-zinc-200/60 dark:border-zinc-800 shrink-0 shadow-2xs">
-            <Headphones className="w-3.5 h-3.5 text-[#16A34A]" />
-            <span className="text-[11px] font-bold text-zinc-900 dark:text-white">24/7 Support</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-900/80 px-2.5 py-1.5 rounded-xl border border-zinc-200/60 dark:border-zinc-800 shrink-0 shadow-2xs">
-            <Handshake className="w-3.5 h-3.5 text-[#16A34A]" />
-            <span className="text-[11px] font-bold text-zinc-900 dark:text-white">Trusted</span>
-          </div>
-        </div>
-
-        {/* Mobile Card Form */}
-        <div className="flex-1 px-4 py-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-lg overflow-hidden">
-            {renderCardForm()}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF9F5] dark:bg-[#0D100E]">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-[#16A34A] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-zinc-400">Loading...</p>
-        </div>
-      </div>
-    }>
-      <LoginForm />
-    </Suspense>
-  );
+  return <LoginForm />;
 }

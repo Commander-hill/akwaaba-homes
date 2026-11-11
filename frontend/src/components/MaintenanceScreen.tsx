@@ -1,4 +1,5 @@
 'use client';
+import '@/app/secondary.css';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -6,7 +7,8 @@ import Link from 'next/link';
 import { Mail, Clock, Lock, ArrowRight, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
-import { useQueryClient } from '@tanstack/react-query';
+import { invalidatePublicResource } from '@/lib/publicFetch';
+import { getRegisteredQueryClient } from '@/lib/queryRegistry';
 
 interface MaintenanceScreenProps {
   estimatedEndTime?: Date;
@@ -16,7 +18,7 @@ interface MaintenanceScreenProps {
 export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScreenProps) {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
-  const queryClient = useQueryClient();
+  const queryClient = getRegisteredQueryClient();
 
   // Default estimated maintenance duration (e.g. 2 hours from now if no date provided)
   const targetTime = estimatedEndTime || new Date(Date.now() + 2 * 60 * 60 * 1000 + 45 * 60 * 1000);
@@ -69,7 +71,8 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
     if (!countdownExpired) return;
 
     const pollTimer = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ['public-config'] });
+      invalidatePublicResource('public-config');
+      getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['public-config'] });
     }, 2000);
 
     // Stop polling after 3 minutes (server should have deactivated by then)
@@ -79,7 +82,7 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
       clearInterval(pollTimer);
       clearTimeout(killTimer);
     };
-  }, [countdownExpired, queryClient]);
+  }, [countdownExpired]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
