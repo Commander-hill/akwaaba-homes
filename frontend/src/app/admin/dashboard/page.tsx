@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -39,6 +39,27 @@ export default function AdminDashboardPage() {
   const [timeRange, setTimeRange] = useState('Last 30 Days');
   const [timeRangeOpen, setTimeRangeOpen] = useState(false);
   const [actionQueueModalOpen, setActionQueueModalOpen] = useState(false);
+  const [chartReady, setChartReady] = useState(false);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = chartContainerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setChartReady(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setChartReady(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '80px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // 1. Executive Metrics Query
   const {
@@ -197,13 +218,14 @@ export default function AdminDashboardPage() {
         {/* Right background luxury building image */}
         <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[65%] lg:w-[60%] pointer-events-none opacity-90 dark:opacity-40">
           <Image
-            src="/images/admin/dashboard-hero-building.png"
+            src="/images/admin/dashboard-hero-building.webp"
             alt="AkwaabaHomes Administration"
             fill
+            unoptimized
             priority
             fetchPriority="high"
-            quality={65}
-            sizes="(max-width: 640px) 100vw, 60vw"
+            decoding="async"
+            sizes="(max-width: 640px) 384px, 60vw"
             className="object-contain object-right"
           />
         </div>
@@ -457,7 +479,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="relative h-56 w-full pt-2">
+          <div ref={chartContainerRef} className="relative h-56 w-full pt-2">
             {/* Callout Badge over peak: "18 Users" */}
             <div
               className="absolute z-10 pointer-events-none transform -translate-x-1/2"
@@ -468,7 +490,11 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <PlatformGrowthChart data={growthChartData} />
+            {chartReady ? (
+              <PlatformGrowthChart data={growthChartData} />
+            ) : (
+              <div className="h-56 w-full rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 animate-pulse" />
+            )}
           </div>
         </div>
 

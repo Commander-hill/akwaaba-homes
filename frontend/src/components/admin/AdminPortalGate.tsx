@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import '../../app/dashboard-admin.css';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -8,21 +9,42 @@ import api from '@/lib/axios';
 import BrandLoader from '@/components/BrandLoader';
 import AdminShell from '@/components/admin/AdminShell';
 import AdminInactivityLock from '@/components/admin/AdminInactivityLock';
-import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
 import { clearPublicResources } from '@/lib/publicFetch';
 import { getRegisteredQueryClient } from '@/lib/queryRegistry';
 
+const AdminPwaInstallPrompt = dynamic(() => import('@/components/AdminPwaInstallPrompt'), {
+  ssr: false,
+});
+
 const USER_CACHE_KEY = 'akwaaba_cached_user_v1';
 
+interface AdminPortalGateProps {
+  initialUser?: any;
+  initialFetchedAt?: number;
+  children: React.ReactNode;
+}
+
 /** Authenticated shell and stylesheet gate for /admin/* portal routes outside /admin/login. */
-export default function AdminPortalGate({ children }: { children: React.ReactNode }) {
+export default function AdminPortalGate({
+  initialUser = null,
+  initialFetchedAt,
+  children,
+}: AdminPortalGateProps) {
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [cachedAdmin, setCachedAdmin] = useState<any>(undefined);
+  const hasValidInitialUser =
+    initialUser?.role === 'ADMIN' || initialUser?.role === 'SUPER_ADMIN';
 
   useEffect(() => {
     setHydrated(true);
     try {
+      if (hasValidInitialUser) {
+        const serialized = JSON.stringify({ user: initialUser });
+        sessionStorage.setItem(USER_CACHE_KEY, serialized);
+        localStorage.setItem(USER_CACHE_KEY, serialized);
+        return;
+      }
       const raw = sessionStorage.getItem(USER_CACHE_KEY) || localStorage.getItem(USER_CACHE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -31,10 +53,12 @@ export default function AdminPortalGate({ children }: { children: React.ReactNod
         }
       }
     } catch {}
-  }, []);
+  }, [hasValidInitialUser, initialUser]);
 
   const { data: userResponse, isLoading, isFetching, error } = useQuery({
     queryKey: ['auth', 'me'],
+    initialData: hasValidInitialUser ? { user: initialUser } : undefined,
+    initialDataUpdatedAt: hasValidInitialUser ? initialFetchedAt : undefined,
     queryFn: async () => {
       try {
         const { data } = await api.get('/auth/me');
@@ -61,7 +85,10 @@ export default function AdminPortalGate({ children }: { children: React.ReactNod
     staleTime: 5 * 60 * 1000,
   });
 
-  const effectiveResponse = hydrated ? (userResponse || cachedAdmin) : undefined;
+  const effectiveResponse =
+    userResponse ||
+    (hasValidInitialUser ? { user: initialUser } : undefined) ||
+    (hydrated ? cachedAdmin : undefined);
   const user = error ? undefined : effectiveResponse?.user;
 
   useEffect(() => {
@@ -74,7 +101,7 @@ export default function AdminPortalGate({ children }: { children: React.ReactNod
     }
   }, [userResponse, isLoading, isFetching, error, router]);
 
-  if (!hydrated || (isLoading && !user)) {
+  if (!user && (!hydrated || isLoading)) {
     return <BrandLoader message="VERIFYING SECURITY CLEARANCE" fullScreen={true} />;
   }
 

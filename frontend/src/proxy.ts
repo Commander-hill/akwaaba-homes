@@ -1,0 +1,13 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+/** Pass the current pathname to /admin Server Components for route-scoped chrome isolation. */
+export function proxy(request: NextRequest) {
+  const headers = new Headers(request.headers);
+  headers.set('x-pathname', request.nextUrl.pathname);
+  return NextResponse.next({ request: { headers } });
+}
+
+export const config = {
+  matcher: ['/admin/:path*'],
+};
