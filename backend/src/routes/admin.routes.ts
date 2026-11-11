@@ -47,6 +47,8 @@ import {
   togglePropertyPhysicalVerification,
   createAdministrator,
   toggleAdminStatus,
+  createLandlord,
+  updateLandlordProfile,
   updateLandlordSettlement
 } from '../controllers/admin.controller';
 import { 
@@ -86,6 +88,8 @@ router.get('/search', searchEntities);
 
 // Users (Landlords & Tenants)
 router.get('/users', getAllUsers);
+router.post('/landlords', createLandlord);
+router.put('/landlords/:id', updateLandlordProfile);
 router.get('/users/:id', getUserById);
 router.put('/users/:id/suspend', toggleUserSuspension);
 router.put('/users/:id/lock', toggleUserProfileLock);

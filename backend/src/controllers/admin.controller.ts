@@ -582,7 +582,14 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
           landlordDocUrl: true,
           isVerifiedLandlord: true,
           landlordVerificationStatus: true,
+          hostEntityType: true,
+          businessName: true,
+          primaryRegion: true,
+          portfolioSize: true,
           reputationScore: true,
+          _count: {
+            select: { properties: true }
+          },
           createdAt: true
         }
       })
@@ -1693,6 +1700,151 @@ export const verifyLandlord = async (req: Request, res: Response): Promise<void>
     });
   } catch (error) {
     console.error('Error verifying landlord:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/** Create a landlord user account from the Admin Landlords workspace. */
+export const createLandlord = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      password,
+      businessName,
+      primaryRegion,
+      hostEntityType,
+      isVerifiedLandlord
+    } = req.body;
+
+    if (!firstName || !lastName || !email || !password) {
+      res.status(400).json({ message: 'First name, last name, email, and temporary password are required.' });
+      return;
+    }
+
+    if (String(password).length < 8) {
+      res.status(400).json({ message: 'Temporary password must be at least 8 characters.' });
+      return;
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (existing) {
+      res.status(409).json({ message: 'An account with this email address already exists.' });
+      return;
+    }
+
+    const bcrypt = await import('bcrypt');
+    const passwordHash = await bcrypt.hash(String(password), 10);
+    const verified = Boolean(isVerifiedLandlord);
+
+    const landlord = await prisma.user.create({
+      data: {
+        firstName: String(firstName).trim(),
+        lastName: String(lastName).trim(),
+        email: normalizedEmail,
+        phoneNumber: phoneNumber ? String(phoneNumber).trim() : null,
+        passwordHash,
+        role: 'LANDLORD',
+        businessName: businessName ? String(businessName).trim() : null,
+        primaryRegion: primaryRegion ? String(primaryRegion).trim() : null,
+        hostEntityType: hostEntityType ? String(hostEntityType).trim() : 'INDIVIDUAL_OWNER',
+        isEmailVerified: true,
+        isVerifiedLandlord: verified,
+        landlordVerificationStatus: verified ? 'VERIFIED' : 'PENDING'
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        role: true,
+        businessName: true,
+        primaryRegion: true,
+        hostEntityType: true,
+        isVerifiedLandlord: true,
+        landlordVerificationStatus: true,
+        createdAt: true
+      }
+    });
+
+    appCache.flushAll();
+    await logAudit(
+      req.user.id,
+      'CREATE_LANDLORD',
+      'User',
+      landlord.id,
+      null,
+      { email: normalizedEmail, primaryRegion: landlord.primaryRegion, hostEntityType: landlord.hostEntityType },
+      req.ip || req.socket.remoteAddress
+    );
+
+    res.status(201).json({ message: 'Landlord account created successfully.', landlord });
+  } catch (error) {
+    console.error('Error creating landlord:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/** Update basic landlord profile metadata from the Admin Landlords table. */
+export const updateLandlordProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, phoneNumber, businessName, primaryRegion, hostEntityType } = req.body;
+
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing || existing.role !== 'LANDLORD') {
+      res.status(404).json({ message: 'Landlord not found.' });
+      return;
+    }
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(firstName !== undefined ? { firstName: String(firstName).trim() } : {}),
+        ...(lastName !== undefined ? { lastName: String(lastName).trim() } : {}),
+        ...(phoneNumber !== undefined ? { phoneNumber: phoneNumber ? String(phoneNumber).trim() : null } : {}),
+        ...(businessName !== undefined ? { businessName: businessName ? String(businessName).trim() : null } : {}),
+        ...(primaryRegion !== undefined ? { primaryRegion: primaryRegion ? String(primaryRegion).trim() : null } : {}),
+        ...(hostEntityType !== undefined ? { hostEntityType: hostEntityType ? String(hostEntityType).trim() : null } : {})
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        businessName: true,
+        primaryRegion: true,
+        hostEntityType: true
+      }
+    });
+
+    appCache.del(`user:me:${id}`);
+    appCache.flushAll();
+    await logAudit(
+      req.user.id,
+      'UPDATE_LANDLORD_PROFILE',
+      'User',
+      id,
+      {
+        firstName: existing.firstName,
+        lastName: existing.lastName,
+        phoneNumber: existing.phoneNumber,
+        businessName: existing.businessName,
+        primaryRegion: existing.primaryRegion,
+        hostEntityType: existing.hostEntityType
+      },
+      updated,
+      req.ip || req.socket.remoteAddress
+    );
+
+    res.status(200).json({ message: 'Landlord details updated.', landlord: updated });
+  } catch (error) {
+    console.error('Error updating landlord profile:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
