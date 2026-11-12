@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io';
 import prisma from './utils/prisma';
 import jwt from 'jsonwebtoken';
 import { parse } from 'cookie';
+import { isOriginAllowed } from './utils/cors';
 
 interface SocketUser {
   id: string;
@@ -22,7 +23,12 @@ let io: Server;
 export const initializeSocket = (server: HttpServer) => {
   io = new Server(server, {
     cors: {
-      origin: true, // Allow any origin, reflecting it back (matches Express config)
+      origin: (origin, callback) => {
+        if (!origin || isOriginAllowed(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error(`CORS policy: Socket origin ${origin} is not authorized`));
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
@@ -109,7 +115,7 @@ export const initializeSocket = (server: HttpServer) => {
           return;
         }
 
-        const isAuthorized = conv.tenantId === userId || conv.landlordId === userId || socket.user?.role === 'ADMIN';
+        const isAuthorized = conv.tenantId === userId || conv.landlordId === userId || ['ADMIN', 'SUPER_ADMIN'].includes(socket.user?.role || '');
         if (!isAuthorized) {
           console.warn(`🚨 Unauthorized socket room join attempt by user ${userId} for conversation ${conversationId}`);
           socket.emit('error', { message: 'Forbidden: You are not a participant in this conversation' });

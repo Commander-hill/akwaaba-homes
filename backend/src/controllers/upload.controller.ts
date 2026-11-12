@@ -9,6 +9,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
 import dotenv from 'dotenv';
 import { verifySignedDocumentUrl } from '../utils/security.service';
+import { isOriginAllowed } from '../utils/cors';
 
 dotenv.config(); // Ensure env is loaded even if imported early
 
@@ -265,7 +266,11 @@ export const serveSecureDocument = async (req: Request, res: Response): Promise<
     if (documentResponse.headers['content-length']) {
       res.setHeader('Content-Length', documentResponse.headers['content-length']);
     }
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    const reqOrigin = req.headers.origin;
+    if (reqOrigin && isOriginAllowed(reqOrigin)) {
+      res.setHeader('Access-Control-Allow-Origin', reqOrigin);
+      res.setHeader('Vary', 'Origin');
+    }
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');

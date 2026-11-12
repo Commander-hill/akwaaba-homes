@@ -93,6 +93,7 @@ import billSplitRoutes from './routes/billSplit.routes';
 import { apiRateLimiter, adminRateLimiter, uploadRateLimiter } from './middleware/rateLimiter.middleware';
 import { xssSanitizer } from './middleware/xss.middleware';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
+import { isOriginAllowed } from './utils/cors';
 import { checkMaintenanceMode } from './middleware/config.middleware';
 import { getSystemConfig } from './utils/config.service';
 import { notifyContactInquiry } from './utils/notification.service';
@@ -131,7 +132,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://js.paystack.co'],
+        scriptSrc: ["'self'", 'https://js.paystack.co'],
         frameSrc: ["'self'", 'https://checkout.paystack.com', 'https://*.paystack.co'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', 'https://*.tile.openstreetmap.org', 'https://*.openstreetmap.org'],
         connectSrc: ["'self'", 'wss:', 'ws:', 'https://checkout.paystack.com', 'https://api.paystack.co'],
@@ -193,7 +194,7 @@ app.use(
 
       // Allow private LAN origins in development (e.g. mobile/tablet testing on 192.168.x.x, 10.x.x.x, 172.16-31.x.x)
       const isPrivateNetwork = /^(http:\/\/|https:\/\/)?(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(cleanOrigin);
-      if (isPrivateNetwork) {
+      if (!isProduction && isPrivateNetwork) {
         return callback(null, true);
       }
 
@@ -224,6 +225,42 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// ─── CSRF Origin Guard for Cookie-Authenticated State-Changing Requests ─────
+const SAFE_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const CSRF_EXEMPT_PATHS = [
+  '/api/v1/transactions/webhook',
+  '/api/v1/payouts/webhook',
+  '/api/v1/subscriptions/webhook',
+];
+app.use((req: Request, res: Response, next) => {
+  if (SAFE_HTTP_METHODS.has(req.method)) return next();
+  if (CSRF_EXEMPT_PATHS.some((p) => req.path.startsWith(p))) return next();
+
+  const hasAuthCookies = Boolean(req.cookies?.accessToken || req.cookies?.refreshToken);
+  const hasBearerHeader = Boolean(req.headers.authorization?.startsWith('Bearer '));
+  if (!hasAuthCookies || hasBearerHeader) return next();
+
+  const rawOrigin = req.headers.origin || (() => {
+    const ref = req.headers.referer;
+    if (!ref) return null;
+    try { return new URL(ref).origin; } catch { return null; }
+  })();
+
+  if (!rawOrigin) {
+    if (!isProduction) return next();
+    res.status(403).json({ message: 'CSRF validation failed: missing Origin header.' });
+    return;
+  }
+
+  if (!isOriginAllowed(rawOrigin)) {
+    console.warn(`🚨 Blocked potential CSRF ${req.method} ${req.originalUrl} from origin: ${rawOrigin}`);
+    res.status(403).json({ message: 'CSRF validation failed: unauthorized origin.' });
+    return;
+  }
+
+  next();
+});
 
 // ─── HTTP Compression ────────────────────────────────────────────────────────
 app.use(compression());
