@@ -1494,7 +1494,7 @@ export const getAllBookings = async (req: Request, res: Response): Promise<void>
             pricePeriod: true,
             type: true,
             landlord: { 
-              select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } 
+              select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } 
             } 
           } 
         },
@@ -3022,7 +3022,7 @@ export const getAllPayouts = async (req: Request, res: Response): Promise<void> 
         where,
         include: {
           landlord: {
-            select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true }
+            select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true }
           }
         },
         orderBy: { createdAt: 'desc' },
