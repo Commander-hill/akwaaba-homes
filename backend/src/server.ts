@@ -5,7 +5,10 @@ import cors from 'cors';
 // ─── Startup environment validation & security constraints ───────────────────
 import crypto from 'crypto';
 
-// If REFRESH_JWT_SECRET is missing, safely fallback to JWT_SECRET
+// If REFRESH_JWT_SECRET is missing, safely fallback to JWT_SECRET (warn in production)
+if (process.env.NODE_ENV === 'production' && (!process.env.REFRESH_JWT_SECRET || process.env.REFRESH_JWT_SECRET === process.env.JWT_SECRET)) {
+  console.warn('⚠️ SECURITY WARNING: REFRESH_JWT_SECRET should be set to a distinct high-entropy secret from JWT_SECRET in production.');
+}
 if (!process.env.REFRESH_JWT_SECRET && process.env.JWT_SECRET) {
   process.env.REFRESH_JWT_SECRET = process.env.JWT_SECRET;
 }

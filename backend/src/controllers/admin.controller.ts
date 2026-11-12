@@ -579,7 +579,7 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
       prisma.user.findMany({
         where,
         orderBy: { createdAt: 'desc' },
-        ...(isPaginated ? { skip: skipNum, take: takeNum } : {}),
+        ...(isPaginated ? { skip: skipNum, take: takeNum } : { take: 500 }),
         select: {
           id: true,
           firstName: true,
@@ -1522,6 +1522,7 @@ export const getAllBookings = async (req: Request, res: Response): Promise<void>
 export const getAllSubscriptions = async (req: Request, res: Response): Promise<void> => {
   try {
     const subscriptions = await prisma.propertySubscription.findMany({
+      take: 500,
       include: {
         property: {
           include: {
@@ -1559,6 +1560,7 @@ export const getAllSubscriptions = async (req: Request, res: Response): Promise<
 export const getAllTransactions = async (req: Request, res: Response): Promise<void> => {
   try {
     const transactions = await prisma.transaction.findMany({
+      take: 500,
       include: {
         tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
         landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
@@ -3636,17 +3638,43 @@ export const getLiveHealthHeartbeat = async (req: Request, res: Response): Promi
 export const getWebhookDLQ = async (req: Request, res: Response): Promise<void> => {
   try {
     // Look up DLQ entries from AuditLog table under entity 'WebhookDLQ'
-    const dlqLogs = await prisma.auditLog.findMany({
-      where: {
-        entity: 'WebhookDLQ'
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 50
-    });
+    const [dlqLogs, retriedLogs] = await Promise.all([
+      prisma.auditLog.findMany({
+        where: {
+          entity: 'WebhookDLQ',
+          action: { not: 'ADMIN_WEBHOOK_DLQ_RETRIED' }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50
+      }),
+      prisma.auditLog.findMany({
+        where: {
+          entity: 'WebhookDLQ',
+          action: 'ADMIN_WEBHOOK_DLQ_RETRIED'
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 200
+      })
+    ]);
+
+    const retryStatsByDlqId = new Map<string, { count: number; lastRetriedAt: Date }>();
+    for (const retryLog of retriedLogs) {
+      if (!retryLog.entityId) continue;
+      const existing = retryStatsByDlqId.get(retryLog.entityId);
+      if (!existing) {
+        retryStatsByDlqId.set(retryLog.entityId, { count: 1, lastRetriedAt: retryLog.createdAt });
+      } else {
+        existing.count += 1;
+        if (retryLog.createdAt > existing.lastRetriedAt) {
+          existing.lastRetriedAt = retryLog.createdAt;
+        }
+      }
+    }
 
     let items = dlqLogs.map((log) => {
       const metadata = safeJsonParse(log.oldData, {});
       const payload = safeJsonParse(log.newData, {});
+      const retryStats = retryStatsByDlqId.get(log.id);
       return {
         id: log.id,
         provider: metadata.provider || 'Paystack',
@@ -3654,10 +3682,10 @@ export const getWebhookDLQ = async (req: Request, res: Response): Promise<void> 
         reference: log.entityId || 'REF-N/A',
         failureReason: metadata.failureReason || 'Webhook delivery timeout',
         payload,
-        retryCount: metadata.retryCount || 0,
-        status: metadata.status || 'PENDING_RETRY',
+        retryCount: (metadata.retryCount || 0) + (retryStats?.count || 0),
+        status: retryStats ? 'RESOLVED' : (metadata.status || 'PENDING_RETRY'),
         createdAt: log.createdAt,
-        lastRetriedAt: metadata.lastRetriedAt || null
+        lastRetriedAt: retryStats ? retryStats.lastRetriedAt : (metadata.lastRetriedAt || null)
       };
     });
 
@@ -3756,19 +3784,6 @@ export const retryWebhookDelivery = async (req: Request, res: Response): Promise
         }
       }
 
-      // Update AuditLog record as RESOLVED
-      await prisma.auditLog.update({
-        where: { id },
-        data: {
-          oldData: JSON.stringify({
-            ...metadata,
-            status: 'RESOLVED',
-            retryCount: (metadata.retryCount || 0) + 1,
-            lastRetriedAt: new Date().toISOString(),
-            resolvedBy: req.user.id
-          })
-        }
-      });
     }
 
     await logAudit(

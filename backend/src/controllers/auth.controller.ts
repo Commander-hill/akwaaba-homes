@@ -582,6 +582,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
           where: { id: user.id },
           data: updateData
         });
+        await logAudit(user.id, 'LOGIN_FAILED_PASSWORD', 'User', user.id, null, { attempts: newAttempts, remaining: 5 - newAttempts }, req.ip).catch(() => {});
         const remaining = 5 - newAttempts;
         res.status(401).json({ 
           message: `Invalid credentials. (${remaining} attempt${remaining === 1 ? '' : 's'} remaining before temporary account lockout)` 
@@ -861,6 +862,7 @@ export const login2FA = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (!isTotpValid && !isRecoveryValid) {
+      await logAudit(user.id, 'LOGIN_FAILED_2FA', 'User', user.id, null, { method: /^\d{6}$/.test(cleanCode) ? 'totp' : 'recovery' }, req.ip).catch(() => {});
       res.status(401).json({ message: 'Invalid 2FA code or recovery code. Please try again.' });
       return;
     }

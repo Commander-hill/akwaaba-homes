@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, verifyStepUpToken } from '../utils/jwt';
+import { logAudit } from '../utils/auditLogger';
 import prisma from '../utils/prisma';
 
 // Extend the Express Request interface to include the user & rawBody
@@ -108,6 +109,7 @@ export const requireStepUpAuth = (req: Request, res: Response, next: NextFunctio
   const stepUpToken = (req.headers['x-step-up-token'] as string) || req.body?.stepUpToken;
 
   if (!stepUpToken) {
+    logAudit(req.user.id, 'STEP_UP_AUTH_MISSING', 'AdminSecurity', req.originalUrl || 'unknown', null, { method: req.method }, req.ip).catch(() => {});
     res.status(403).json({
       requireStepUp: true,
       message: 'Step-up authentication required under Act 843 and Ghana Cyber Security Act governance. Please confirm your administrator credentials to proceed with this critical action.'
@@ -117,6 +119,7 @@ export const requireStepUpAuth = (req: Request, res: Response, next: NextFunctio
 
   const decoded = verifyStepUpToken(stepUpToken) as any;
   if (!decoded || decoded.purpose !== 'STEP_UP_AUTHENTICATION' || decoded.adminId !== req.user.id) {
+    logAudit(req.user.id, 'STEP_UP_AUTH_INVALID', 'AdminSecurity', req.originalUrl || 'unknown', null, { method: req.method }, req.ip).catch(() => {});
     res.status(403).json({
       requireStepUp: true,
       message: 'Step-up authentication token has expired or is invalid. Please re-authenticate.'
