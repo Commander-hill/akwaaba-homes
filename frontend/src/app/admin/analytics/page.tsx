@@ -58,7 +58,7 @@ export default function AdminAnalyticsPage() {
   const geographicalDensity = analytics?.geographicalDensity || [];
   const monthlyTrends = analytics?.monthlyTrends || [];
   const categoryMix = analytics?.categoryMix || [];
-  const deedExecutionRate = analytics?.deedExecutionRate ?? 100;
+  const deedExecutionRate = analytics?.deedExecutionRate ?? 0;
 
   return (
     <div className="space-y-6">

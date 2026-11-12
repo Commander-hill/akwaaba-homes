@@ -105,9 +105,10 @@ export default function AdminReviewsPage() {
     if (list.length === 0) {
       return {
         total: 0,
-        avg: 4.8,
-        positivePct: 96,
-        verifiedPct: 100,
+        avg: 0,
+        positiveCount: 0,
+        positivePct: 0,
+        verifiedPct: 0,
       };
     }
     let sum = 0;
@@ -115,7 +116,7 @@ export default function AdminReviewsPage() {
     let verified = 0;
 
     list.forEach((r: any) => {
-      const rating = Number(r.rating || 5);
+      const rating = Number(r.rating || 0);
       sum += rating;
       if (rating >= 4) positive += 1;
       if (r.bookingId || r.booking) verified += 1;
@@ -124,6 +125,7 @@ export default function AdminReviewsPage() {
     return {
       total: list.length,
       avg: Number((sum / list.length).toFixed(1)),
+      positiveCount: positive,
       positivePct: Math.round((positive / list.length) * 100),
       verifiedPct: Math.round((verified / list.length) * 100),
     };
@@ -152,23 +154,66 @@ export default function AdminReviewsPage() {
   }, [filteredReviews, showAll]);
 
   const chartPoints = useMemo(() => {
-    const base = stats.avg || 4.8;
-    const months =
-      chartWindow === '6M'
-        ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-        : ['Jul', 'Sep', 'Nov', 'Jan', 'Mar', 'May'];
-    const deltas = [-0.6, -0.4, -0.1, 0, 0, 0];
-    return months.map((label, i) => ({
-      label,
-      val: Math.max(3.0, Math.min(5.0, Number((base + deltas[i]).toFixed(1)))),
-    }));
-  }, [stats.avg, chartWindow]);
+    const now = new Date();
+    const bucketMonths = chartWindow === '6M' ? 1 : 2;
+    const list = Array.isArray(reviews) ? reviews : [];
 
-  const loveHighlights = [
-    'Great location',
-    'Responsive host',
-    'Well-maintained property',
-  ];
+    const buckets = Array.from({ length: 6 }, (_, i) => {
+      const monthsAgo = (5 - i) * bucketMonths;
+      const start = new Date(now.getFullYear(), now.getMonth() - monthsAgo - (bucketMonths - 1), 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59, 999);
+      const label = end.toLocaleDateString('en-US', { month: 'short' });
+      let sum = 0;
+      let count = 0;
+      list.forEach((r: any) => {
+        const d = new Date(r.createdAt);
+        if (!Number.isNaN(d.getTime()) && d >= start && d <= end) {
+          sum += Number(r.rating || 0);
+          count += 1;
+        }
+      });
+      const val = count > 0 ? Number((sum / count).toFixed(1)) : 0;
+      const y = val > 0 ? Math.max(22, Math.min(118, Math.round(105 - (val - 3.0) * 40))) : 122;
+      return {
+        label,
+        val,
+        count,
+        x: 36 + i * 53,
+        y,
+      };
+    });
+
+    const linePath = buckets
+      .map((pt, idx) => `${idx === 0 ? 'M' : 'L'}${pt.x} ${pt.y}`)
+      .join(' ');
+    const areaPath = `${linePath} L${buckets[buckets.length - 1].x} 126 L${buckets[0].x} 126 Z`;
+
+    return { points: buckets, linePath, areaPath };
+  }, [reviews, chartWindow]);
+
+  const loveHighlights = useMemo(() => {
+    const list = Array.isArray(reviews) ? reviews : [];
+    if (list.length === 0) return [];
+    const themes = [
+      { label: 'Great location', keywords: ['location', 'neighborhood', 'area', 'central', 'close to'] },
+      { label: 'Responsive host', keywords: ['host', 'landlord', 'responsive', 'communication', 'helpful'] },
+      { label: 'Well-maintained property', keywords: ['clean', 'maintained', 'well-kept', 'tidy', 'neat'] },
+      { label: 'Safe & secure', keywords: ['safe', 'secure', 'security', 'quiet'] },
+      { label: 'Smooth booking process', keywords: ['smooth', 'easy', 'process', 'check-in', 'recommend'] },
+    ];
+    return themes
+      .map((t) => ({
+        label: t.label,
+        hits: list.filter((r: any) => {
+          const text = String(r.comment || '').toLowerCase();
+          return t.keywords.some((kw) => text.includes(kw));
+        }).length,
+      }))
+      .filter((t) => t.hits > 0)
+      .sort((a, b) => b.hits - a.hits)
+      .slice(0, 3)
+      .map((t) => t.label);
+  }, [reviews]);
 
   return (
     <div className="space-y-5 pb-12">
@@ -239,7 +284,7 @@ export default function AdminReviewsPage() {
                 Total Reviews
               </span>
               <span className="text-[11px] font-bold text-[#059669] dark:text-emerald-400">
-                ↑ +12%
+                {stats.positiveCount} positive
               </span>
             </div>
           </div>
@@ -512,24 +557,22 @@ export default function AdminReviewsPage() {
                 <text x="2" y="108" fontSize="10" fill="rgba(255,255,255,0.7)">3.0</text>
 
                 <path
-                  d="M36 96 C70 90, 95 72, 130 62 C165 52, 200 44, 240 44 C270 44, 290 42, 304 42 L304 126 L36 126 Z"
+                  d={chartPoints.areaPath}
                   fill="url(#reviewAreaGrad)"
                 />
                 <path
-                  d="M36 96 C70 90, 95 72, 130 62 C165 52, 200 44, 240 44 C270 44, 290 42, 304 42"
+                  d={chartPoints.linePath}
                   fill="none"
                   stroke="#34d399"
                   strokeWidth="2.5"
                   strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
 
-                {chartPoints.map((pt, idx) => {
-                  const x = 36 + idx * 53;
-                  const y = 96 - idx * 11;
-                  return (
+                {chartPoints.points.map((pt) => (
                     <g key={pt.label}>
-                      {idx >= 1 && (
-                        <g transform={`translate(${x - 14}, ${y - 24})`}>
+                      {pt.count > 0 && (
+                        <g transform={`translate(${pt.x - 14}, ${pt.y - 24})`}>
                           <rect width="28" height="16" rx="6" fill="#ffffff" />
                           <text
                             x="14"
@@ -543,13 +586,12 @@ export default function AdminReviewsPage() {
                           </text>
                         </g>
                       )}
-                      <circle cx={x} cy={y} r="4" fill="#34d399" stroke="#ffffff" strokeWidth="1.5" />
-                      <text x={x} y="144" textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.75)">
+                      <circle cx={pt.x} cy={pt.y} r="4" fill="#34d399" stroke="#ffffff" strokeWidth="1.5" />
+                      <text x={pt.x} y="144" textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.75)">
                         {pt.label}
                       </text>
                     </g>
-                  );
-                })}
+                ))}
               </svg>
             </div>
 
@@ -559,9 +601,19 @@ export default function AdminReviewsPage() {
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-xs font-black text-zinc-900">Rated Excellent!</div>
+                <div className="text-xs font-black text-zinc-900">
+                  {stats.total === 0
+                    ? 'No Ratings Yet'
+                    : stats.avg >= 4.5
+                    ? 'Rated Excellent!'
+                    : stats.avg >= 3.5
+                    ? 'Good Standing'
+                    : 'Needs Attention'}
+                </div>
                 <div className="text-[11px] text-zinc-600">
-                  Consistent high satisfaction across verified stays.
+                  {stats.total === 0
+                    ? 'Tenant ratings will appear here once reviews are submitted.'
+                    : `${stats.positivePct}% positive feedback across ${stats.total} reviews.`}
                 </div>
               </div>
             </div>
@@ -572,14 +624,20 @@ export default function AdminReviewsPage() {
             <h2 className="text-sm font-bold text-zinc-900 dark:text-white mb-3.5">
               What tenants love most
             </h2>
-            <ul className="space-y-2.5 text-xs font-medium text-zinc-700 dark:text-zinc-200 relative z-10">
-              {loveHighlights.map((item) => (
-                <li key={item} className="flex items-center gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#059669] dark:text-emerald-400 shrink-0" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            {loveHighlights.length === 0 ? (
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 relative z-10">
+                No tenant feedback highlights yet.
+              </p>
+            ) : (
+              <ul className="space-y-2.5 text-xs font-medium text-zinc-700 dark:text-zinc-200 relative z-10">
+                {loveHighlights.map((item) => (
+                  <li key={item} className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#059669] dark:text-emerald-400 shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             <div className="absolute right-4 bottom-3 opacity-15 pointer-events-none select-none flex flex-col items-center">
               <Heart className="w-6 h-6 text-[#059669] fill-[#059669] mb-0.5" />

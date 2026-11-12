@@ -127,13 +127,67 @@ export default function AdminPayoutsPage() {
   const summaryRates = useMemo(() => {
     const total = stats.successCount + stats.pendingCount + stats.processingCount + stats.failedCount;
     if (total === 0) {
-      return { successPct: 100, pendingPct: 0, failedPct: 0 };
+      return { successPct: 0, pendingPct: 0, failedPct: 0 };
     }
     const successPct = Math.round((stats.successCount / total) * 100);
     const pendingPct = Math.round(((stats.pendingCount + stats.processingCount) / total) * 100);
     const failedPct = Math.max(0, 100 - successPct - pendingPct);
     return { successPct, pendingPct, failedPct };
   }, [stats]);
+
+  const overviewChart = useMemo(() => {
+    const bucketCount = 6;
+    const now = Date.now();
+    const totalMs = (dateRange === '7D' ? 7 : dateRange === '30D' ? 30 : dateRange === '90D' ? 90 : 180) * 86400000;
+    const stepMs = totalMs / bucketCount;
+    const buckets = Array.from({ length: bucketCount }, (_, idx) => {
+      const bucketEnd = now - (bucketCount - 1 - idx) * stepMs;
+      const d = new Date(bucketEnd);
+      return {
+        label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        disbursed: 0,
+        pending: 0,
+      };
+    });
+
+    filteredPayouts.forEach((item: any) => {
+      const ts = new Date(item.createdAt).getTime();
+      if (Number.isNaN(ts)) return;
+      const offsetFromStart = ts - (now - totalMs);
+      const rawIdx = Math.floor(offsetFromStart / stepMs);
+      const idx = Math.max(0, Math.min(bucketCount - 1, rawIdx));
+      const amt = Number(item.amount || 0);
+      if (item.status === 'SUCCESS') buckets[idx].disbursed += amt;
+      else if (item.status === 'PENDING' || item.status === 'PROCESSING') buckets[idx].pending += amt;
+    });
+
+    const maxVal = Math.max(1, ...buckets.map((b) => Math.max(b.disbursed, b.pending)));
+    const xStart = 42;
+    const xEnd = 504;
+    const yTop = 32;
+    const yBottom = 160;
+    const toPoint = (idx: number, val: number) => {
+      const x = xStart + (idx * (xEnd - xStart)) / (bucketCount - 1);
+      const y = yBottom - (val / maxVal) * (yBottom - yTop);
+      return { x: Number(x.toFixed(1)), y: Number(y.toFixed(1)) };
+    };
+
+    const dPts = buckets.map((b, i) => toPoint(i, b.disbursed));
+    const pPts = buckets.map((b, i) => toPoint(i, b.pending));
+    const toLine = (pts: { x: number; y: number }[]) => pts.map((pt, i) => (i === 0 ? 'M' : 'L') + pt.x + ' ' + pt.y).join(' ');
+    const toArea = (pts: { x: number; y: number }[]) => toLine(pts) + ' L' + pts[pts.length - 1].x + ' ' + yBottom + ' L' + pts[0].x + ' ' + yBottom + ' Z';
+
+    return {
+      buckets,
+      maxVal,
+      dLine: toLine(dPts),
+      dArea: toArea(dPts),
+      pLine: toLine(pPts),
+      pArea: toArea(pPts),
+      dLast: dPts[dPts.length - 1],
+      pLast: pPts[pPts.length - 1],
+    };
+  }, [filteredPayouts, dateRange]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -379,11 +433,10 @@ export default function AdminPayoutsPage() {
                     </linearGradient>
                   </defs>
 
-                  {/* Horizontal gridlines */}
-                  {[30, 70, 110, 150].map((y) => (
+                  {[32, 74, 117, 160].map((y) => (
                     <line
                       key={y}
-                      x1="38"
+                      x1="40"
                       y1={y}
                       x2="510"
                       y2={y}
@@ -393,47 +446,32 @@ export default function AdminPayoutsPage() {
                     />
                   ))}
 
-                  {/* Y-axis labels */}
-                  <text x="6" y="34" fontSize="10" fill="#94a3b8">80K</text>
-                  <text x="6" y="74" fontSize="10" fill="#94a3b8">60K</text>
-                  <text x="6" y="114" fontSize="10" fill="#94a3b8">40K</text>
-                  <text x="6" y="154" fontSize="10" fill="#94a3b8">20K</text>
+                  <text x="4" y="36" fontSize="10" fill="#94a3b8">{Math.round(overviewChart.maxVal)}</text>
+                  <text x="4" y="78" fontSize="10" fill="#94a3b8">{Math.round(overviewChart.maxVal * 0.66)}</text>
+                  <text x="4" y="121" fontSize="10" fill="#94a3b8">{Math.round(overviewChart.maxVal * 0.33)}</text>
+                  <text x="4" y="162" fontSize="10" fill="#94a3b8">0</text>
 
-                  {/* Disbursed area + line */}
-                  <path
-                    d="M40 120 C75 110, 100 90, 130 96 C160 102, 185 84, 215 88 C245 92, 270 55, 300 66 C330 78, 355 62, 385 68 C415 74, 455 58, 505 56 L505 162 L40 162 Z"
-                    fill="url(#payoutGreenGrad)"
-                  />
-                  <path
-                    d="M40 120 C75 110, 100 90, 130 96 C160 102, 185 84, 215 88 C245 92, 270 55, 300 66 C330 78, 355 62, 385 68 C415 74, 455 58, 505 56"
-                    fill="none"
-                    stroke="#16A34A"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
+                  <path d={overviewChart.dArea} fill="url(#payoutGreenGrad)" />
+                  <path d={overviewChart.dLine} fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
-                  {/* Pending area + line */}
-                  <path
-                    d="M40 148 C80 145, 110 142, 145 144 C180 146, 210 130, 245 132 C280 134, 310 112, 345 115 C380 118, 425 104, 505 84 L505 162 L40 162 Z"
-                    fill="url(#payoutBlueGrad)"
-                  />
-                  <path
-                    d="M40 148 C80 145, 110 142, 145 144 C180 146, 210 130, 245 132 C280 134, 310 112, 345 115 C380 118, 425 104, 505 84"
-                    fill="none"
-                    stroke="#2563EB"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                  />
+                  <path d={overviewChart.pArea} fill="url(#payoutBlueGrad)" />
+                  <path d={overviewChart.pLine} fill="none" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
 
-                  {/* End dots */}
-                  <circle cx="505" cy="56" r="4" fill="#16A34A" stroke="#ffffff" strokeWidth="1.5" />
-                  <circle cx="505" cy="84" r="3.5" fill="#2563EB" stroke="#ffffff" strokeWidth="1.5" />
+                  <circle cx={overviewChart.dLast.x} cy={overviewChart.dLast.y} r="4" fill="#16A34A" stroke="#ffffff" strokeWidth="1.5" />
+                  <circle cx={overviewChart.pLast.x} cy={overviewChart.pLast.y} r="3.5" fill="#2563EB" stroke="#ffffff" strokeWidth="1.5" />
 
-                  {/* X-axis dates */}
-                  <text x="40" y="182" fontSize="10" fill="#94a3b8">Wk 1</text>
-                  <text x="160" y="182" fontSize="10" fill="#94a3b8">Wk 2</text>
-                  <text x="290" y="182" fontSize="10" fill="#94a3b8">Wk 3</text>
-                  <text x="420" y="182" fontSize="10" fill="#94a3b8">Wk 4</text>
+                  {overviewChart.buckets.map((b, idx) => (
+                    <text
+                      key={b.label + idx}
+                      x={42 + (idx * 462) / 5}
+                      y="182"
+                      textAnchor="middle"
+                      fontSize="10"
+                      fill="#94a3b8"
+                    >
+                      {b.label}
+                    </text>
+                  ))}
                 </svg>
               </div>
             </div>

@@ -183,51 +183,15 @@ export default function AdminActivityPage() {
     const titleAuditRate = Math.min(100, Math.round((verifiedProperties / Math.max(1, totalProperties)) * 100));
 
     return {
-      kycRate: isNaN(kycRate) ? 85 : kycRate,
-      titleAuditRate: isNaN(titleAuditRate) ? 90 : titleAuditRate,
+      kycRate: isNaN(kycRate) ? 0 : kycRate,
+      titleAuditRate: isNaN(titleAuditRate) ? 0 : titleAuditRate,
       totalTenants: Math.max(0, (stats?.totalUsers || 0) - (stats?.totalLandlords || 0))
     };
   }, [stats]);
 
-  // Fallback telemetry events if database is brand new
   const eventList: TelemetryEvent[] = useMemo(() => {
-    if (activity && activity.length > 0) return activity;
-    return [
-      {
-        id: 'sys-init-1',
-        type: 'USER',
-        severity: 'COMPLIANCE',
-        title: 'Institutional Network Initialized',
-        message: `Platform telemetry stream operational with ${stats?.totalUsers || 5} registered platform users.`,
-        actor: { name: 'Super Admin', role: 'SYSTEM' },
-        entity: { type: 'Platform Registry', title: 'Akwaaba Real Estate Network' },
-        status: 'VERIFIED',
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'sys-init-2',
-        type: 'PROPERTY',
-        severity: 'COMPLIANCE',
-        title: 'Residential Property Inventory Synced',
-        message: `Residential portfolio active with ${stats?.totalProperties || 1} verified properties.`,
-        actor: { name: 'Lands Commission Registry Sync', role: 'SYSTEM' },
-        entity: { type: 'Property Inventory', title: 'Greater Accra Real Estate Pool' },
-        status: 'APPROVED',
-        createdAt: new Date(Date.now() - 3600000).toISOString()
-      },
-      {
-        id: 'sys-init-3',
-        type: 'BOOKING',
-        severity: 'INFO',
-        title: 'Tenancy Settlement Gateway',
-        message: `Payment gateway verified with Paystack & MTN Mobile Money channels enabled.`,
-        actor: { name: 'Settlement Daemon', role: 'SYSTEM' },
-        entity: { type: 'Payment Ledger', title: 'Statutory 6-Month Advance Reserve' },
-        status: 'CONFIRMED',
-        createdAt: new Date(Date.now() - 7200000).toISOString()
-      }
-    ];
-  }, [activity, stats]);
+    return Array.isArray(activity) ? activity : [];
+  }, [activity]);
 
   // Filtering
   const filteredEvents = useMemo(() => {

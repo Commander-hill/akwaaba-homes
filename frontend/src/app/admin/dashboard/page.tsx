@@ -135,26 +135,18 @@ export default function AdminDashboardPage() {
   }, [socket, refetchStats, refetchQueue, refetchActivity]);
 
   // Metric values with fallbacks matching target showcase
-  const totalRevenue = stats?.totalRevenue ?? 22500;
-  const totalUsers = stats?.totalUsers ?? 18;
-  const totalProperties = stats?.totalProperties ?? 4;
-  const totalBookings = stats?.totalBookings ?? 2;
-  const actionItemsCount = actionQueue.length > 0 ? actionQueue.length : 2;
+  const totalRevenue = stats?.totalRevenue ?? 0;
+  const totalUsers = stats?.totalUsers ?? 0;
+  const totalProperties = stats?.totalProperties ?? 0;
+  const totalBookings = stats?.totalBookings ?? 0;
+  const actionItemsCount = actionQueue.length;
 
   // Chart growth data
   const growthChartData = useMemo(() => {
     if (stats?.monthlyGrowth && Array.isArray(stats.monthlyGrowth) && stats.monthlyGrowth.length > 0) {
       return stats.monthlyGrowth;
     }
-    // High-fidelity fallback curve matching reference (Jun to Nov)
-    return [
-      { name: 'Jun', users: 3, listings: 1 },
-      { name: 'Jul', users: 5, listings: 2 },
-      { name: 'Aug', users: 8, listings: 3 },
-      { name: 'Sep', users: 11, listings: 3 },
-      { name: 'Oct', users: 14, listings: 4 },
-      { name: 'Nov', users: 18, listings: 4 }
-    ];
+    return [];
   }, [stats]);
 
   // Recent activity items mapping
@@ -183,30 +175,7 @@ export default function AdminDashboardPage() {
       });
     }
 
-    // Default exact items matching the reference screenshot
-    return [
-      {
-        id: 'act-1',
-        title: 'New user registered',
-        timeAgo: '5 mins ago',
-        type: 'user',
-        targetUrl: '/admin/users'
-      },
-      {
-        id: 'act-2',
-        title: 'New listing submitted',
-        timeAgo: '12 mins ago',
-        type: 'property',
-        targetUrl: '/admin/properties'
-      },
-      {
-        id: 'act-3',
-        title: 'Payment received (GH₵ 1,200)',
-        timeAgo: '18 mins ago',
-        type: 'payment',
-        targetUrl: '/admin/transactions'
-      }
-    ];
+    return [];
   }, [activityData]);
   const showSkeleton = useInitialSkeleton();
   if (showSkeleton) return <DashboardOverviewSkeleton />;

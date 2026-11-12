@@ -8,6 +8,10 @@ export interface TicketKpiStats {
   inProgress: number;
   resolved: number;
   overdue: number;
+  totalTrendText?: string;
+  inProgressTrendText?: string;
+  resolvedTrendText?: string;
+  overdueTrendText?: string;
 }
 
 interface TicketKpiCardsProps {
@@ -41,7 +45,7 @@ export default function TicketKpiCards({
       id: 'ALL',
       label: 'Total Tickets',
       value: stats.total,
-      trendText: '↑ 12%',
+      trendText: stats.totalTrendText || `${stats.total} logged`,
       icon: Ticket,
       iconBg: 'bg-[#E6F7EE] dark:bg-emerald-950/60',
       iconColor: 'text-[#059669] dark:text-emerald-400',
@@ -55,7 +59,7 @@ export default function TicketKpiCards({
       id: 'IN_PROGRESS',
       label: 'In Progress',
       value: stats.inProgress,
-      trendText: '↑ 8%',
+      trendText: stats.inProgressTrendText || `${stats.inProgress} active`,
       icon: Clock,
       iconBg: 'bg-[#E8F2FF] dark:bg-blue-950/60',
       iconColor: 'text-[#2563EB] dark:text-blue-400',
@@ -69,7 +73,7 @@ export default function TicketKpiCards({
       id: 'RESOLVED',
       label: 'Resolved',
       value: stats.resolved,
-      trendText: '↑ 16%',
+      trendText: stats.resolvedTrendText || `${stats.resolved} closed`,
       icon: FileCheck,
       iconBg: 'bg-[#FEF3E8] dark:bg-amber-950/60',
       iconColor: 'text-[#EA580C] dark:text-amber-400',
@@ -83,7 +87,7 @@ export default function TicketKpiCards({
       id: 'OVERDUE',
       label: 'Overdue',
       value: stats.overdue,
-      trendText: '↓ 3%',
+      trendText: stats.overdueTrendText || `${stats.overdue} overdue`,
       icon: AlertCircle,
       iconBg: 'bg-[#FEE2E2] dark:bg-rose-950/60',
       iconColor: 'text-[#DC2626] dark:text-rose-400',

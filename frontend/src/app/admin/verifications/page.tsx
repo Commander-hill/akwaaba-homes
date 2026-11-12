@@ -40,15 +40,13 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 
-// Realistic Ghanaian / African portrait fallbacks for pixel-perfect fidelity
-const AVATAR_FALLBACKS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
-];
+const getInitials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'AU';
 
 export interface VerificationItem {
   id: string;
@@ -139,9 +137,8 @@ export default function AdminVerificationsQueuePage() {
   const allSubmissions = useMemo(() => {
     const list: VerificationItem[] = [];
 
-    users.forEach((u: any, index: number) => {
-      const fallbackAvatar = AVATAR_FALLBACKS[index % AVATAR_FALLBACKS.length];
-      const avatar = u.avatarUrl || fallbackAvatar;
+    users.forEach((u: any) => {
+      const avatar = u.avatarUrl || '';
       const applicantName = `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Applicant User';
 
       // 1. Ghana Card Identity KYC
@@ -226,118 +223,6 @@ export default function AdminVerificationsQueuePage() {
         });
       }
     });
-
-    // Provide default mockup illustrative records if dataset is fresh or sparse
-    if (list.length === 0) {
-      const mockups: VerificationItem[] = [
-        {
-          id: 'mock-1',
-          userId: 'usr-1',
-          user: { firstName: 'Ama', lastName: 'Serwaa', email: 'ama.serwaa@email.com' },
-          applicantName: 'Ama Serwaa',
-          applicantEmail: 'ama.serwaa@email.com',
-          applicantPhone: '+233 24 412 9012',
-          avatarUrl: AVATAR_FALLBACKS[0],
-          type: 'GHANA_CARD',
-          typeDisplay: 'Identity (Ghana Card)',
-          docCategory: 'IDENTITY',
-          status: 'REJECTED',
-          statusDisplay: 'Rejected',
-          submittedAt: '2026-09-28T10:24:00Z',
-          formattedDate: 'Sep 28, 2026 • 10:24 AM',
-          ghanaCardNumber: 'GHA-724910284-9',
-          rejectionReason: 'ID photo is unclear. Please resubmit with a clearer image.',
-          docUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80',
-          docBackUrl: null,
-          hasDocuments: true
-        },
-        {
-          id: 'mock-2',
-          userId: 'usr-2',
-          user: { firstName: 'Kwame', lastName: 'Mensah', email: 'kwame.mensah@email.com' },
-          applicantName: 'Kwame Mensah',
-          applicantEmail: 'kwame.mensah@email.com',
-          applicantPhone: '+233 20 891 2345',
-          avatarUrl: AVATAR_FALLBACKS[1],
-          type: 'LANDLORD_DEED',
-          typeDisplay: 'Ownership',
-          docCategory: 'OWNERSHIP',
-          status: 'VERIFIED',
-          statusDisplay: 'Approved',
-          submittedAt: '2026-09-27T16:18:00Z',
-          formattedDate: 'Sep 27, 2026 • 04:18 PM',
-          ghanaCardNumber: 'GHA-819203948-2',
-          rejectionReason: null,
-          docUrl: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=800&auto=format&fit=crop&q=80',
-          docBackUrl: null,
-          hasDocuments: true
-        },
-        {
-          id: 'mock-3',
-          userId: 'usr-3',
-          user: { firstName: 'Abena', lastName: 'Osei', email: 'abena.osei@email.com' },
-          applicantName: 'Abena Osei',
-          applicantEmail: 'abena.osei@email.com',
-          applicantPhone: '+233 55 901 8234',
-          avatarUrl: AVATAR_FALLBACKS[2],
-          type: 'PASSPORT',
-          typeDisplay: 'Identity (Passport)',
-          docCategory: 'IDENTITY',
-          status: 'PENDING',
-          statusDisplay: 'Pending',
-          submittedAt: '2026-09-26T13:12:00Z',
-          formattedDate: 'Sep 26, 2026 • 01:12 PM',
-          ghanaCardNumber: 'GHA-619283749-1',
-          rejectionReason: null,
-          docUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&auto=format&fit=crop&q=80',
-          docBackUrl: null,
-          hasDocuments: true
-        },
-        {
-          id: 'mock-4',
-          userId: 'usr-4',
-          user: { firstName: 'Daniel', lastName: 'Tanor', email: 'daniel.tanor@email.com' },
-          applicantName: 'Daniel Tanor',
-          applicantEmail: 'daniel.tanor@email.com',
-          applicantPhone: '+233 24 334 5566',
-          avatarUrl: AVATAR_FALLBACKS[3],
-          type: 'LANDLORD_DEED',
-          typeDisplay: 'Ownership',
-          docCategory: 'OWNERSHIP',
-          status: 'VERIFIED',
-          statusDisplay: 'Approved',
-          submittedAt: '2026-09-25T09:20:00Z',
-          formattedDate: 'Sep 25, 2026 • 09:20 AM',
-          ghanaCardNumber: 'GHA-908123746-5',
-          rejectionReason: null,
-          docUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80',
-          docBackUrl: null,
-          hasDocuments: true
-        },
-        {
-          id: 'mock-5',
-          userId: 'usr-5',
-          user: { firstName: 'Esi', lastName: 'Darko', email: 'esi.darko@email.com' },
-          applicantName: 'Esi Darko',
-          applicantEmail: 'esi.darko@email.com',
-          applicantPhone: '+233 26 112 3344',
-          avatarUrl: AVATAR_FALLBACKS[4],
-          type: 'GHANA_CARD',
-          typeDisplay: 'Identity (Ghana Card)',
-          docCategory: 'IDENTITY',
-          status: 'VERIFIED',
-          statusDisplay: 'Approved',
-          submittedAt: '2026-09-24T11:35:00Z',
-          formattedDate: 'Sep 24, 2026 • 11:35 AM',
-          ghanaCardNumber: 'GHA-512938475-8',
-          rejectionReason: null,
-          docUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
-          docBackUrl: null,
-          hasDocuments: true
-        }
-      ];
-      return mockups;
-    }
 
     return list;
   }, [users]);
@@ -950,12 +835,16 @@ export default function AdminVerificationsQueuePage() {
                         {/* Applicant */}
                         <td className="py-3.5 px-3">
                           <div className="flex items-center gap-3">
-                            <div className="relative w-9 h-9 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0 border border-zinc-200 dark:border-zinc-700">
-                              <img decoding="async"
-                                src={row.avatarUrl || AVATAR_FALLBACKS[0]}
-                                alt={row.applicantName}
-                                className="w-full h-full object-cover"
-                              />
+                            <div className="relative w-9 h-9 rounded-full overflow-hidden bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs font-bold shrink-0 border border-zinc-200 dark:border-zinc-700">
+                              {row.avatarUrl ? (
+                                <img decoding="async"
+                                  src={row.avatarUrl}
+                                  alt={row.applicantName}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                getInitials(row.applicantName)
+                              )}
                             </div>
                             <div>
                               <div className="font-bold text-zinc-900 dark:text-white leading-tight">
@@ -1099,12 +988,16 @@ export default function AdminVerificationsQueuePage() {
               
               {/* Profile Card Top */}
               <div className="flex flex-col items-center text-center space-y-2 pt-1">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-500 shadow-sm">
-                  <img decoding="async"
-                    src={activeSelectedItem.avatarUrl || AVATAR_FALLBACKS[0]}
-                    alt={activeSelectedItem.applicantName}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-500 shadow-sm bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-lg font-extrabold">
+                  {activeSelectedItem.avatarUrl ? (
+                    <img decoding="async"
+                      src={activeSelectedItem.avatarUrl}
+                      alt={activeSelectedItem.applicantName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    getInitials(activeSelectedItem.applicantName)
+                  )}
                 </div>
                 <div>
                   <h3 className="font-extrabold text-base text-zinc-950 dark:text-white leading-tight">

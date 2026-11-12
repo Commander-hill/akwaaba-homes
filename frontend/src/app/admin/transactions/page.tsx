@@ -323,6 +323,10 @@ export default function AdminTransactionsPage() {
         inflows,
         outflows,
         successRate,
+        totalTrendText: `${totalCount} ${totalCount === 1 ? 'entry' : 'entries'}`,
+        inflowsTrendText: `${rentPayments} inflow${rentPayments === 1 ? '' : 's'}`,
+        outflowsTrendText: `${disbursements + refunds} outflow${disbursements + refunds === 1 ? '' : 's'}`,
+        successTrendText: `${successful} of ${totalCount} settled`,
       },
     };
   }, [dateFilteredEntries]);
@@ -947,7 +951,9 @@ export default function AdminTransactionsPage() {
               </div>
 
               <div className="text-sm font-bold mt-2">Success Rate</div>
-              <div className="text-xs font-semibold text-emerald-300 mt-0.5">↑ +0.2%</div>
+              <div className="text-xs font-semibold text-emerald-300 mt-0.5">
+                {counts.successful} of {counts.all} settled
+              </div>
             </div>
 
             <div className="space-y-2.5 pt-3 border-t border-white/10 text-xs">

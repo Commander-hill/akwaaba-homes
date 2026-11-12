@@ -8,6 +8,10 @@ export interface PayoutKpiStats {
   pendingSum: number;
   processingSum: number;
   failedSum: number;
+  successCount?: number;
+  pendingCount?: number;
+  processingCount?: number;
+  failedCount?: number;
 }
 
 interface PayoutKpiCardsProps {
@@ -47,7 +51,7 @@ export default function PayoutKpiCards({
       id: 'SUCCESS',
       label: 'Total Disbursed',
       valueText: formatGhs(stats.successSum),
-      trendText: '↑ 12%',
+      trendText: `${stats.successCount ?? 0} settled`,
       icon: Wallet,
       iconBg: 'bg-[#E6F7EE] dark:bg-emerald-950/60',
       iconColor: 'text-[#059669] dark:text-emerald-400',
@@ -61,7 +65,7 @@ export default function PayoutKpiCards({
       id: 'PENDING',
       label: 'Pending Release',
       valueText: formatGhs(stats.pendingSum),
-      trendText: '↑ 5%',
+      trendText: `${stats.pendingCount ?? 0} pending`,
       icon: Clock,
       iconBg: 'bg-[#E8F2FF] dark:bg-blue-950/60',
       iconColor: 'text-[#2563EB] dark:text-blue-400',
@@ -75,7 +79,7 @@ export default function PayoutKpiCards({
       id: 'PROCESSING',
       label: 'In Processing',
       valueText: formatGhs(stats.processingSum),
-      trendText: '↑ 8%',
+      trendText: `${stats.processingCount ?? 0} in batch`,
       icon: Check,
       iconBg: 'bg-[#E6F7EE] dark:bg-emerald-950/60',
       iconColor: 'text-[#059669] dark:text-emerald-400',
@@ -89,7 +93,7 @@ export default function PayoutKpiCards({
       id: 'FAILED',
       label: 'Failed Transfers',
       valueText: formatGhs(stats.failedSum),
-      trendText: '↓ 2%',
+      trendText: `${stats.failedCount ?? 0} failed`,
       icon: AlertTriangle,
       iconBg: 'bg-[#FEE2E2] dark:bg-rose-950/60',
       iconColor: 'text-[#DC2626] dark:text-rose-400',

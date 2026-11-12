@@ -217,7 +217,7 @@ export default function AdminTicketsPage() {
     });
 
     const total = dateFilteredTickets.length;
-    const slaPct = total > 0 ? Math.max(0, Math.min(100, Math.round(((total - overdue) / total) * 100))) : 92;
+    const slaPct = total > 0 ? Math.max(0, Math.min(100, Math.round(((total - overdue) / total) * 100))) : 0;
 
     const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
 
@@ -229,10 +229,10 @@ export default function AdminTicketsPage() {
       overdue,
       slaPct,
       categories: [
-        { label: 'Maintenance', count: catMap.Maintenance, pct: total > 0 ? pct(catMap.Maintenance) : 40, color: '#047857', dot: 'bg-[#047857]' },
-        { label: 'Rent & Billing', count: catMap['Rent & Billing'], pct: total > 0 ? pct(catMap['Rent & Billing']) : 28, color: '#2563EB', dot: 'bg-[#2563EB]' },
-        { label: 'Access & Security', count: catMap['Access & Security'], pct: total > 0 ? pct(catMap['Access & Security']) : 18, color: '#F59E0B', dot: 'bg-[#F59E0B]' },
-        { label: 'Other', count: catMap.Other, pct: total > 0 ? Math.max(0, 100 - pct(catMap.Maintenance) - pct(catMap['Rent & Billing']) - pct(catMap['Access & Security'])) : 14, color: '#9333EA', dot: 'bg-[#9333EA]' },
+        { label: 'Maintenance', count: catMap.Maintenance, pct: total > 0 ? pct(catMap.Maintenance) : 0, color: '#047857', dot: 'bg-[#047857]' },
+        { label: 'Rent & Billing', count: catMap['Rent & Billing'], pct: total > 0 ? pct(catMap['Rent & Billing']) : 0, color: '#2563EB', dot: 'bg-[#2563EB]' },
+        { label: 'Access & Security', count: catMap['Access & Security'], pct: total > 0 ? pct(catMap['Access & Security']) : 0, color: '#F59E0B', dot: 'bg-[#F59E0B]' },
+        { label: 'Other', count: catMap.Other, pct: total > 0 ? Math.max(0, 100 - pct(catMap.Maintenance) - pct(catMap['Rent & Billing']) - pct(catMap['Access & Security'])) : 0, color: '#9333EA', dot: 'bg-[#9333EA]' },
       ],
     };
   }, [dateFilteredTickets]);
@@ -332,15 +332,51 @@ export default function AdminTicketsPage() {
     { key: 'OVERDUE', label: 'Overdue', count: counts.overdue },
   ];
 
-  // Visual bar heights for overview chart
-  const barGroups = [
-    { label: 'Wk 1', n: 55, p: 42, res: 38 },
-    { label: 'Wk 2', n: 78, p: 50, res: 86 },
-    { label: 'Wk 3', n: 85, p: 66, res: 54 },
-    { label: 'Wk 4', n: 88, p: 58, res: 82 },
-    { label: 'Wk 5', n: 78, p: 84, res: 56 },
-    { label: 'Wk 6', n: 78, p: 86, res: 90 },
-  ];
+  const barGroups = useMemo(() => {
+    const now = Date.now();
+    const spanMs =
+      dateRange === '7D'
+        ? 7 * 86400000
+        : dateRange === '30D'
+        ? 30 * 86400000
+        : dateRange === '90D'
+        ? 90 * 86400000
+        : 180 * 86400000;
+    const startMs = now - spanMs;
+    const bucketMs = spanMs / 6;
+
+    const buckets = Array.from({ length: 6 }, (_, i) => {
+      const bucketEnd = new Date(startMs + (i + 1) * bucketMs);
+      return {
+        label: bucketEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        newCount: 0,
+        inProgressCount: 0,
+        resolvedCount: 0,
+      };
+    });
+
+    (dateFilteredTickets as any[]).forEach((t) => {
+      const ts = new Date(t.createdAt).getTime();
+      if (Number.isNaN(ts)) return;
+      const idx = Math.max(0, Math.min(5, Math.floor((ts - startMs) / bucketMs)));
+      const st = normalizeStatus(t);
+      if (st === 'IN_PROGRESS') buckets[idx].inProgressCount += 1;
+      else if (st === 'RESOLVED') buckets[idx].resolvedCount += 1;
+      else buckets[idx].newCount += 1;
+    });
+
+    const maxVal = Math.max(
+      1,
+      ...buckets.flatMap((b) => [b.newCount, b.inProgressCount, b.resolvedCount]),
+    );
+
+    return buckets.map((b) => ({
+      label: b.label,
+      n: b.newCount > 0 ? Math.max(8, Math.round((b.newCount / maxVal) * 100)) : 0,
+      p: b.inProgressCount > 0 ? Math.max(8, Math.round((b.inProgressCount / maxVal) * 100)) : 0,
+      res: b.resolvedCount > 0 ? Math.max(8, Math.round((b.resolvedCount / maxVal) * 100)) : 0,
+    }));
+  }, [dateFilteredTickets, dateRange]);
 
   return (
     <div className="space-y-5 pb-12">
@@ -931,7 +967,9 @@ export default function AdminTicketsPage() {
 
               <div className="text-xs font-medium text-zinc-600 dark:text-zinc-300 mt-2">
                 Target: <strong className="text-zinc-900 dark:text-white">90%</strong>{' '}
-                <span className="text-[#04793d] dark:text-emerald-400 font-bold ml-1">↑ 2%</span>
+                <span className="text-[#04793d] dark:text-emerald-400 font-bold ml-1">
+                  {counts.resolved} of {counts.total} resolved
+                </span>
               </div>
             </div>
           </div>
