@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer';
 import prisma from './prisma';
 import { sendSMS } from './sms.service';
 
@@ -13,7 +13,7 @@ import {
 const getFrontendUrl = () => process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // ─── Global SMTP Transporter (Pooled) ─────────────────────────────────────────
-let transporterInstance: nodemailer.Transporter | null = null;
+let transporterInstance: Transporter | null = null;
 export const getTransporter = () => {
   if (!process.env.SMTP_USER || process.env.SMTP_USER === 'your_gmail_address@gmail.com') return null;
   if (transporterInstance) return transporterInstance;
