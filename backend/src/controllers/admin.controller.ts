@@ -2706,7 +2706,7 @@ export const getAllTickets = async (req: Request, res: Response): Promise<void> 
   try {
     const tickets = await prisma.maintenanceTicket.findMany({
       include: {
-        tenant: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
         property: { 
           include: { 
             landlord: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } } 
