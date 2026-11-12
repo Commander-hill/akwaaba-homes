@@ -806,7 +806,7 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
         },
         bookings: {
           include: {
-            tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+            tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
             transaction: { select: { id: true, amount: true, status: true, reference: true } }
           },
           orderBy: { createdAt: 'desc' },
@@ -909,9 +909,9 @@ export const getTransactionById = async (req: Request, res: Response): Promise<v
     const transaction = await prisma.transaction.findUnique({
       where: { id },
       include: {
-        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
-        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
-        property: { select: { id: true, title: true, location: true, type: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
+        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
+        property: { select: { id: true, title: true, location: true, type: true, images: true } },
         booking: {
           include: {
             leaseAgreement: { select: { id: true, status: true, cryptographicHash: true } }
@@ -1562,9 +1562,9 @@ export const getAllTransactions = async (req: Request, res: Response): Promise<v
     const transactions = await prisma.transaction.findMany({
       take: 500,
       include: {
-        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
-        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
-        property: { select: { id: true, title: true, location: true, type: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
+        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
+        property: { select: { id: true, title: true, location: true, type: true, images: true } },
         booking: { select: { id: true, startDate: true, endDate: true, status: true } }
       },
       orderBy: { createdAt: 'desc' }
@@ -2265,7 +2265,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
         take: 12,
         orderBy: { createdAt: 'desc' },
         include: {
-          tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+          tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
           property: { select: { id: true, title: true, location: true, price: true } }
         }
       }),
