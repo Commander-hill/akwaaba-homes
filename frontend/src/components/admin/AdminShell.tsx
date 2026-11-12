@@ -44,7 +44,11 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import NotificationBell from '@/components/NotificationBell';
-import AdminGlobalSearch from './AdminGlobalSearch';
+import dynamic from 'next/dynamic';
+const AdminGlobalSearch = dynamic(() => import('./AdminGlobalSearch'), {
+  ssr: false,
+  loading: () => <div className="h-9 w-48 sm:w-64 rounded-xl bg-slate-100 dark:bg-slate-800/60 animate-pulse" />,
+});
 
 interface AdminNavGroup {
   title: string;

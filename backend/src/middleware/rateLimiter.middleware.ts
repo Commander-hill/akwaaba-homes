@@ -103,3 +103,12 @@ export const kycRateLimiter = rateLimit({
   statusCode: 429,
 });
 
+// ─── Public Contact & Maintenance Subscription Rate Limiter ──────────────────
+export const contactRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes window
+  max: process.env.NODE_ENV === 'production' ? 10 : 100,
+  message: { message: 'Too many submissions from this IP. Please wait 15 minutes before trying again.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  statusCode: 429,
+});

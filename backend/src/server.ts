@@ -93,7 +93,7 @@ import leaseRenewalRoutes from './routes/leaseRenewal.routes';
 import deliveryRoutes from './routes/delivery.routes';
 import billSplitRoutes from './routes/billSplit.routes';
 
-import { apiRateLimiter, adminRateLimiter, uploadRateLimiter } from './middleware/rateLimiter.middleware';
+import { apiRateLimiter, adminRateLimiter, uploadRateLimiter, contactRateLimiter } from './middleware/rateLimiter.middleware';
 import { xssSanitizer } from './middleware/xss.middleware';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { isOriginAllowed } from './utils/cors';
@@ -112,6 +112,23 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // ─── Disable X-Powered-By Header ─────────────────────────────────────────────
 app.disable('x-powered-by');
+
+// --- Request Correlation ID & Slow-Request Telemetry ---
+app.use((req: Request, res: Response, next) => {
+  const existingId = req.headers['x-request-id'];
+  const requestId = typeof existingId === 'string' && existingId.trim() ? existingId.trim() : crypto.randomUUID();
+  req.headers['x-request-id'] = requestId;
+  res.setHeader('X-Request-Id', requestId);
+
+  const startedAt = Date.now();
+  res.on('finish', () => {
+    const durationMs = Date.now() - startedAt;
+    if (durationMs > 1500) {
+      console.warn(`[SLOW REQUEST] [${requestId}] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${durationMs}ms)`);
+    }
+  });
+  next();
+});
 
 // ─── Initialize Socket.io ────────────────────────────────────────────────────
 initializeSocket(httpServer);
@@ -220,13 +237,13 @@ app.use(
 // ─── Body parsing & cookies (preserves rawBody for webhook HMAC verification) ──
 app.use(
   express.json({
-    limit: '10mb',
+    limit: '2mb',
     verify: (req: Request, _res: Response, buf: Buffer) => {
       req.rawBody = buf;
     },
   })
 );
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
 
 // ─── CSRF Origin Guard for Cookie-Authenticated State-Changing Requests ─────
@@ -286,7 +303,30 @@ app.get('/api/health', (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
     commit: process.env.RENDER_GIT_COMMIT || 'local-dev',
     uptime: Math.round(process.uptime()),
+    memoryRssMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
   });
+});
+
+app.get('/api/health/ready', async (req: Request, res: Response) => {
+  try {
+    await Promise.race([
+      prisma.$queryRaw`SELECT 1`,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB readiness timeout')), 2000)),
+    ]);
+    res.status(200).json({
+      status: 'ready',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+      uptime: Math.round(process.uptime()),
+    });
+  } catch (err: any) {
+    res.status(503).json({
+      status: 'degraded',
+      database: 'disconnected',
+      error: err?.message || 'Database check failed',
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // ─── Global Rate Limiting (High-Throughput Safe Ceiling) ───────────────────────
@@ -320,7 +360,7 @@ app.get('/api/v1/config/public', async (req: Request, res: Response) => {
 });
 
 // ─── Maintenance Mode Email Subscription ─────────────────────────────────────
-app.post('/api/v1/config/subscribe-maintenance', async (req: Request, res: Response) => {
+app.post('/api/v1/config/subscribe-maintenance', contactRateLimiter, async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -340,7 +380,7 @@ app.post('/api/v1/config/subscribe-maintenance', async (req: Request, res: Respo
 });
 
 // ─── Public Contact & Support Inquiry Endpoint ───────────────────────────────
-app.post('/api/v1/contact', async (req: Request, res: Response) => {
+app.post('/api/v1/contact', contactRateLimiter, async (req: Request, res: Response) => {
   try {
     const { name, email, phone, subject, message } = req.body;
     if (!name || typeof name !== 'string' || !name.trim()) {
@@ -435,11 +475,28 @@ process.on('uncaughtException', (err: Error) => {
 });
 
 // ─── Graceful shutdown on SIGTERM / SIGINT ──────────────────────────────────
+let bookingCleanupTimer: NodeJS.Timeout | null = null;
 const shutdownGracefully = (signal: string) => {
-  console.log(`📴 ${signal} received — starting graceful shutdown...`);
-  httpServer.close(() => {
-    console.log('✅ HTTP server closed.');
-    process.exit(0);
+  console.log(`[SHUTDOWN] ${signal} received -- starting graceful shutdown...`);
+  if (bookingCleanupTimer) {
+    clearInterval(bookingCleanupTimer);
+    bookingCleanupTimer = null;
+  }
+  const forceExitTimer = setTimeout(() => {
+    console.error('[SHUTDOWN] Forced shutdown after 10s grace period.');
+    process.exit(1);
+  }, 10000);
+  forceExitTimer.unref();
+
+  httpServer.close(async () => {
+    try {
+      await prisma.$disconnect();
+      console.log('[SHUTDOWN] HTTP server & Prisma disconnected cleanly.');
+      process.exit(0);
+    } catch (err) {
+      console.error('[SHUTDOWN] Error disconnecting Prisma during shutdown:', err);
+      process.exit(1);
+    }
   });
 };
 process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
@@ -473,9 +530,10 @@ if (process.env.NODE_ENV !== 'test') {
     cleanupExpiredBookings().catch(console.error);
     
     // Periodic background cleanup every 2 minutes
-    setInterval(() => {
+    bookingCleanupTimer = setInterval(() => {
       cleanupExpiredBookings().catch(console.error);
     }, 2 * 60 * 1000);
+    bookingCleanupTimer.unref();
   });
 }
 

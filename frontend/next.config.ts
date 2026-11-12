@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: false, // Prevents duplicate renders/network calls in dev mode
   experimental: {
     cpus: 2,
-    optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion', 'recharts', 'clsx'],
+    optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion', 'recharts', 'clsx', '@tanstack/react-query', 'react-hot-toast'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -53,6 +53,15 @@ const nextConfig: NextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/icons/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
