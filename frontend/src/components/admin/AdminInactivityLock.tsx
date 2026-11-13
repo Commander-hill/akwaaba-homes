@@ -1,22 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import {
   ShieldCheck,
   Lock,
-  Unlock,
-  KeyRound,
   Eye,
   EyeOff,
   AlertTriangle,
   Loader2,
   LogOut,
   Clock,
-  Sparkles,
+  ArrowRight,
+  Headphones,
+  X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -39,26 +39,15 @@ const STORAGE_KEY_LAST_ACTIVE = 'akwaaba_admin_last_interaction';
 const STORAGE_KEY_LOCKED = 'akwaaba_admin_workstation_locked';
 
 export default function AdminInactivityLock({ user, children }: AdminInactivityLockProps) {
-  const router = useRouter();
   const [isLocked, setIsLocked] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const lastActiveRef = useRef<number>(Date.now());
-
-  // Mask email for security display (e.g. k***@akwaabahomes.com)
-  const maskedEmail = React.useMemo(() => {
-    if (!user?.email) return '';
-    const parts = user.email.split('@');
-    if (parts.length < 2) return user.email;
-    const name = parts[0];
-    const domain = parts[1];
-    const maskedName = name.length > 2 ? `${name.slice(0, 2)}***` : `${name.slice(0, 1)}***`;
-    return `${maskedName}@${domain}`;
-  }, [user?.email]);
 
   const recordActivity = useCallback(() => {
     if (isLocked) return;
@@ -181,7 +170,7 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
   const handleUnlockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password.trim()) {
-      setUnlockError('Please enter your administrator password to unlock.');
+      setUnlockError('Please enter your password to unlock.');
       return;
     }
 
@@ -193,7 +182,7 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
       toast.success('Workstation unlocked. Welcome back!', { icon: '🛡️' });
       unlockWorkstation();
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Incorrect administrator password. Workstation remains secured.';
+      const msg = err.response?.data?.message || 'Incorrect password. Workstation remains secured.';
       setUnlockError(msg);
       toast.error(msg);
     } finally {
@@ -211,8 +200,7 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
   };
 
   const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Administrator';
-  const initials = `${user.firstName?.[0] || 'A'}${user.lastName?.[0] || ''}`.toUpperCase();
-  const isSuperAdmin = user.role === 'SUPER_ADMIN';
+  const initials = `${user.firstName?.[0] || 'S'}${user.lastName?.[0] || 'A'}`.toUpperCase();
 
   return (
     <>
@@ -242,7 +230,7 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
                 </span>
               </div>
               <p className="text-xs text-amber-100/80 mt-1 leading-relaxed">
-                Admin workstation will lock in {secondsRemaining} seconds to protect sensitive Ghana Card and banking records.
+                Workstation will lock in {secondsRemaining} seconds to protect sensitive records.
               </p>
               <div className="mt-3 flex items-center gap-2">
                 <button
@@ -268,138 +256,266 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
         </div>
       )}
 
-      {/* ── HIGH-SECURITY WORKSTATION LOCK SCREEN (ACT 843 §20) ── */}
+      {/* ── HIGH-SECURITY 2-COLUMN WORKSTATION LOCK MODAL ── */}
       {isLocked && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Admin Workstation Locked"
-          className="fixed inset-0 z-[99999] bg-[#0A0D14]/92 backdrop-blur-xl flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200 select-none"
+          aria-label="Workstation Locked"
+          className="fixed inset-0 z-[99999] bg-[#0A0D14]/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200 select-none"
         >
-          {/* Subtle Ambient Glow Background */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Subtle Ambient Glow */}
+          <div className="absolute w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative w-full max-w-md bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl p-6 sm:p-8 text-center space-y-6">
-            {/* Top Institutional Compliance Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-[10.5px] font-bold tracking-wider uppercase">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Act 843 §20 Data Privacy Auto-Lock</span>
-            </div>
+          {/* Modal Container */}
+          <div className="relative w-full max-w-4xl bg-white dark:bg-[#12151D] border border-zinc-200/80 dark:border-zinc-800 rounded-[28px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden grid grid-cols-1 md:grid-cols-12 animate-in zoom-in-95 duration-200">
+            {/* Top Right Close Button */}
+            <button
+              type="button"
+              onClick={handleSignOut}
+              aria-label="Close workstation lock"
+              title="Sign out or close workstation"
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 z-20 w-8 h-8 rounded-full bg-zinc-100/80 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center text-zinc-500 dark:text-zinc-400 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
 
-            {/* Administrator Profile Card */}
-            <div className="flex flex-col items-center space-y-3">
-              <div className="relative">
-                <div className="w-20 h-20 rounded-full bg-[#0B7A46] text-white text-xl font-bold flex items-center justify-center overflow-hidden shadow-lg border-2 border-emerald-500/30">
-                  {user?.avatarUrl ? (
-                    <img decoding="async"
-                      src={getImageUrl(user.avatarUrl)}
-                      alt={fullName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span>{initials}</span>
-                  )}
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-zinc-950 flex items-center justify-center shadow-md border-2 border-white dark:border-[#12151D]" title="Workstation Secured">
-                  <Lock className="w-3.5 h-3.5" />
-                </div>
+            {/* ── LEFT COLUMN: SECURE ACCESS & BRANDING ── */}
+            <div className="md:col-span-5 relative overflow-hidden bg-gradient-to-br from-[#065F46] via-[#047857] to-[#024430] text-white p-7 sm:p-8 flex flex-col justify-between">
+              {/* Background Building Image & Overlays */}
+              <div className="absolute top-0 right-0 w-[85%] h-56 pointer-events-none select-none overflow-hidden opacity-55">
+                <img
+                  src="/images/resident/hero-building-clean.webp"
+                  alt=""
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#065F46]/30 via-[#047857]/70 to-[#047857]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#047857] via-transparent to-transparent" />
               </div>
 
-              <div>
-                <h3 className="text-base font-bold text-zinc-950 dark:text-white">
-                  {fullName}
-                </h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
-                  {maskedEmail}
-                </p>
-                <div className="mt-1.5">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                    {isSuperAdmin ? 'SUPER ADMINISTRATOR' : 'ADMINISTRATOR'}
+              {/* Decorative wave graphic */}
+              <svg
+                className="absolute -bottom-10 -left-10 w-64 h-64 opacity-25 pointer-events-none"
+                viewBox="0 0 200 200"
+              >
+                <path
+                  fill="#34D399"
+                  d="M44.7,-76.4C58.8,-69.2,71.8,-59.1,79.6,-45.8C87.4,-32.6,90,-16.3,88.5,-0.9C86.9,14.6,81.2,29.1,72.6,41.2C64,53.2,52.5,62.8,39.6,70.5C26.7,78.2,12.3,84,-1.8,87.1C-15.9,90.2,-31.8,90.6,-45.6,84C-59.4,77.4,-71.1,63.8,-79.8,48.6C-88.5,33.4,-94.2,16.7,-93.8,0.2C-93.5,-16.3,-87.1,-32.6,-77.4,-46.2C-67.7,-59.8,-54.7,-70.7,-40.4,-77.8C-26.1,-84.9,-10.5,-88.2,3.1,-93.5C16.7,-98.9,30.6,-83.6,44.7,-76.4Z"
+                  transform="translate(100 100)"
+                />
+              </svg>
+
+              {/* Top Logo */}
+              <div className="flex items-center gap-2.5 relative z-10">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                  <Image
+                    src="/images/auth/akwaaba-emblem.png"
+                    alt="AkwaabaHomes"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-contain drop-shadow"
+                  />
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-base font-black text-white tracking-tight">AkwaabaHomes</span>
+                  <span className="text-[10px] text-emerald-200/90 font-medium">
+                    Live Well. Feel at Home.
                   </span>
                 </div>
               </div>
-            </div>
 
-            {/* Regulatory Description */}
-            <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 text-left space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900 dark:text-white">
-                <KeyRound className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Station Idle for 15 Minutes</span>
+              {/* Middle Content */}
+              <div className="relative z-10 my-6">
+                {/* 3D Glowing Shield */}
+                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#34D399]/30 to-[#059669]/60 border-2 border-[#34D399]/60 shadow-[0_8px_20px_rgba(5,150,105,0.4)] backdrop-blur-md flex items-center justify-center mb-5">
+                  <div className="absolute inset-1 rounded-xl bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+                  <Lock className="w-8 h-8 text-white drop-shadow-md" />
+                </div>
+
+                <h2 className="text-2xl font-black text-white tracking-tight leading-tight">
+                  Secure Access<br />for Landlords
+                </h2>
+                <p className="text-xs text-emerald-100/90 leading-relaxed mt-2.5 max-w-[280px]">
+                  Your property management starts here. Sign in to manage your listings, bookings and more.
+                </p>
+
+                {/* Features Checkmarks */}
+                <div className="space-y-2.5 mt-5">
+                  {[
+                    'Manage Your Properties',
+                    'Track Bookings & Payments',
+                    'Stay Updated',
+                  ].map((item) => (
+                    <div key={item} className="flex items-center gap-2.5 text-xs font-semibold text-white">
+                      <div className="w-4 h-4 rounded-full bg-[#34D399] text-[#065F46] flex items-center justify-center shrink-0 font-black text-[10px]">
+                        ✓
+                      </div>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                National ID data, tenant records, and landlord settlement details have been obscured to prevent unauthorized visual inspection. Please re-enter your administrator password to resume.
-              </p>
-            </div>
 
-            {/* Password Unlock Form */}
-            <form onSubmit={handleUnlockSubmit} className="space-y-4 text-left">
-              <div>
-                <label
-                  htmlFor="admin-unlock-password"
-                  className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5"
-                >
-                  Administrator Password
-                </label>
-                <div className="relative">
-                  <input
-                    ref={passwordInputRef}
-                    id="admin-unlock-password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (unlockError) setUnlockError(null);
-                    }}
-                    placeholder="Enter your login password..."
-                    disabled={isUnlocking}
-                    className="w-full px-4 py-2.5 pr-11 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-hidden transition"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition cursor-pointer"
+              {/* Bottom Support Widget */}
+              <div className="relative z-10 rounded-2xl border border-emerald-400/30 bg-emerald-950/40 p-3.5 flex items-center gap-3 backdrop-blur-xs">
+                <div className="w-10 h-10 rounded-full bg-emerald-900/60 border border-emerald-400/40 text-emerald-300 flex items-center justify-center shrink-0">
+                  <Headphones className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-emerald-200/90 font-medium">Need Help?</div>
+                  <Link
+                    href="/support"
+                    className="text-xs font-bold text-white hover:underline flex items-center gap-1 mt-0.5"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                    <span>Contact Support</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* ── RIGHT COLUMN: AUTHENTICATION & UNLOCK FORM ── */}
+            <div className="md:col-span-7 p-7 sm:p-9 flex flex-col justify-center space-y-5 bg-white dark:bg-[#12151D]">
+              {/* Profile Card Header */}
+              <div className="flex flex-col items-center space-y-2 text-center pt-2">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full bg-[#0B7A46] text-white text-2xl font-black flex items-center justify-center overflow-hidden shadow-lg border-2 border-emerald-500/20">
+                    {user?.avatarUrl ? (
+                      <img
+                        decoding="async"
+                        src={getImageUrl(user.avatarUrl)}
+                        alt={fullName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
+                  </div>
+                  {/* Verified Shield Badge */}
+                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white dark:bg-[#12151D] p-0.5 shadow-md flex items-center justify-center">
+                    <div className="w-full h-full rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
+                    Welcome Back!
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">
+                    Sign in to your landlord account
+                  </p>
                 </div>
               </div>
 
-              {unlockError && (
-                <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <span className="text-[11.5px] leading-tight">{unlockError}</span>
+              {/* Station Idle Notice Card */}
+              <div className="rounded-2xl bg-[#E8F8EE] dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 p-3.5 flex items-start gap-3">
+                <Clock className="w-4 h-4 text-[#059669] dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-zinc-900 dark:text-white">
+                    Station Idle for 15 Minutes
+                  </div>
+                  <p className="text-[11.5px] text-zinc-600 dark:text-zinc-400 leading-relaxed mt-0.5">
+                    For your security, your session will expire after 15 minutes of inactivity.
+                  </p>
                 </div>
-              )}
+              </div>
 
-              <button
-                type="submit"
-                disabled={isUnlocking}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-              >
-                {isUnlocking ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Verifying Security Clearance...</span>
-                  </>
-                ) : (
-                  <>
-                    <Unlock className="w-4 h-4" />
-                    <span>Unlock Workstation</span>
-                  </>
+              {/* Password Unlock Form */}
+              <form onSubmit={handleUnlockSubmit} className="space-y-3.5 text-left">
+                <div>
+                  <label
+                    htmlFor="admin-unlock-password"
+                    className="block text-xs font-bold text-zinc-800 dark:text-zinc-200 mb-1.5"
+                  >
+                    Administrator Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      ref={passwordInputRef}
+                      id="admin-unlock-password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (unlockError) setUnlockError(null);
+                      }}
+                      placeholder="Enter your password..."
+                      disabled={isUnlocking}
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember Me & Forgot Password */}
+                <div className="flex items-center justify-between text-xs pt-0.5">
+                  <label className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <span>Remember me</span>
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    className="font-semibold text-[#059669] dark:text-emerald-400 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+
+                {unlockError && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span className="text-[11.5px] leading-tight">{unlockError}</span>
+                  </div>
                 )}
-              </button>
-            </form>
 
-            {/* Bottom Sign-out or switch operator */}
-            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-              <span className="text-[11px] text-zinc-400">
-                Not {user.firstName || 'you'}?
-              </span>
+                {/* Primary Button */}
+                <button
+                  type="submit"
+                  disabled={isUnlocking}
+                  className="w-full py-3 px-5 rounded-full bg-gradient-to-r from-[#10B981] via-[#059669] to-[#047857] hover:opacity-95 active:scale-[0.99] text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 cursor-pointer transition disabled:opacity-60"
+                >
+                  {isUnlocking ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Verifying Password...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="w-4 h-4" />
+                      <span>Unlock Workstation</span>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Divider */}
+              <div className="relative flex items-center justify-center my-0.5">
+                <div className="border-t border-zinc-200 dark:border-zinc-800 w-full" />
+                <span className="bg-white dark:bg-[#12151D] px-3 text-[11px] text-zinc-400 font-medium absolute">
+                  or
+                </span>
+              </div>
+
+              {/* Secondary Button: Sign Out Completely */}
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-full border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out Completely</span>
