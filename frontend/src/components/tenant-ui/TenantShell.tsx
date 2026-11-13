@@ -522,7 +522,7 @@ export default function TenantShell({
       {/* ── MAIN WORKSPACE COLUMN ── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header Bar matching reference */}
-        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between fixed top-0 left-0 right-0 lg:left-60 xl:left-64 z-30">
+        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
           {/* Left: Mobile Menu Toggle & Breadcrumb / Search */}
           <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1 max-w-2xl">
             <button
@@ -716,7 +716,7 @@ export default function TenantShell({
         </header>
 
         {/* Page Content Container */}
-        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 lg:pb-8">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
           {children}
         </main>
       </div>
