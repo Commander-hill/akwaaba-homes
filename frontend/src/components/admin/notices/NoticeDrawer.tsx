@@ -36,6 +36,7 @@ export interface Notice {
   buttonLink: string | null;
   iconType: string | null;
   isActive: boolean;
+  views?: number;
   createdAt?: string;
 }
 

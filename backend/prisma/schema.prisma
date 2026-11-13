@@ -361,6 +361,7 @@ model Notice {
   buttonLink  String?
   iconType    String?
   isActive    Boolean  @default(true)
+  views       Int      @default(0)
   createdAt   DateTime @default(now())
 }
 

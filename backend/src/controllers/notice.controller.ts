@@ -18,6 +18,20 @@ export const getActiveNotices = async (req: Request, res: Response): Promise<voi
   }
 };
 
+export const recordNoticeView = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const updated = await prisma.notice.update({
+      where: { id },
+      data: { views: { increment: 1 } },
+      select: { id: true, views: true }
+    });
+    res.status(200).json(updated);
+  } catch (error) {
+    res.status(404).json({ message: 'Notice not found' });
+  }
+};
+
 export const getAllNotices = async (req: Request, res: Response): Promise<void> => {
   try {
     const notices = await prisma.notice.findMany({

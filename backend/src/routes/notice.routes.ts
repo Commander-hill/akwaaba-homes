@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getActiveNotices } from '../controllers/notice.controller';
+import { getActiveNotices, recordNoticeView } from '../controllers/notice.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -8,5 +8,6 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', getActiveNotices);
+router.post('/:id/view', recordNoticeView);
 
 export default router;

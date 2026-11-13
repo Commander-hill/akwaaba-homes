@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { AlertTriangle, CreditCard, Loader2, Info } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface Notice {
   id: string;
@@ -19,6 +19,7 @@ interface Notice {
 
 export default function NoticeBoard() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const viewedIdsRef = useRef<Set<string>>(new Set());
 
   const { data: notices, isLoading } = useQuery({
     queryKey: ['active-notices'],
@@ -27,6 +28,17 @@ export default function NoticeBoard() {
       return res.data as Notice[];
     }
   });
+
+  // Record a real view once per session when a notice is displayed
+  useEffect(() => {
+    const activeNotice = notices?.[currentIndex];
+    if (!activeNotice?.id) return;
+    if (viewedIdsRef.current.has(activeNotice.id)) return;
+    viewedIdsRef.current.add(activeNotice.id);
+    api.post(`/notices/${activeNotice.id}/view`).catch(() => {
+      viewedIdsRef.current.delete(activeNotice.id);
+    });
+  }, [notices, currentIndex]);
 
   // Auto-rotate notices every 8 seconds if there are multiple
   useEffect(() => {

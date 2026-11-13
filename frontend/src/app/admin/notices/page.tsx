@@ -126,6 +126,12 @@ function getCategoryInfo(notice: Notice) {
   };
 }
 
+function formatNoticeViews(views?: number): string {
+  const count = typeof views === 'number' && Number.isFinite(views) ? views : 0;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K views`;
+  return `${count} ${count === 1 ? 'view' : 'views'}`;
+}
+
 export default function AdminNoticesPage() {
   const queryClient = useQueryClient();
   const { socket } = useSocket();
@@ -768,6 +774,10 @@ export default function AdminNoticesPage() {
                       <span className="flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-zinc-400" />
                         {formatNoticeDate(notice.createdAt)}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-zinc-400" />
+                        {formatNoticeViews(notice.views)}
                       </span>
                     </div>
                   </div>
