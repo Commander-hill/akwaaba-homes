@@ -1117,7 +1117,7 @@ export default function AdminUsersPage() {
 
       {/* ─── MODAL: INVITE USER ─────────────────────────────────────────── */}
       {isInviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/70 backdrop-blur-xs animate-in">
           <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1190,7 +1190,7 @@ export default function AdminUsersPage() {
 
       {/* ─── MODAL: USER QUICK DOSSIER DRAWER ───────────────────────────── */}
       {selectedUserForDrawer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/70 backdrop-blur-xs animate-in">
           <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-3">
@@ -1304,7 +1304,7 @@ export default function AdminUsersPage() {
 
       {/* ─── MODAL: SUSPENSION CONFIRMATION ─────────────────────────────── */}
       {suspensionTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/70 backdrop-blur-xs animate-in">
           <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
             <div className="flex items-center gap-3">
               <div className={clsx(
@@ -1365,7 +1365,7 @@ export default function AdminUsersPage() {
 
       {/* ─── MODAL: FULLSCREEN LIGHTBOX ZOOM ────────────────────────────── */}
       {zoomedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/95 backdrop-blur-md animate-in">
           <div className="relative max-w-4xl w-full flex flex-col items-center">
             <div className="flex justify-between items-center w-full mb-3 text-white">
               <h3 className="font-extrabold text-sm">{zoomedImage.title}</h3>

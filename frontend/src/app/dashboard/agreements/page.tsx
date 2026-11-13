@@ -1237,7 +1237,7 @@ export default function TenancyAgreementsPage() {
           4. DIGITAL SIGNATURE MODAL (For any pending tenancy agreements)
          ════════════════════════════════════════════════════════════════════ */}
       {showSignModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-black text-zinc-900 dark:text-white">

@@ -1156,7 +1156,7 @@ export default function AdminVerificationsQueuePage() {
 
       {/* ─── MODAL 1: INTERACTIVE DOCUMENT VIEWER ────────────────────────────── */}
       {isDocViewerOpen && activeSelectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-xs p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in duration-150">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             
             {/* Modal Header */}
@@ -1307,7 +1307,7 @@ export default function AdminVerificationsQueuePage() {
 
       {/* ─── MODAL 2: REQUEST RESUBMISSION PROMPT ───────────────────────────── */}
       {isResubmitModalOpen && activeSelectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-md p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1404,7 +1404,7 @@ export default function AdminVerificationsQueuePage() {
 
       {/* ─── MODAL 3: REJECT CONFIRMATION ───────────────────────────────────── */}
       {isRejectModalOpen && activeSelectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-md p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
@@ -1463,7 +1463,7 @@ export default function AdminVerificationsQueuePage() {
 
       {/* ─── MODAL 4: APPROVE CONFIRMATION ──────────────────────────────────── */}
       {isApproveConfirmOpen && activeSelectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-md p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">

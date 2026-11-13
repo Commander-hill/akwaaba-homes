@@ -492,7 +492,7 @@ export default function PassportUpload({
       {/* ──── Interactive Avatar Crop & Zoom Modal ──── */}
       {isCropModalOpen && rawImageSrc && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in duration-150"
           onClick={() => setIsCropModalOpen(false)}
         >
           <div

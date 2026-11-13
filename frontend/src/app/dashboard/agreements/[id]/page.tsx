@@ -673,7 +673,7 @@ export default function AgreementPage() {
 
       {/* ── SIGNATURE PAD MODAL ── */}
       {showSignModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-md p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-[#1A1A1B] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white/10">
             <div className="px-7 py-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#16161D]">
               <div className="flex items-center gap-3">

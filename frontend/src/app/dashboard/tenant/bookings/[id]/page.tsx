@@ -747,7 +747,7 @@ export default function TenantBookingDetailsPage() {
       {/* Cancellation Confirmation Dialog */}
       {showCancelModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="cancel-detail-modal-title"

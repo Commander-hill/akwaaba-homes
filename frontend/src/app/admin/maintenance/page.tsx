@@ -1727,7 +1727,7 @@ export default function AdminMaintenancePage() {
 
       {/* ── TWO-STEP IMPACT CONFIRMATION MODAL ── */}
       {impactModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-xl rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden space-y-5 p-6 sm:p-8 animate-in zoom-in-95">
             
             {/* Header */}

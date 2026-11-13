@@ -86,9 +86,9 @@ export default function StepUpAuthModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="step-up-modal-title"
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
     >
-      <div className="relative w-full max-w-lg bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-[28px] sm:rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
           <div className="flex items-center gap-3">

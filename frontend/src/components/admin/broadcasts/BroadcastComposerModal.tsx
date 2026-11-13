@@ -203,7 +203,7 @@ export default function BroadcastComposerModal({
   const currentCatObj = BROADCAST_CATEGORIES.find((c) => c.id === category) || BROADCAST_CATEGORIES[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"

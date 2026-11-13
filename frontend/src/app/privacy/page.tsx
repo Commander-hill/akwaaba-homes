@@ -745,7 +745,7 @@ export default function PrivacyPage() {
           INTERACTIVE MODAL: FAQ DETAIL VIEW
          ══════════════════════════════════════════════════════════════════════ */}
       {activeFaq && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -791,7 +791,7 @@ export default function PrivacyPage() {
           INTERACTIVE MODAL: DATA SUBJECT ACCESS REQUEST (DSAR) DESK
          ══════════════════════════════════════════════════════════════════════ */}
       {isDsarModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
@@ -899,7 +899,7 @@ export default function PrivacyPage() {
           INTERACTIVE MODAL: CONTACT PRIVACY OFFICER
          ══════════════════════════════════════════════════════════════════════ */}
       {isContactModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">

@@ -262,13 +262,13 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
           role="dialog"
           aria-modal="true"
           aria-label="Workstation Locked"
-          className="fixed inset-0 z-[99999] bg-[#0A0D14]/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200 select-none"
+          className="fixed inset-0 z-[99999] bg-[#0A0D14]/80 backdrop-blur-md flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-6 overflow-y-auto animate-in fade-in duration-200 select-none"
         >
           {/* Subtle Ambient Glow */}
           <div className="absolute w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Modal Container */}
-          <div className="relative w-full max-w-4xl bg-white dark:bg-[#12151D] border border-zinc-200/80 dark:border-zinc-800 rounded-[28px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden grid grid-cols-1 md:grid-cols-12 animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-4xl bg-white dark:bg-[#12151D] border border-zinc-200/80 dark:border-zinc-800 rounded-[28px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden grid grid-cols-1 md:grid-cols-12 max-h-[90dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
             {/* Top Right Close Button */}
             <button
               type="button"

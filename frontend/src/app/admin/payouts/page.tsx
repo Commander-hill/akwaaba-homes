@@ -813,7 +813,7 @@ export default function AdminPayoutsPage() {
       {/* Payout Detail & Escrow Release Modal */}
       {selectedPayout && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
           onClick={() => setSelectedPayout(null)}
         >
           <div

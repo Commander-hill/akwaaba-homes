@@ -273,7 +273,7 @@ export default function AdminAdministratorsPage() {
 
       {/* Provisioning Drawer / Modal */}
       {isProvisionOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800">
             <div className="px-6 py-4 bg-zinc-900 text-white flex justify-between items-center border-b border-zinc-800">
               <div className="flex items-center gap-2.5">

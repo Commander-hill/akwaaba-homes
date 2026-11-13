@@ -58,8 +58,13 @@ export default function AdminConfirmDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div className="w-full max-w-md bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-4">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isSubmitting) onClose();
+      }}
+    >
+      <div className="w-full max-w-md bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-[28px] sm:rounded-3xl p-6 shadow-2xl space-y-4 max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -121,12 +126,12 @@ export default function AdminConfirmDialog({
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2.5 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 pt-2">
             <button
               type="button"
               disabled={isSubmitting}
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs font-bold rounded-full sm:rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
             >
               Cancel
             </button>
@@ -134,7 +139,7 @@ export default function AdminConfirmDialog({
               type="submit"
               disabled={isSubmitting}
               className={clsx(
-                'px-4 py-2 text-xs font-bold text-white rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-60',
+                'w-full sm:w-auto justify-center px-4 py-2.5 sm:py-2 text-xs font-bold text-white rounded-full sm:rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-60',
                 confirmVariant === 'danger' && 'bg-rose-600 hover:bg-rose-700',
                 confirmVariant === 'warning' && 'bg-amber-600 hover:bg-amber-700',
                 confirmVariant === 'primary' && 'bg-[#16A34A] hover:bg-[#15803D]'

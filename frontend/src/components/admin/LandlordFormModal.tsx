@@ -133,7 +133,7 @@ export default function LandlordFormModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/50 backdrop-blur-xs"
       onClick={() => !submitting && onClose()}
     >
       <div

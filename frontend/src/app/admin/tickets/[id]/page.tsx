@@ -398,7 +398,7 @@ export default function AdminTicketDetailPage({
 
       {/* Lightbox Zoom */}
       {zoomedPhoto && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/90 backdrop-blur-md">
           <div className="relative max-w-5xl w-full flex flex-col items-center">
             <div className="flex justify-between items-center w-full mb-3 text-white">
               <h3 className="font-extrabold text-sm">{zoomedPhoto.title}</h3>

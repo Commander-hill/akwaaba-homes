@@ -65,15 +65,20 @@ export default function DialogModal({
   const style = getTypeStyles();
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md transition-all">
+    <div
+      className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/55 backdrop-blur-md transition-all animate-in fade-in duration-150"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
+    >
       <div
-        className="w-full max-w-md bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] transition-all scale-100"
+        className="w-full max-w-md bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-[28px] sm:rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
         onKeyDown={(e) => {
           if (e.key === 'Escape') onCancel();
           if (e.key === 'Enter' && dialogState.inputType !== 'textarea') onConfirm();
         }}
       >
-        <div className="flex items-start gap-4 mb-4">
+        <div className="relative flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left gap-3.5 sm:gap-4 mb-4">
           <div className={clsx('w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-inner', style.badgeBg)}>
             {style.icon}
           </div>
@@ -87,7 +92,7 @@ export default function DialogModal({
           </div>
           <button
             onClick={onCancel}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg transition"
+            className="hidden sm:inline-flex text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg transition cursor-pointer"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -124,12 +129,12 @@ export default function DialogModal({
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-3 mt-6 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 mt-6 pt-3 border-t border-slate-100 dark:border-slate-800/80">
           {dialogState.cancelText && (
             <button
               type="button"
               onClick={onCancel}
-              className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-full sm:rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 sm:bg-transparent dark:bg-slate-800/80 sm:dark:bg-transparent hover:bg-slate-200 sm:hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
               {dialogState.cancelText}
             </button>
@@ -137,7 +142,7 @@ export default function DialogModal({
           <button
             type="button"
             onClick={onConfirm}
-            className={clsx('px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2', style.btnBg)}
+            className={clsx('w-full sm:w-auto justify-center px-6 py-3 sm:py-2.5 rounded-full sm:rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer', style.btnBg)}
           >
             <span>{dialogState.confirmText}</span>
           </button>

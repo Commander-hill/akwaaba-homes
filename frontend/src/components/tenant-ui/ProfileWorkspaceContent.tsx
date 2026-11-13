@@ -1431,7 +1431,7 @@ function ProfileWorkspaceInner({
          ══════════════════════════════════════════════════════════════════════ */}
       {requestModalOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50"
           role="dialog"
           aria-modal="true"
         >
@@ -1500,7 +1500,7 @@ function ProfileWorkspaceInner({
          ══════════════════════════════════════════════════════════════════════ */}
       {guardianModalOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50"
           role="dialog"
           aria-modal="true"
         >
@@ -1595,7 +1595,7 @@ function ProfileWorkspaceInner({
          ══════════════════════════════════════════════════════════════════════ */}
       {academicModalOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50"
           role="dialog"
           aria-modal="true"
         >
@@ -1817,7 +1817,7 @@ function ProfileWorkspaceInner({
          ══════════════════════════════════════════════════════════════════════ */}
       {securityModalOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50"
           role="dialog"
           aria-modal="true"
         >

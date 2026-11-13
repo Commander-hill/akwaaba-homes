@@ -1439,7 +1439,7 @@ function PropertyDetailsContent({ propertyId, initialProperty, initialReviews }:
       {/* ── SEQUENTIAL RESERVATION & CONFIRMATION DIALOG (Section 14) ── */}
       {showReservationSheet && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="reservation-modal-title"
@@ -1564,7 +1564,7 @@ function PropertyDetailsContent({ propertyId, initialProperty, initialReviews }:
       {/* ── PHYSICAL INSPECTION MODAL ── */}
       {showViewingModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Schedule physical inspection"

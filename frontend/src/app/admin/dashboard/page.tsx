@@ -518,7 +518,7 @@ export default function AdminDashboardPage() {
 
       {/* ── ACTION REQUIRED MODAL (OPERATIONAL QUEUE INSPECTOR) ── */}
       {actionQueueModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white dark:bg-zinc-900 rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-4 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
               <div className="flex items-center gap-2.5">
