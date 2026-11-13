@@ -344,7 +344,7 @@ export default function LandlordShell({
   );
 
   return (
-    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
+    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row overflow-x-hidden bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
       <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col bg-white dark:bg-[#141816] border-r border-zinc-200 dark:border-zinc-800 sticky top-0 h-screen z-20 shadow-xs overflow-hidden">
         <div className="h-16 px-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center shrink-0">{brand}</div>
         {nav()}
@@ -469,7 +469,7 @@ export default function LandlordShell({
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">{children}</main>
+        <main className="flex-1 min-w-0 p-3.5 sm:p-6 max-w-6xl w-full mx-auto pb-24 lg:pb-8">{children}</main>
       </div>
 
       {drawerOpen && (

@@ -131,7 +131,7 @@ export default function TenantDashboardPage() {
         {/* Hero Content */}
         <div className="relative z-10 w-full p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           {/* Left: Dynamic Greeting, Subtext & Stay Tags */}
-          <div className="max-w-lg space-y-2">
+          <div className="min-w-0 flex-1 max-w-lg space-y-2">
             <p className="text-xs sm:text-sm font-medium text-emerald-200/90">
               {greeting}
             </p>
@@ -166,7 +166,7 @@ export default function TenantDashboardPage() {
 
           {/* Right Floating Card: Current Stay OR Onboarding Milestone Tracker */}
           {primaryBooking ? (
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-xl border border-zinc-100/80 dark:border-zinc-800 w-full md:w-[340px] shrink-0">
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-xl border border-zinc-100/80 dark:border-zinc-800 w-full md:max-w-[340px] shrink-0">
               <div className="flex items-start gap-3">
                 <div className="w-14 h-14 rounded-xl overflow-hidden relative shrink-0 border border-zinc-100 dark:border-zinc-800">
                   <Image
@@ -216,7 +216,7 @@ export default function TenantDashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-xl border border-zinc-100/80 dark:border-zinc-800 w-full md:w-[340px] shrink-0 space-y-3">
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-xl border border-zinc-100/80 dark:border-zinc-800 w-full md:max-w-[340px] shrink-0 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                   Getting Started

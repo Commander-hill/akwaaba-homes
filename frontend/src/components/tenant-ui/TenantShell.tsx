@@ -514,7 +514,7 @@ export default function TenantShell({
   );
 
   return (
-    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0E1210] text-zinc-900 dark:text-zinc-100 font-sans">
+    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row overflow-x-hidden bg-white dark:bg-[#0E1210] text-zinc-900 dark:text-zinc-100 font-sans">
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col bg-white dark:bg-[#12151D] border-r border-zinc-200 dark:border-zinc-800 sticky top-0 h-screen z-20 shadow-xs">
         {renderSidebarContent()}
@@ -711,7 +711,7 @@ export default function TenantShell({
         </header>
 
         {/* Page Content Container */}
-        <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
+        <main className="flex-1 min-w-0 p-3.5 sm:p-6 max-w-6xl w-full mx-auto pb-24 lg:pb-8">
           {children}
         </main>
       </div>
