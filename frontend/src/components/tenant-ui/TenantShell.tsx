@@ -512,16 +512,6 @@ export default function TenantShell({
     </div>
   );
 
-  const isFullBleedPage =
-    pathname === '/dashboard/invoice' ||
-    pathname === '/dashboard/agreements' ||
-    pathname === '/dashboard/documents' ||
-    pathname === '/dashboard/profile' ||
-    pathname === '/profile' ||
-    pathname === '/settings' ||
-    pathname === '/dashboard/tenant/tickets' ||
-    pathname === '/dashboard/messages';
-
   return (
     <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0E1210] text-zinc-900 dark:text-zinc-100 font-sans">
       {/* ── DESKTOP SIDEBAR ── */}
@@ -726,12 +716,7 @@ export default function TenantShell({
         </header>
 
         {/* Page Content Container */}
-        <main
-          className={clsx(
-            'flex-1 w-full mx-auto pt-16 pb-24 lg:pb-8',
-            isFullBleedPage ? 'p-0 pt-16 max-w-full' : 'max-w-[1440px] p-4 pt-20 sm:p-6 sm:pt-22 lg:p-7 lg:pt-23'
-          )}
-        >
+        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 lg:pb-8">
           {children}
         </main>
       </div>
