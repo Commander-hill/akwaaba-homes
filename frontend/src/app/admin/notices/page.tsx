@@ -126,14 +126,6 @@ function getCategoryInfo(notice: Notice) {
   };
 }
 
-function getNoticeViews(notice: Notice): string {
-  const hash = notice.id
-    ? notice.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    : notice.orderIndex * 77;
-  const count = (hash % 900) + 450;
-  return count > 999 ? `${(count / 1000).toFixed(1)}K views` : `${count} views`;
-}
-
 export default function AdminNoticesPage() {
   const queryClient = useQueryClient();
   const { socket } = useSocket();
@@ -733,7 +725,6 @@ export default function AdminNoticesPage() {
             filteredNotices.map((notice) => {
               const catInfo = getCategoryInfo(notice);
               const noticeImg = getNoticeImage(notice);
-              const viewsText = getNoticeViews(notice);
 
               return (
                 <div
@@ -778,10 +769,6 @@ export default function AdminNoticesPage() {
                         <Calendar className="w-3.5 h-3.5 text-zinc-400" />
                         {formatNoticeDate(notice.createdAt)}
                       </span>
-                      <span className="flex items-center gap-1.5">
-                        <Eye className="w-3.5 h-3.5 text-zinc-400" />
-                        {viewsText}
-                      </span>
                     </div>
                   </div>
 
@@ -825,7 +812,7 @@ export default function AdminNoticesPage() {
                         {openMenuId === notice.id && (
                           <div
                             onClick={(e) => e.stopPropagation()}
-                            className="absolute right-0 top-8 z-30 w-44 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-xl py-1 text-left text-xs"
+                            className="absolute left-0 sm:left-auto sm:right-0 top-8 z-30 w-44 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-xl py-1 text-left text-xs"
                           >
                             <button
                               onClick={() => {
