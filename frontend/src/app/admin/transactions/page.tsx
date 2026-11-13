@@ -617,7 +617,56 @@ export default function AdminTransactionsPage() {
                 </p>
               </div>
             ) : viewMode === 'list' ? (
-              <div className="overflow-x-auto">
+              <>
+                {/* Mobile Card List */}
+                <div className="md:hidden divide-y divide-zinc-100 dark:divide-zinc-800/80">
+                  {paginatedEntries.map((entry) => {
+                    const dt = formatDateParts(entry.createdAt);
+                    const statusCfg = STATUS_STYLE_MAP[entry.status];
+                    return (
+                      <div key={entry.id} className="p-4 space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <Link
+                              href={entry.detailHref}
+                              className="font-mono text-xs font-bold text-zinc-900 dark:text-white hover:text-emerald-600 transition"
+                            >
+                              {entry.reference}
+                            </Link>
+                            <div className="text-[11px] text-zinc-400 mt-0.5">
+                              {dt.date} · {dt.time}
+                            </div>
+                          </div>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 ${statusCfg.pill}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
+                            {statusCfg.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate">
+                              {entry.partyName}
+                            </div>
+                            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                              {entry.propertyTitle} · {entry.paymentMethod}
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-sm font-black text-zinc-900 dark:text-white">
+                              GH₵ {entry.amount.toLocaleString('en-GH')}
+                            </div>
+                            <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${TYPE_BADGE_MAP[entry.typeLabel]}`}>
+                              {entry.typeLabel}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-zinc-100 dark:border-zinc-800 text-[11px] font-bold text-zinc-500 dark:text-zinc-400">
@@ -801,6 +850,7 @@ export default function AdminTransactionsPage() {
                   </tbody>
                 </table>
               </div>
+              </>
             ) : (
               <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {paginatedEntries.map((entry) => {

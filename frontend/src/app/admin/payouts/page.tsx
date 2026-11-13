@@ -621,7 +621,65 @@ export default function AdminPayoutsPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+                {/* Mobile Card List */}
+                <div className="md:hidden divide-y divide-zinc-100 dark:divide-zinc-800/80">
+                  {visiblePayouts.map((p: any) => {
+                    const landlordName =
+                      `${p.landlord?.firstName || ''} ${p.landlord?.lastName || ''}`.trim() ||
+                      p.accountName ||
+                      'Landlord';
+                    const statusCfg = STATUS_STYLE_MAP[p.status] || STATUS_STYLE_MAP.PENDING;
+                    const refCode = p.transferReference || `PAY-${String(p.id).slice(0, 8).toUpperCase()}`;
+
+                    return (
+                      <div key={p.id} className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="font-bold text-sm text-zinc-900 dark:text-white truncate">
+                              {landlordName}
+                            </div>
+                            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+                              {refCode} · {formatDateTime(p.createdAt)}
+                            </div>
+                          </div>
+                          {p.disputeHold ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[11px] font-bold shrink-0">
+                              <Scale className="w-3 h-3" />
+                              Dispute Frozen
+                            </span>
+                          ) : (
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 ${statusCfg.pill}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
+                              {statusCfg.label}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between gap-3 pt-1">
+                          <div>
+                            <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                              {p.bankOrNetwork || 'MoMo / Bank'}
+                            </div>
+                            <div className="text-sm font-black text-zinc-900 dark:text-white mt-0.5">
+                              GHS {Number(p.amount || 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPayout(p)}
+                            className="h-9 px-3.5 rounded-full border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition inline-flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-zinc-500" />
+                            <span>View</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-zinc-100 dark:border-zinc-800 text-[11px] font-bold text-zinc-500 dark:text-zinc-400">
@@ -730,6 +788,7 @@ export default function AdminPayoutsPage() {
                   </tbody>
                 </table>
               </div>
+              </>
             )}
           </div>
         </div>

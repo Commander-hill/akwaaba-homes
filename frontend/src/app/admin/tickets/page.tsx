@@ -661,7 +661,53 @@ export default function AdminTicketsPage() {
                 </p>
               </div>
             ) : viewMode === 'list' ? (
-              <div className="overflow-x-auto">
+              <>
+                {/* Mobile Card List */}
+                <div className="md:hidden divide-y divide-zinc-100 dark:divide-zinc-800/80">
+                  {paginatedTickets.map((t: any) => {
+                    const ticketCode = `TKT-${String(t.id).slice(0, 8).toUpperCase()}`;
+                    const normStatus = normalizeStatus(t);
+                    const statusCfg = STATUS_BADGE_MAP[normStatus];
+                    const priority = normalizePriority(t.priority);
+                    const priorityCfg = PRIORITY_STYLE_MAP[priority];
+                    const reporterName =
+                      `${t.tenant?.firstName || ''} ${t.tenant?.lastName || ''}`.trim() || 'Tenant';
+
+                    return (
+                      <div key={t.id} className="p-4 space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <Link
+                              href={`/admin/tickets/${t.id}`}
+                              className="font-mono text-xs font-bold text-zinc-900 dark:text-white hover:text-emerald-600 transition"
+                            >
+                              {ticketCode}
+                            </Link>
+                            <div className="text-sm font-bold text-zinc-900 dark:text-white truncate mt-0.5">
+                              {t.title || detectCategory(t.title, t.description)}
+                            </div>
+                          </div>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 ${statusCfg.pill}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
+                            {statusCfg.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <div className="text-zinc-500 dark:text-zinc-400 truncate">
+                            {reporterName} · {t.property?.title || 'Residential Unit'}
+                          </div>
+                          <span className={`inline-flex items-center gap-1.5 font-bold shrink-0 ${priorityCfg.text}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${priorityCfg.dot}`} />
+                            {priority}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-zinc-100 dark:border-zinc-800 text-[11px] font-bold text-zinc-500 dark:text-zinc-400">
@@ -823,6 +869,7 @@ export default function AdminTicketsPage() {
                   </tbody>
                 </table>
               </div>
+              </>
             ) : (
               <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {paginatedTickets.map((t: any) => {

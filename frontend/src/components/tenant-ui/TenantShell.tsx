@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
+import { useSocket } from '@/providers/SocketProvider';
 
 export interface TenantShellProps {
   user?: {
@@ -78,6 +79,23 @@ export default function TenantShell({
   const pathname = usePathname() || '';
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleSync = () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['active-notices'] });
+    };
+    const events = ['notification', 'booking_updated', 'ticket_updated', 'notice_updated', 'message_received'];
+    events.forEach((ev) => socket.on(ev, handleSync));
+    return () => {
+      events.forEach((ev) => socket.off(ev, handleSync));
+    };
+  }, [socket, queryClient]);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);

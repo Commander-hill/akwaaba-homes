@@ -31,6 +31,8 @@ import {
 import NotificationBell from '@/components/NotificationBell';
 import LogoutControl from '@/components/LogoutControl';
 import { getImageUrl } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
+import { useSocket } from '@/providers/SocketProvider';
 
 export interface LandlordShellProps {
   user?: {
@@ -67,6 +69,24 @@ export default function LandlordShell({
 }: LandlordShellProps) {
   const pathname = usePathname() || '';
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleSync = () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['landlord-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['landlord-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['active-notices'] });
+    };
+    const events = ['notification', 'booking_updated', 'ticket_updated', 'notice_updated', 'payout_updated'];
+    events.forEach((ev) => socket.on(ev, handleSync));
+    return () => {
+      events.forEach((ev) => socket.off(ev, handleSync));
+    };
+  }, [socket, queryClient]);
 
   useEffect(() => {
     setDrawerOpen(false);

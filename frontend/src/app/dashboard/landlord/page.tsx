@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { DashboardOverviewSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/axios';
+import { getImageUrl } from '@/lib/utils';
+import { DashboardOverviewSkeleton } from '@/components/ui/PageSkeletons';
 import {
   Home,
   CalendarCheck,
@@ -16,8 +18,8 @@ import {
   ShieldCheck,
   Crown,
   Activity,
-  MessageSquare,
-  MoreHorizontal,
+  Plus,
+  Building2,
 } from 'lucide-react';
 
 function RollingWaves({ color, darkColor }: { color: string; darkColor: string }) {
@@ -60,126 +62,169 @@ function GoldCrownGraphic({ className }: { className?: string }) {
           <feDropShadow dx="0" dy="6" stdDeviation="5" floodColor="#92400E" floodOpacity="0.35" />
         </filter>
       </defs>
-      <g filter="url(#crownGlow)">
-        {/* Crown Body with 5 Peaks */}
+      <circle cx="34" cy="34" r="2.5" fill="#FFF9C4" />
+      <circle cx="128" cy="30" r="2" fill="#FFF9C4" />
+      <circle cx="24" cy="80" r="2" fill="#FFE082" />
+      <circle cx="136" cy="75" r="2.5" fill="#FFE082" />
+      <path d="M120 42L122 46L126 48L122 50L120 54L118 50L114 48L118 46L120 42Z" fill="#FFF59D" />
+      <g filter="url(#crownGlow)" transform="rotate(-12 80 70)">
         <path
-          d="M22 100 L26 48 L56 74 L80 26 L104 74 L134 48 L138 100 Q80 112 22 100 Z"
+          d="M36 96L28 48L56 68L80 34L104 68L132 48L124 96H36Z"
           fill="url(#goldLight)"
-          stroke="#FFE082"
-          strokeWidth="2.5"
+          stroke="#FFF59D"
+          strokeWidth="2"
           strokeLinejoin="round"
         />
-        {/* Base Rim Band */}
-        <path
-          d="M20 98 Q80 112 140 98 L138 116 Q80 128 22 116 Z"
-          fill="url(#goldDark)"
-          stroke="#FFA000"
-          strokeWidth="1.5"
-        />
-        {/* Jewels on Base Band */}
-        <circle cx="45" cy="108" r="3.5" fill="#EF4444" stroke="#FFF" strokeWidth="1" />
-        <circle cx="80" cy="112" r="4.5" fill="#10B981" stroke="#FFF" strokeWidth="1" />
-        <circle cx="115" cy="108" r="3.5" fill="#3B82F6" stroke="#FFF" strokeWidth="1" />
-        {/* Pearls on Crown Peaks */}
-        <circle cx="26" cy="46" r="5" fill="#FFFBEB" stroke="#F59E0B" strokeWidth="1.5" />
-        <circle cx="56" cy="72" r="4.5" fill="#FFFBEB" stroke="#F59E0B" strokeWidth="1.5" />
-        <circle cx="80" cy="24" r="6.5" fill="#FFFBEB" stroke="#F59E0B" strokeWidth="2" />
-        <circle cx="104" cy="72" r="4.5" fill="#FFFBEB" stroke="#F59E0B" strokeWidth="1.5" />
-        <circle cx="134" cy="46" r="5" fill="#FFFBEB" stroke="#F59E0B" strokeWidth="1.5" />
+        <path d="M56 68L80 34L104 68L80 96L56 68Z" fill="url(#goldDark)" fillOpacity="0.45" />
+        <rect x="34" y="96" width="92" height="12" rx="6" fill="url(#goldLight)" stroke="#FFF59D" strokeWidth="1.5" />
+        <circle cx="28" cy="45" r="5" fill="#FFF59D" />
+        <circle cx="80" cy="31" r="6" fill="#FFF59D" />
+        <circle cx="132" cy="45" r="5" fill="#FFF59D" />
+        <circle cx="80" cy="78" r="5" fill="#FFF9C4" />
+        <circle cx="54" cy="83" r="3" fill="#FFF9C4" />
+        <circle cx="106" cy="83" r="3" fill="#FFF9C4" />
       </g>
     </svg>
   );
 }
 
-// Exactly matches the properties in the mockup
-const exactProperties = [
-  {
-    id: 'kimo-apt',
-    title: 'KIMO APARTMENT',
-    location: 'Burma Camp, Accra',
-    price: 'GH₵ 2,000',
-    unit: '/ room',
-    status: 'Active',
-    image: '/images/resident/prop-kimo.jpg',
-  },
-  {
-    id: 'ssnit-apt',
-    title: 'SSNIT RESIDENTIAL APARTMENTS',
-    location: 'Koforidua',
-    price: 'GH₵ 4,500',
-    unit: '/ room',
-    status: 'Active',
-    image: '/images/resident/prop-premium-studio.jpg',
-  },
-  {
-    id: 'glacier-studio',
-    title: 'GLACIER STUDIO',
-    location: 'Achimota, Accra',
-    price: 'GH₵ 20,000',
-    unit: '/ room',
-    status: 'Active',
-    image: '/images/resident/residence-glacier-main.jpg',
-  },
-];
+function formatTimeAgo(iso?: string): string {
+  if (!iso) return 'Recently';
+  const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${Math.max(1, mins)}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
 
 export default function LandlordDashboardPage() {
-  const showSkeleton = useInitialSkeleton();
-  if (showSkeleton) return <DashboardOverviewSkeleton />;
+  const { data: meData, isLoading: meLoading } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data;
+    },
+    staleTime: 60_000,
+  });
+
+  const { data: propertiesData, isLoading: propsLoading } = useQuery({
+    queryKey: ['landlord-properties'],
+    queryFn: async () => {
+      const res = await api.get('/properties/landlord/mine');
+      const d = res.data;
+      return Array.isArray(d) ? d : Array.isArray(d?.properties) ? d.properties : [];
+    },
+  });
+
+  const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
+    queryKey: ['landlord-bookings'],
+    queryFn: async () => {
+      const res = await api.get('/bookings/landlord');
+      const d = res.data;
+      return Array.isArray(d) ? d : Array.isArray(d?.bookings) ? d.bookings : [];
+    },
+  });
+
+  const { data: payoutData } = useQuery({
+    queryKey: ['payouts', 'history'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/payouts/history');
+        return res.data;
+      } catch {
+        return null;
+      }
+    },
+  });
+
+  const user = meData?.user || meData || null;
+  const properties: any[] = propertiesData || [];
+  const bookings: any[] = bookingsData || [];
+  const payouts: any[] = payoutData?.payouts || [];
+  const availableBalance = Number(payoutData?.summary?.availableBalance || 0);
+
+  const displayName = useMemo(() => {
+    if (!user?.firstName) return 'Landlord';
+    const lastInitial = user.lastName ? ` ${user.lastName[0]}.` : '';
+    return `${user.firstName}${lastInitial}`;
+  }, [user]);
+
+  const pendingBookingsCount = useMemo(
+    () => bookings.filter((b: any) => b.status === 'PENDING' || b.status === 'AWAITING_LANDLORD').length,
+    [bookings],
+  );
+
+  const recentProperties = useMemo(() => properties.slice(0, 3), [properties]);
+
+  const recentActivities = useMemo(() => {
+    const items: {
+      id: string;
+      kind: 'BOOKING' | 'PAYOUT';
+      title: string;
+      subtitle: string;
+      time: string;
+      ts: number;
+    }[] = [];
+
+    bookings.slice(0, 4).forEach((b: any) => {
+      items.push({
+        id: `bk-${b.id}`,
+        kind: 'BOOKING',
+        title: b.status === 'PENDING' ? 'New booking request' : `Booking ${String(b.status || '').toLowerCase()}`,
+        subtitle: b.property?.title || 'Property Booking',
+        time: formatTimeAgo(b.createdAt),
+        ts: new Date(b.createdAt || 0).getTime(),
+      });
+    });
+
+    payouts.slice(0, 3).forEach((p: any) => {
+      items.push({
+        id: `pay-${p.id}`,
+        kind: 'PAYOUT',
+        title: p.status === 'COMPLETED' ? 'Payout settled' : `Payout ${String(p.status || 'pending').toLowerCase()}`,
+        subtitle: `GH₵ ${Number(p.amount || 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}`,
+        time: formatTimeAgo(p.createdAt),
+        ts: new Date(p.createdAt || 0).getTime(),
+      });
+    });
+
+    return items.sort((a, b) => b.ts - a.ts).slice(0, 3);
+  }, [bookings, payouts]);
+
+  const isVerified =
+    user?.ghanaCardStatus === 'VERIFIED' || user?.landlordVerificationStatus === 'VERIFIED';
+
+  if (meLoading && propsLoading && bookingsLoading) {
+    return <DashboardOverviewSkeleton />;
+  }
+
   return (
     <div className="space-y-6 pb-12">
       {/* Hero Banner */}
-      <div className="relative rounded-3xl overflow-hidden min-h-[220px] md:h-[230px] flex items-center shadow-xs bg-[#06331C]">
-        {/* Panoramic apartment background on right */}
-        <div className="absolute inset-y-0 right-0 w-full md:w-[65%]">
-          <Image
-            src="/images/resident/landlord-dashboard-hero-bldg.jpg"
-            alt=""
-            fill
-            priority
-            fetchPriority="high"
-            decoding="sync"
-            quality={65}
-            sizes="(max-width: 768px) 100vw, 65vw"
-            className="object-cover object-center"
-          />
-          {/* Seamless left edge blend */}
-          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#06331C] to-transparent" />
-        </div>
+      <div className="relative rounded-3xl overflow-hidden shadow-sm border border-emerald-950/10 min-h-[190px] sm:min-h-[210px] flex items-center bg-[#064E3B]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          decoding="async"
+          src="/images/resident/landlord-dashboard-hero-bldg.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover object-right"
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(6,78,59,0.96) 0%, rgba(6,78,59,0.88) 42%, rgba(6,78,59,0.35) 75%, rgba(6,78,59,0.05) 100%)',
+          }}
+        />
 
-        {/* Right curved wave overlay framing the right edge */}
-        <div className="absolute right-0 top-0 bottom-0 w-36 sm:w-48 md:w-64 pointer-events-none overflow-hidden">
-          <svg
-            viewBox="0 0 240 300"
-            fill="none"
-            preserveAspectRatio="none"
-            className="w-full h-full"
-          >
-            <path
-              d="M90,0 C175,70 185,210 40,300 L240,300 L240,0 Z"
-              fill="#0E7A36"
-              fillOpacity="0.55"
-            />
-            <path
-              d="M135,0 C210,80 215,200 90,300 L240,300 L240,0 Z"
-              fill="#16A34A"
-              fillOpacity="0.85"
-            />
-            <path
-              d="M175,0 C235,90 240,190 140,300 L240,300 L240,0 Z"
-              fill="#22C55E"
-              fillOpacity="0.45"
-            />
-          </svg>
-        </div>
-
-        {/* Content inside Hero */}
         <div className="relative z-10 px-6 sm:px-10 py-7 max-w-xl text-white space-y-3">
           <div>
             <p className="text-xl sm:text-2xl font-light text-white/95 leading-tight">
               Welcome back,
             </p>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mt-0.5">
-              Stephen D.!
+              {displayName}!
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-white/85 font-normal leading-relaxed max-w-md">
@@ -202,7 +247,6 @@ export default function LandlordDashboardPage() {
 
       {/* 4 Stat / KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        {/* Card 1: Total Properties */}
         <Link
           href="/dashboard/landlord/properties"
           className="relative rounded-2xl p-5 overflow-hidden bg-[#EDF9F0] border border-[#DCF5E3] shadow-2xs hover:shadow-sm transition-all hover:-translate-y-0.5 flex flex-col justify-between min-h-[115px]"
@@ -213,7 +257,7 @@ export default function LandlordDashboardPage() {
             </div>
             <div className="flex-1 ml-4 min-w-0">
               <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
-                3
+                {properties.length}
               </span>
               <span className="block text-xs font-semibold text-zinc-700 mt-1.5 truncate">
                 Total Properties
@@ -224,7 +268,6 @@ export default function LandlordDashboardPage() {
           <RollingWaves color="#A7F3D0" darkColor="#4ADE80" />
         </Link>
 
-        {/* Card 2: Total Bookings */}
         <Link
           href="/dashboard/landlord/bookings"
           className="relative rounded-2xl p-5 overflow-hidden bg-[#EAF3FD] border border-[#D6E8FD] shadow-2xs hover:shadow-sm transition-all hover:-translate-y-0.5 flex flex-col justify-between min-h-[115px]"
@@ -235,7 +278,7 @@ export default function LandlordDashboardPage() {
             </div>
             <div className="flex-1 ml-4 min-w-0">
               <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
-                3
+                {bookings.length}
               </span>
               <span className="block text-xs font-semibold text-zinc-700 mt-1.5 truncate">
                 Total Bookings
@@ -246,7 +289,6 @@ export default function LandlordDashboardPage() {
           <RollingWaves color="#BFDBFE" darkColor="#60A5FA" />
         </Link>
 
-        {/* Card 3: Pending Requests */}
         <Link
           href="/dashboard/landlord/bookings?status=PENDING"
           className="relative rounded-2xl p-5 overflow-hidden bg-[#FEF7EB] border border-[#FDECCD] shadow-2xs hover:shadow-sm transition-all hover:-translate-y-0.5 flex flex-col justify-between min-h-[115px]"
@@ -257,7 +299,7 @@ export default function LandlordDashboardPage() {
             </div>
             <div className="flex-1 ml-4 min-w-0">
               <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
-                0
+                {pendingBookingsCount}
               </span>
               <span className="block text-xs font-semibold text-zinc-700 mt-1.5 truncate">
                 Pending Requests
@@ -268,7 +310,6 @@ export default function LandlordDashboardPage() {
           <RollingWaves color="#FDE68A" darkColor="#FBBF24" />
         </Link>
 
-        {/* Card 4: Awaiting Payment */}
         <Link
           href="/dashboard/landlord/withdraw"
           className="relative rounded-2xl p-5 overflow-hidden bg-[#F3EEFD] border border-[#E6DBFC] shadow-2xs hover:shadow-sm transition-all hover:-translate-y-0.5 flex flex-col justify-between min-h-[115px]"
@@ -278,11 +319,11 @@ export default function LandlordDashboardPage() {
               <CreditCard className="w-6 h-6 stroke-[2.2]" />
             </div>
             <div className="flex-1 ml-4 min-w-0">
-              <span className="block text-2xl sm:text-3xl font-extrabold text-zinc-900 leading-none">
-                GH₵ 0.00
+              <span className="block text-2xl sm:text-3xl font-extrabold text-zinc-900 leading-none truncate">
+                GH₵ {availableBalance.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <span className="block text-xs font-semibold text-zinc-700 mt-1.5 truncate">
-                Awaiting Payment
+                Available Balance
               </span>
             </div>
             <ArrowRight className="w-4 h-4 text-zinc-600 shrink-0 mt-1 stroke-[2]" />
@@ -293,9 +334,7 @@ export default function LandlordDashboardPage() {
 
       {/* Main Grid: Left (8-cols) & Right (4-cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (8-cols) */}
         <div className="lg:col-span-8 space-y-6">
-          {/* My Properties Section */}
           <div className="space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -313,97 +352,112 @@ export default function LandlordDashboardPage() {
               </Link>
             </div>
 
-            {/* 3 Property Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-              {exactProperties.map((prop) => (
-                <div
-                  key={prop.id}
-                  className="bg-white dark:bg-[#141816] rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col group"
-                >
-                  {/* Property Image Container */}
-                  <div className="relative h-36 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img decoding="async" loading="lazy"
-                      src={prop.image}
-                      alt={prop.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-
-                    {/* Active Badge on BOTTOM LEFT of image */}
-                    <div className="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-[#15803D] text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-md">
-                      <MessageSquare className="w-2.5 h-2.5 fill-white" />
-                      <span>{prop.status}</span>
-                    </div>
-
-                    {/* 3 dots menu button on TOP RIGHT of image */}
-                    <button
-                      type="button"
-                      aria-label="Property options"
-                      className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-white/80 hover:bg-white text-zinc-700 flex items-center justify-center backdrop-blur-xs transition-colors shadow-xs cursor-pointer"
-                    >
-                      <MoreHorizontal className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Card Content */}
-                  <div className="p-3.5 flex flex-col flex-1 justify-between gap-3">
-                    <div className="space-y-1">
-                      <h3 className="text-xs sm:text-[13px] font-bold text-zinc-900 dark:text-white uppercase truncate">
-                        {prop.title}
-                      </h3>
-                      <div className="flex items-center gap-1 text-[11px] text-[#15803D] font-medium truncate">
-                        <MapPin className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{prop.location}</span>
-                      </div>
-                      <div className="pt-0.5 text-xs sm:text-[13px] font-bold text-zinc-900 dark:text-white">
-                        {prop.price}{' '}
-                        <span className="text-[11px] font-normal text-zinc-500 dark:text-zinc-400">
-                          {prop.unit}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800">
-                      <Link
-                        href={`/dashboard/landlord/properties`}
-                        className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-[#15803D]" />
-                        <span>View Details</span>
-                      </Link>
-                      <Link
-                        href={`/dashboard/landlord/properties`}
-                        className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
-                      >
-                        <Settings className="w-3.5 h-3.5 text-[#15803D]" />
-                        <span>Manage</span>
-                      </Link>
-                    </div>
-                  </div>
+            {recentProperties.length === 0 ? (
+              <div className="rounded-2xl bg-white dark:bg-[#141816] border border-zinc-200/80 dark:border-zinc-800 p-10 text-center space-y-3 shadow-2xs">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-[#15803D] flex items-center justify-center mx-auto">
+                  <Building2 className="w-6 h-6" />
                 </div>
-              ))}
-            </div>
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                  No properties listed yet
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+                  Publish your first apartment, hostel, or residential unit to start receiving verified tenant bookings.
+                </p>
+                <Link
+                  href="/dashboard/landlord/new"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#15803D] hover:bg-[#11843b] text-white text-xs font-bold shadow-sm transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add First Property</span>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+                {recentProperties.map((prop: any) => {
+                  const thumb = prop.images?.[0]?.url || prop.images?.[0] || prop.coverImage || '/images/resident/prop-kimo.jpg';
+                  const locationText = [prop.address, prop.city].filter(Boolean).join(', ') || 'Ghana';
+                  const priceVal = Number(prop.price || 0).toLocaleString('en-GH');
+                  const unitLabel = prop.priceUnit === 'MONTHLY' ? '/ month' : prop.priceUnit === 'SEMESTER' ? '/ semester' : '/ year';
+                  const statusLabel = prop.isAvailable === false ? 'Occupied' : prop.status === 'PENDING' ? 'Pending' : 'Active';
+
+                  return (
+                    <div
+                      key={prop.id}
+                      className="bg-white dark:bg-[#141816] rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col group"
+                    >
+                      <div className="relative h-36 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          decoding="async"
+                          loading="lazy"
+                          src={getImageUrl(thumb)}
+                          alt={prop.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-[#15803D] text-white text-[11px] font-semibold shadow-md">
+                          {statusLabel}
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 flex flex-col flex-1 justify-between gap-3">
+                        <div className="space-y-1">
+                          <h3 className="text-xs sm:text-[13px] font-bold text-zinc-900 dark:text-white uppercase truncate">
+                            {prop.title}
+                          </h3>
+                          <div className="flex items-center gap-1 text-[11px] text-[#15803D] font-medium truncate">
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{locationText}</span>
+                          </div>
+                          <div className="pt-0.5 text-xs sm:text-[13px] font-bold text-zinc-900 dark:text-white">
+                            GH₵ {priceVal}{' '}
+                            <span className="text-[11px] font-normal text-zinc-500 dark:text-zinc-400">
+                              {unitLabel}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800">
+                          <Link
+                            href={`/properties/${prop.id}`}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-[#15803D]" />
+                            <span>View</span>
+                          </Link>
+                          <Link
+                            href={`/dashboard/landlord/properties/${prop.id}/edit`}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
+                          >
+                            <Settings className="w-3.5 h-3.5 text-[#15803D]" />
+                            <span>Manage</span>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Account Verification Banner */}
           <div className="relative overflow-hidden rounded-2xl bg-[#EDF9F2] dark:bg-emerald-950/30 border border-[#D0F2DC] dark:border-emerald-900/50 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
-            {/* Left Icon and Text */}
             <div className="flex items-center gap-3.5 relative z-10">
               <div className="w-10 h-10 rounded-xl bg-[#15803D] text-white flex items-center justify-center shrink-0 shadow-xs">
                 <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
               </div>
               <div>
                 <h3 className="font-bold text-sm sm:text-base text-zinc-900 dark:text-white">
-                  Your account is verified!
+                  {isVerified ? 'Your account is verified!' : 'Complete Landlord Verification'}
                 </h3>
                 <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-0.5">
-                  You can now receive bookings with confidence.
+                  {isVerified
+                    ? 'You can receive bookings and withdraw payouts with confidence.'
+                    : 'Verify your Ghana Card and property title to unlock automated payouts.'}
                 </p>
               </div>
             </div>
 
-            {/* Right Action Button */}
             <div className="relative z-10 w-full sm:w-auto">
               <Link
                 href="/dashboard/verification"
@@ -413,38 +467,32 @@ export default function LandlordDashboardPage() {
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-
-            {/* Accra Skyline line art watermark on the right */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img decoding="async" loading="lazy"
+            <img
+              decoding="async"
+              loading="lazy"
               src="/images/about/terms-accra-skyline.png"
               alt=""
-              className="absolute right-0 bottom-0 h-full w-auto max-w-[280px] object-contain opacity-40 dark:opacity-20 pointer-events-none select-none"
+              className="absolute right-0 bottom-0 h-16 opacity-20 pointer-events-none select-none"
             />
           </div>
         </div>
 
         {/* Right Column (4-cols) */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Upgrade Your Plan Card */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#16A34A] via-[#15803D] to-[#0A4D28] text-white p-5 shadow-xs">
-            {/* Background organic shape */}
-            <div className="absolute -bottom-8 -right-8 w-44 h-44 rounded-full bg-white/10 pointer-events-none" />
-            <div className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full bg-[#15803D]/40 pointer-events-none" />
-
-            {/* Crown icon box */}
-            <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-xs flex items-center justify-center mb-3">
-              <Crown className="w-4 h-4 text-white" />
-            </div>
-
-            <h3 className="font-bold text-base sm:text-lg text-white">
-              Upgrade Your Plan
-            </h3>
-            <p className="text-xs text-white/85 mt-1 max-w-[190px] leading-relaxed">
-              Get more visibility and unlock premium features.
-            </p>
-
-            <div className="pt-4">
+        <div className="lg:col-span-4 space-y-5">
+          {/* Upgrade Plan Card */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#065F46] via-[#047857] to-[#064E3B] p-6 text-white shadow-sm">
+            <div className="relative z-10 max-w-[200px] space-y-2.5">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 text-[10px] font-bold uppercase tracking-wider">
+                <Crown className="w-3 h-3 text-amber-300" />
+                <span>Pro Hosting</span>
+              </div>
+              <h3 className="text-lg font-extrabold leading-snug">
+                Boost Your Property Visibility
+              </h3>
+              <p className="text-xs text-emerald-100/90 leading-relaxed">
+                Unlock featured placement, priority support, and advanced analytics.
+              </p>
               <Link
                 href="/dashboard/landlord/subscription"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-zinc-100 text-[#15803D] font-bold text-xs shadow-md transition-all hover:scale-102"
@@ -454,7 +502,6 @@ export default function LandlordDashboardPage() {
               </Link>
             </div>
 
-            {/* 3D Gold Crown graphic */}
             <div className="absolute right-2 top-1/2 -translate-y-1/2 w-24 h-24 sm:w-28 sm:h-28 pointer-events-none select-none">
               <GoldCrownGraphic className="w-full h-full" />
             </div>
@@ -462,7 +509,6 @@ export default function LandlordDashboardPage() {
 
           {/* Recent Activity Card */}
           <div className="bg-white dark:bg-[#141816] rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-2xs p-5 space-y-4">
-            {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-[#15803D]" />
@@ -479,68 +525,44 @@ export default function LandlordDashboardPage() {
               </Link>
             </div>
 
-            {/* Activity List */}
-            <div className="space-y-3.5 pt-1">
-              {/* Item 1 */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-[#EAF8F0] dark:bg-emerald-950/40 text-[#15803D] flex items-center justify-center shrink-0">
-                    <CalendarCheck className="w-4 h-4" />
+            {recentActivities.length === 0 ? (
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 py-2">
+                No recent booking or payout activity yet.
+              </p>
+            ) : (
+              <div className="space-y-3.5 pt-1">
+                {recentActivities.map((act) => (
+                  <div key={act.id} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                          act.kind === 'BOOKING'
+                            ? 'bg-[#EAF8F0] dark:bg-emerald-950/40 text-[#15803D]'
+                            : 'bg-[#EAF3FD] dark:bg-blue-950/40 text-[#2563EB]'
+                        }`}
+                      >
+                        {act.kind === 'BOOKING' ? (
+                          <CalendarCheck className="w-4 h-4" />
+                        ) : (
+                          <CreditCard className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate">
+                          {act.title}
+                        </p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                          {act.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
+                      {act.time}
+                    </span>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate">
-                      New booking received
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                      KIMO APARTMENT
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
-                  2h ago
-                </span>
+                ))}
               </div>
-
-              {/* Item 2 */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-[#EAF3FD] dark:bg-blue-950/40 text-[#2563EB] flex items-center justify-center shrink-0">
-                    <CreditCard className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate">
-                      Payment confirmed
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                      GH₵ 1,800.00
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
-                  4h ago
-                </span>
-              </div>
-
-              {/* Item 3 */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-[#EAF8F0] dark:bg-emerald-950/40 text-[#15803D] flex items-center justify-center shrink-0">
-                    <MessageSquare className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate">
-                      New message
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium italic truncate">
-                      Hi, is the studio still available?
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
-                  5h ago
-                </span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

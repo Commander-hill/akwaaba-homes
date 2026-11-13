@@ -112,20 +112,29 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
       queryClient.invalidateQueries({ queryKey: ['admin-action-queue'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       queryClient.invalidateQueries({ queryKey: ['admin-payouts'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-notices'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-transactions'] });
     };
 
-    socket.on('admin_action_required', handleInvalidate);
-    socket.on('kyc_submitted', handleInvalidate);
-    socket.on('property_created', handleInvalidate);
-    socket.on('breach_reported', handleInvalidate);
-    socket.on('booking_updated', handleInvalidate);
+    const events = [
+      'admin_action_required',
+      'kyc_submitted',
+      'property_created',
+      'breach_reported',
+      'booking_updated',
+      'ticket_created',
+      'ticket_updated',
+      'payout_updated',
+      'notice_updated',
+      'dispute_updated',
+      'review_created',
+    ];
+    events.forEach((ev) => socket.on(ev, handleInvalidate));
 
     return () => {
-      socket.off('admin_action_required', handleInvalidate);
-      socket.off('kyc_submitted', handleInvalidate);
-      socket.off('property_created', handleInvalidate);
-      socket.off('breach_reported', handleInvalidate);
-      socket.off('booking_updated', handleInvalidate);
+      events.forEach((ev) => socket.off(ev, handleInvalidate));
     };
   }, [socket, queryClient]);
 

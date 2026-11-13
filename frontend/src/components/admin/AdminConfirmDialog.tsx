@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { AlertTriangle, Loader2, X } from 'lucide-react';
 import clsx from 'clsx';
+import BottomSheetHandle from '@/components/ui/BottomSheetHandle';
+import { useSwipeToDismiss } from '@/hooks/useSwipeToDismiss';
 
 interface AdminConfirmDialogProps {
   isOpen: boolean;
@@ -35,6 +37,8 @@ export default function AdminConfirmDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const { dragHandlers, sheetStyle } = useSwipeToDismiss({ onDismiss: onClose, disabled: isSubmitting });
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,7 +68,8 @@ export default function AdminConfirmDialog({
         if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
     >
-      <div className="w-full max-w-md bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-[28px] sm:rounded-3xl p-6 shadow-2xl space-y-4 max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+      <div {...dragHandlers} style={sheetStyle} className="w-full max-w-md bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-[28px] sm:rounded-3xl p-6 shadow-2xl space-y-4 max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+        <BottomSheetHandle />
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">

@@ -4,6 +4,8 @@ import '@/app/secondary.css';
 import React from 'react';
 import { AlertTriangle, HelpCircle, Info, CheckCircle, X } from 'lucide-react';
 import clsx from 'clsx';
+import BottomSheetHandle from '@/components/ui/BottomSheetHandle';
+import { useSwipeToDismiss } from '@/hooks/useSwipeToDismiss';
 
 export interface DialogModalState {
   isOpen: boolean;
@@ -63,6 +65,7 @@ export default function DialogModal({
   };
 
   const style = getTypeStyles();
+  const { dragHandlers, sheetStyle } = useSwipeToDismiss({ onDismiss: onCancel });
 
   return (
     <div
@@ -72,12 +75,15 @@ export default function DialogModal({
       }}
     >
       <div
+        {...dragHandlers}
+        style={sheetStyle}
         className="w-full max-w-md bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-[28px] sm:rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
         onKeyDown={(e) => {
           if (e.key === 'Escape') onCancel();
           if (e.key === 'Enter' && dialogState.inputType !== 'textarea') onConfirm();
         }}
       >
+        <BottomSheetHandle />
         <div className="relative flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left gap-3.5 sm:gap-4 mb-4">
           <div className={clsx('w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-inner', style.badgeBg)}>
             {style.icon}
