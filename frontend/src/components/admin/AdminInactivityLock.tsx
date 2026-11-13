@@ -333,18 +333,18 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
                 </div>
 
                 <h2 className="text-2xl font-black text-white tracking-tight leading-tight">
-                  Secure Access<br />for Landlords
+                  Secure Access<br />for Administrators
                 </h2>
                 <p className="text-xs text-emerald-100/90 leading-relaxed mt-2.5 max-w-[280px]">
-                  Your property management starts here. Sign in to manage your listings, bookings and more.
+                  Your platform administration starts here. Unlock to manage users, listings, payouts, and system operations.
                 </p>
 
                 {/* Features Checkmarks */}
                 <div className="space-y-2.5 mt-5">
                   {[
-                    'Manage Your Properties',
-                    'Track Bookings & Payments',
-                    'Stay Updated',
+                    'Manage Users & Properties',
+                    'Oversee Payouts & Compliance',
+                    'Monitor Live Operations',
                   ].map((item) => (
                     <div key={item} className="flex items-center gap-2.5 text-xs font-semibold text-white">
                       <div className="w-4 h-4 rounded-full bg-[#34D399] text-[#065F46] flex items-center justify-center shrink-0 font-black text-[10px]">
@@ -404,7 +404,7 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
                     Welcome Back!
                   </h3>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">
-                    Sign in to your landlord account
+                    Sign in to your administrator account
                   </p>
                 </div>
               </div>
