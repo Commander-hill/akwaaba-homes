@@ -186,8 +186,8 @@ export default function LandlordBookingsPage() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/resident/landlord-bookings-hero-bldg.jpg" alt="" fetchPriority="high" decoding="async" className="w-full h-full object-cover object-center" />
-          {/* Seamless left edge blend */}
-          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#E8F7EE] to-transparent" />
+          {/* Seamless left edge blend for crisp text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#E8F7EE] via-[#E8F7EE]/90 to-[#E8F7EE]/15 md:via-[#E8F7EE]/75 md:to-transparent" />
         </div>
 
         {/* Content inside Hero */}
@@ -358,7 +358,7 @@ export default function LandlordBookingsPage() {
         {filteredBookings.map((booking) => (
           <div
             key={booking.id}
-            className="bg-white dark:bg-[#141816] rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-2xs hover:shadow-md transition-all p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative"
+            className="bg-white dark:bg-[#141816] rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-2xs hover:shadow-md transition-all p-4 sm:p-5 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 xl:gap-6 relative"
           >
             {/* Top-Right 3 Vertical Dots */}
             <button
@@ -370,7 +370,7 @@ export default function LandlordBookingsPage() {
             </button>
 
             {/* Left Column: Image & Property Stay Details */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 w-full xl:flex-1 min-w-0 pr-8 xl:pr-0">
               {/* Property Thumbnail */}
               <div className="relative w-full sm:w-44 h-28 sm:h-30 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -402,7 +402,7 @@ export default function LandlordBookingsPage() {
               </div>
 
               {/* Property & Booking Details */}
-              <div className="space-y-1.5 min-w-0 flex-1">
+              <div className="space-y-1.5 min-w-0 flex-1 w-full">
                 <h3 className="text-base sm:text-lg font-extrabold text-zinc-900 dark:text-white truncate">
                   {booking.propertyTitle}
                 </h3>
@@ -454,7 +454,7 @@ export default function LandlordBookingsPage() {
             </div>
 
             {/* Middle Column: Tenant Info */}
-            <div className="flex flex-col gap-1.5 min-w-[210px] lg:border-l lg:border-zinc-100 dark:lg:border-zinc-800 lg:pl-6">
+            <div className="flex flex-col gap-1.5 w-full sm:w-auto xl:min-w-[200px] xl:border-l xl:border-zinc-100 dark:xl:border-zinc-800 xl:pl-6 pt-3 xl:pt-0 border-t xl:border-t-0 border-zinc-100 dark:border-zinc-800">
               <span className="text-[11px] text-zinc-400 font-medium">
                 Tenant
               </span>
@@ -490,7 +490,7 @@ export default function LandlordBookingsPage() {
             </div>
 
             {/* Right Column: Total Amount & Actions */}
-            <div className="flex flex-col items-start lg:items-start justify-between gap-2.5 min-w-[230px] w-full lg:w-auto lg:pr-6">
+            <div className="flex flex-row sm:flex-row xl:flex-col items-center xl:items-start justify-between gap-3 xl:min-w-[200px] w-full xl:w-auto xl:pr-6 pt-3 xl:pt-0 border-t xl:border-t-0 border-zinc-100 dark:border-zinc-800">
               <div>
                 <span className="block text-[11px] text-zinc-500 font-medium">
                   Total Amount

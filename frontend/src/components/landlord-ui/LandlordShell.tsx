@@ -26,8 +26,10 @@ import {
   BadgeCheck,
   Search,
   Moon,
+  Sun,
   ChevronDown,
 } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import NotificationBell from '@/components/NotificationBell';
 import LogoutControl from '@/components/LogoutControl';
 import { getImageUrl } from '@/lib/utils';
@@ -69,6 +71,9 @@ export default function LandlordShell({
 }: LandlordShellProps) {
   const pathname = usePathname() || '';
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const queryClient = useQueryClient();
   const { socket } = useSocket();
 
@@ -343,13 +348,6 @@ export default function LandlordShell({
             >
               <Menu className="w-5 h-5 stroke-[2]" />
             </button>
-            <button
-              type="button"
-              aria-label="Toggle theme"
-              className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hidden sm:flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0"
-            >
-              <Moon className="w-4 h-4 stroke-[2]" />
-            </button>
             <div className="relative flex-1 max-w-md hidden sm:block">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
               <input
@@ -359,7 +357,20 @@ export default function LandlordShell({
               />
             </div>
           </div>
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3.5">
+            <button
+              type="button"
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              aria-label="Toggle dark mode"
+              title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition cursor-pointer shrink-0"
+            >
+              {mounted && resolvedTheme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </button>
             <div className="relative">
               <button
                 type="button"
