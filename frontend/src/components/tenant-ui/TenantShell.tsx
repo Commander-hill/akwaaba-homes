@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
+import PortalGlobalSearch from '@/components/ui/PortalGlobalSearch';
 import { useSocket } from '@/providers/SocketProvider';
 
 export interface TenantShellProps {
@@ -564,26 +565,18 @@ export default function TenantShell({
               </span>
             </div>
 
-            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-sm sm:max-w-md hidden md:block">
-              <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                placeholder={
-                  pathname.startsWith('/dashboard/messages')
-                    ? 'Search messages, users, or topics...'
-                    : pathname.startsWith('/dashboard/agreements')
-                    ? 'Search properties, bookings, or help...'
-                    : 'Search properties, bookings, or help...'
-                }
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 rounded-full bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] shadow-2xs transition"
-              />
-            </form>
+            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10.5px] font-mono uppercase tracking-wider font-bold">
+                Portal Live
+              </span>
+            </div>
           </div>
 
-          {/* Right: Theme Toggle, Notifications & Profile Trigger */}
-          <div className="flex items-center gap-2 sm:gap-3.5 ml-4">
+          {/* Right: Search, Theme Toggle, Notifications & Profile Trigger */}
+          <div className="flex items-center gap-2 sm:gap-3.5 ml-4 shrink-0">
+            <PortalGlobalSearch portal="tenant" placeholder="Search portal..." />
+
             {/* Dark/Light Mode Toggle */}
             <button
               type="button"
@@ -606,9 +599,11 @@ export default function TenantShell({
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#B91C1C] text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
-                {liveUnreadCount > 0 ? liveUnreadCount : 6}
-              </span>
+              {liveUnreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#B91C1C] text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
+                  {liveUnreadCount > 9 ? '9+' : liveUnreadCount}
+                </span>
+              )}
             </Link>
 
             <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />

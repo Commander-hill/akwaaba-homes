@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -24,13 +24,16 @@ import {
   ClipboardList,
   AlertTriangle,
   BadgeCheck,
-  Search,
+  Home,
+  LogOut,
+  Settings,
   Moon,
   Sun,
   ChevronDown,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import NotificationBell from '@/components/NotificationBell';
+import PortalGlobalSearch from '@/components/ui/PortalGlobalSearch';
 import LogoutControl from '@/components/LogoutControl';
 import { getImageUrl } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
@@ -73,7 +76,18 @@ export default function LandlordShell({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   const queryClient = useQueryClient();
   const { socket } = useSocket();
 
@@ -339,7 +353,7 @@ export default function LandlordShell({
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-3 sm:gap-4 flex-1 max-w-xl">
+          <div className="flex items-center gap-3 sm:gap-5 min-w-0 flex-1 max-w-2xl">
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
@@ -348,16 +362,29 @@ export default function LandlordShell({
             >
               <Menu className="w-5 h-5 stroke-[2]" />
             </button>
-            <div className="relative flex-1 max-w-md hidden sm:block">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search your properties, bookings..."
-                className="w-full h-10 pl-10 pr-4 rounded-full bg-[#EEF2F6] dark:bg-zinc-800/80 border border-transparent focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none transition-all"
-              />
+
+            <div className="flex items-center gap-1.5 text-xs text-[#526357] dark:text-zinc-400 shrink-0">
+              <Home className="w-4 h-4 text-[#16A34A]" />
+              <Link href="/dashboard/landlord" className="hover:text-zinc-900 dark:hover:text-zinc-200 font-medium">
+                Landlord Portal
+              </Link>
+              <span className="text-zinc-300 dark:text-zinc-600">/</span>
+              <span className="font-bold text-zinc-900 dark:text-white truncate max-w-[140px] sm:max-w-none">
+                {pageLabel}
+              </span>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10.5px] font-mono uppercase tracking-wider font-bold">
+                Portal Live
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3.5">
+
+          <div className="flex items-center gap-2 sm:gap-3.5 ml-4 shrink-0">
+            <PortalGlobalSearch portal="landlord" placeholder="Search portal..." />
+
             <button
               type="button"
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
@@ -371,37 +398,74 @@ export default function LandlordShell({
                 <Moon className="w-4 h-4" />
               )}
             </button>
-            <div className="relative">
+
+            <NotificationBell />
+
+            <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
+
+            <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
-                title="Notifications"
-                className="relative p-2 text-zinc-700 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
+                onClick={() => setProfileDropdownOpen((p) => !p)}
+                aria-label="Profile and settings"
+                className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-zinc-800/60 transition cursor-pointer text-left"
               >
-                <Bell className="w-5 h-5 stroke-[1.8]" />
-                <span className="absolute top-1 right-1 w-4 h-4 bg-[#B91C1C] text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 leading-none">
-                  3<span className="sr-only"> unread notifications</span>
-                </span>
+                <div className="w-9 h-9 rounded-full bg-[#0B7A46] text-white text-xs font-bold flex items-center justify-center overflow-hidden shrink-0 shadow-2xs border border-[#0B7A46]">
+                  {user?.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={getImageUrl(user.avatarUrl)} alt={fullName} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{initials}</span>
+                  )}
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-xs font-bold text-zinc-950 dark:text-white leading-tight">{fullName}</p>
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">Landlord</p>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 shrink-0 ml-0.5 hidden sm:block" />
               </button>
+
+              {profileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg py-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-3.5 py-2.5 border-b border-zinc-100 dark:border-zinc-800">
+                    <p className="font-bold text-zinc-950 dark:text-white truncate">{fullName}</p>
+                    <p className="text-[11px] text-zinc-500 truncate font-mono mt-0.5">{user?.email}</p>
+                  </div>
+                  <Link
+                    href="/dashboard/profile"
+                    onClick={() => setProfileDropdownOpen(false)}
+                    className="flex items-center gap-2 px-3.5 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Profile &amp; Settings</span>
+                  </Link>
+                  <Link
+                    href="/dashboard/verification"
+                    onClick={() => setProfileDropdownOpen(false)}
+                    className="flex items-center gap-2 px-3.5 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>ID &amp; Title Deeds</span>
+                  </Link>
+                  {onLogout && (
+                    <>
+                      <div className="border-t border-zinc-100 dark:border-zinc-800 my-1" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          onLogout();
+                        }}
+                        className="w-full flex items-center gap-2 px-3.5 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer font-medium"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
-            <Link
-              href="/dashboard/profile"
-              aria-label="Profile and settings"
-              className="flex items-center gap-2.5 p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-emerald-500/20 bg-zinc-200 shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={user?.avatarUrl ? getImageUrl(user.avatarUrl) : '/images/avatars/stephen-darko.png'}
-                  alt="Stephen Darko"
-                  className="w-full h-full object-cover"
-                />
-              </span>
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-bold text-zinc-900 dark:text-white leading-tight">Stephen D.</span>
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium leading-none">Landlord</span>
-              </div>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400 hidden sm:block stroke-[2.2]" />
-            </Link>
           </div>
         </header>
 
