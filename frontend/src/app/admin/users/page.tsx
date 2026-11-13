@@ -1117,8 +1117,8 @@ export default function AdminUsersPage() {
 
       {/* ─── MODAL: INVITE USER ─────────────────────────────────────────── */}
       {isInviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/70 backdrop-blur-xs animate-in">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs animate-in">
+          <div className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl w-full sm:max-w-md p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center">
@@ -1190,8 +1190,8 @@ export default function AdminUsersPage() {
 
       {/* ─── MODAL: USER QUICK DOSSIER DRAWER ───────────────────────────── */}
       {selectedUserForDrawer && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/70 backdrop-blur-xs animate-in">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs animate-in">
+          <div className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl w-full sm:max-w-lg p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-sm text-zinc-700 dark:text-zinc-300 overflow-hidden border border-zinc-200">
@@ -1304,8 +1304,8 @@ export default function AdminUsersPage() {
 
       {/* ─── MODAL: SUSPENSION CONFIRMATION ─────────────────────────────── */}
       {suspensionTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/70 backdrop-blur-xs animate-in">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs animate-in">
+          <div className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl w-full sm:max-w-md p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-4">
             <div className="flex items-center gap-3">
               <div className={clsx(
                 "w-10 h-10 rounded-2xl flex items-center justify-center",

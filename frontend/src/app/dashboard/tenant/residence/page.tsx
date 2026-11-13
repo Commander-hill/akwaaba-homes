@@ -862,11 +862,11 @@ function ResidencePageContent() {
           onClick={(e) => {
             if (e.target === e.currentTarget) setWifiModalOpen(false);
           }}
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4 cursor-default"
+            className="relative w-full sm:max-w-md bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl space-y-4 cursor-default"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -973,11 +973,11 @@ function ResidencePageContent() {
           onClick={(e) => {
             if (e.target === e.currentTarget) setEcgModalOpen(false);
           }}
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4 cursor-default"
+            className="relative w-full sm:max-w-md bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl space-y-4 cursor-default"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -1048,11 +1048,11 @@ function ResidencePageContent() {
           onClick={(e) => {
             if (e.target === e.currentTarget) setGateModalOpen(false);
           }}
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4 cursor-default"
+            className="relative w-full sm:max-w-md bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl space-y-4 cursor-default"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">

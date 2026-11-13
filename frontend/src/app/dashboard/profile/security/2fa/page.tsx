@@ -926,8 +926,8 @@ function TwoFactorStudioContent() {
 
       {/* ── MODAL: REGENERATE RECOVERY CODES ── */}
       {regenModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50">
-          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 sm:p-8 max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-xl space-y-5">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+          <div className="bg-white dark:bg-[#12151D] rounded-t-[28px] rounded-b-none sm:rounded-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-8 sm:max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-xl space-y-5">
             <div className="flex items-center gap-3 text-zinc-900 dark:text-white">
               <div className="p-2.5 bg-amber-500/10 text-amber-600 rounded-xl">
                 <RefreshCw className="w-5 h-5" />
@@ -996,8 +996,8 @@ function TwoFactorStudioContent() {
 
       {/* ── MODAL: DISABLE 2FA ── */}
       {disableModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50">
-          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 sm:p-8 max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-xl space-y-5">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+          <div className="bg-white dark:bg-[#12151D] rounded-t-[28px] rounded-b-none sm:rounded-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-8 sm:max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-xl space-y-5">
             <div className="flex items-center gap-3 text-rose-600">
               <div className="p-2.5 bg-rose-500/10 text-rose-600 rounded-xl">
                 <XCircle className="w-5 h-5" />

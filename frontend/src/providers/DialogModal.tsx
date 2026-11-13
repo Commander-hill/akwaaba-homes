@@ -69,7 +69,7 @@ export default function DialogModal({
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/55 backdrop-blur-md transition-all animate-in fade-in duration-150"
+      className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/55 backdrop-blur-md transition-all animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
@@ -77,7 +77,7 @@ export default function DialogModal({
       <div
         {...dragHandlers}
         style={sheetStyle}
-        className="w-full max-w-md bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-[28px] sm:rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+        className="w-full sm:max-w-md bg-white dark:bg-[#121216] border-t sm:border border-slate-200/80 dark:border-white/10 rounded-t-[28px] rounded-b-none sm:rounded-3xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
         onKeyDown={(e) => {
           if (e.key === 'Escape') onCancel();
           if (e.key === 'Enter' && dialogState.inputType !== 'textarea') onConfirm();

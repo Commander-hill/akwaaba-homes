@@ -1156,8 +1156,8 @@ export default function AdminVerificationsQueuePage() {
 
       {/* ─── MODAL 1: INTERACTIVE DOCUMENT VIEWER ────────────────────────────── */}
       {isDocViewerOpen && activeSelectedItem && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-xs p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full sm:max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
@@ -1307,8 +1307,8 @@ export default function AdminVerificationsQueuePage() {
 
       {/* ─── MODAL 2: REQUEST RESUBMISSION PROMPT ───────────────────────────── */}
       {isResubmitModalOpen && activeSelectedItem && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-md p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full sm:max-w-md p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
@@ -1404,8 +1404,8 @@ export default function AdminVerificationsQueuePage() {
 
       {/* ─── MODAL 3: REJECT CONFIRMATION ───────────────────────────────────── */}
       {isRejectModalOpen && activeSelectedItem && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-md p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full sm:max-w-md p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-5 h-5" />
@@ -1463,8 +1463,8 @@ export default function AdminVerificationsQueuePage() {
 
       {/* ─── MODAL 4: APPROVE CONFIRMATION ──────────────────────────────────── */}
       {isApproveConfirmOpen && activeSelectedItem && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-md p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full sm:max-w-md p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-5 h-5" />

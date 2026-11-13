@@ -46,7 +46,7 @@ export default function AsyncStatusSheet({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[10050] flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/55 backdrop-blur-sm animate-in fade-in duration-150"
+      className="fixed inset-0 z-[10050] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/55 backdrop-blur-sm animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isBusy) onClose();
       }}
@@ -54,7 +54,7 @@ export default function AsyncStatusSheet({
       <div
         {...dragHandlers}
         style={sheetStyle}
-        className="w-full max-w-sm bg-white dark:bg-[#12151D] border border-zinc-200/80 dark:border-zinc-800 rounded-[28px] p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] text-center space-y-4 animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+        className="w-full sm:max-w-sm bg-white dark:bg-[#12151D] border-t sm:border border-zinc-200/80 dark:border-zinc-800 rounded-t-[28px] rounded-b-none sm:rounded-3xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] text-center space-y-4 animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
       >
         <BottomSheetHandle />
 

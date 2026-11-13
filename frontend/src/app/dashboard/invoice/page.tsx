@@ -864,8 +864,8 @@ export default function TenantPaymentsPage() {
 
       {/* ── Make a Payment Modal (Resolves Anomaly 4 & 8) ── */}
       {paymentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 space-y-4 relative">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-7 sm:max-w-md w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 space-y-4 relative">
             <button
               type="button"
               onClick={() => setPaymentModalOpen(false)}
@@ -999,11 +999,11 @@ export default function TenantPaymentsPage() {
       {/* ── Receipt Preview Modal (Resolves Anomaly 6) ── */}
       {selectedReceiptTx && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/50 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs"
           onClick={() => setSelectedReceiptTx(null)}
         >
           <div
-            className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 space-y-4 relative"
+            className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-7 sm:max-w-md w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 space-y-4 relative"
             onClick={(e) => e.stopPropagation()}
           >
             <button

@@ -1248,8 +1248,8 @@ function SupportHelpCentreContent() {
 
       {/* Modal 1: Review & Submit Issue Confirmation */}
       {reviewModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
-          <div className="bg-white rounded-2xl border border-zinc-200 max-w-md w-full p-6 space-y-4 shadow-xl">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-2xl border border-zinc-200 sm:max-w-md w-full p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-[#0E6B38]" />
@@ -1332,8 +1332,8 @@ function SupportHelpCentreContent() {
 
       {/* Modal 2: Support Request Detail */}
       {selectedRequestModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
-          <div className="bg-white rounded-2xl border border-zinc-200 max-w-md w-full p-6 space-y-4 shadow-xl">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-2xl border border-zinc-200 sm:max-w-md w-full p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#0E6B38]">
@@ -1375,8 +1375,8 @@ function SupportHelpCentreContent() {
 
       {/* Modal 3: Urgent Help / Direct Support */}
       {urgentModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
-          <div className="bg-white rounded-2xl border border-zinc-200 max-w-md w-full p-6 space-y-4 shadow-xl">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-2xl border border-zinc-200 sm:max-w-md w-full p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-full bg-[#DCE9DB] text-[#0B3B24] flex items-center justify-center">
@@ -1427,8 +1427,8 @@ function SupportHelpCentreContent() {
 
       {/* Modal 4: Browse All Help Articles */}
       {allArticlesModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
-          <div className="bg-white rounded-2xl border border-zinc-200 max-w-lg w-full p-6 space-y-4 shadow-xl">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-2xl border border-zinc-200 sm:max-w-lg w-full p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#0E6B38]" />

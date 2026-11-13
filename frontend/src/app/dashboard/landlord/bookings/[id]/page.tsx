@@ -877,12 +877,12 @@ export default function BookingDetailPage() {
       {/* ── CONTEXTUAL ACTION CONFIRMATION MODAL ── */}
       {pendingAction && (
         <div 
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/50 backdrop-blur-xs animate-in" 
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs animate-in" 
           role="alertdialog" 
           aria-modal="true"
           aria-labelledby="modal-title"
         >
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 max-w-md w-full shadow-xl space-y-4">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-t-[28px] rounded-b-none sm:rounded-xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 sm:max-w-md w-full shadow-xl space-y-4">
             <div>
               <h2 id="modal-title" className="text-base font-bold text-zinc-950 dark:text-white">
                 {pendingAction.confirmTitle}

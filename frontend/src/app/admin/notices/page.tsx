@@ -1000,11 +1000,11 @@ export default function AdminNoticesPage() {
       {/* Inspect Notice Modal */}
       {inspectNotice && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/50 backdrop-blur-xs animate-in fade-in"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs animate-in fade-in"
           onClick={() => setInspectNotice(null)}
         >
           <div
-            className="w-full max-w-lg rounded-[22px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden p-6 space-y-4 text-left animate-in zoom-in-95"
+            className="w-full sm:max-w-lg rounded-t-[28px] rounded-b-none sm:rounded-[22px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4 text-left animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">

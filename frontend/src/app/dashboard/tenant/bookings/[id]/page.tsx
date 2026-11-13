@@ -747,12 +747,12 @@ export default function TenantBookingDetailsPage() {
       {/* Cancellation Confirmation Dialog */}
       {showCancelModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="cancel-detail-modal-title"
         >
-          <div className="w-full max-w-md bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-6 space-y-4 shadow-xl">
+          <div className="w-full sm:max-w-md bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4 shadow-xl">
             <div className="w-11 h-11 rounded-full bg-[#FEF3F2] dark:bg-[#450A0A]/50 text-[#B42318] dark:text-[#FCA5A5] flex items-center justify-center">
               <XCircle className="w-5 h-5" />
             </div>

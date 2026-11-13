@@ -631,8 +631,8 @@ export default function RoommatesPage() {
 
       {/* ── CO-LIVING LEASE INVITATION MODAL ── */}
       {inviteModalUser && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
-          <div className="bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white rounded-2xl p-6 max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4 animate-in">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white rounded-t-[28px] rounded-b-none sm:rounded-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 sm:max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-4 animate-in">
             <div className="flex justify-between items-start border-b border-zinc-100 dark:border-zinc-800 pb-3">
               <div>
                 <h3 className="font-black text-sm text-zinc-950 dark:text-white">

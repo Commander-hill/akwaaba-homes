@@ -20,12 +20,12 @@ export default function SessionTimeoutWarningModal({
   const formattedTime = `${m}:${s < 10 ? '0' : ''}${s}`;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
         role="alertdialog"
         aria-labelledby="timeout-title"
         aria-describedby="timeout-desc"
-        className="w-full max-w-md bg-white dark:bg-[#121216] border border-amber-200 dark:border-amber-900/60 rounded-[28px] sm:rounded-3xl p-6 sm:p-7 shadow-2xl space-y-6 text-center max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
+        className="w-full sm:max-w-md bg-white dark:bg-[#121216] border border-amber-200 dark:border-amber-900/60 rounded-t-[28px] rounded-b-none sm:rounded-3xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-7 shadow-2xl space-y-6 text-center max-h-[88dvh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
       >
         <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-center text-amber-600 dark:text-amber-400">
           <AlertTriangle className="w-7 h-7" />

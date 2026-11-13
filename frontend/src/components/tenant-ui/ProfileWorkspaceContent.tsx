@@ -1431,11 +1431,11 @@ function ProfileWorkspaceInner({
          ══════════════════════════════════════════════════════════════════════ */}
       {requestModalOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50"
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full border border-zinc-200 shadow-2xl space-y-4">
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 sm:max-w-md w-full border border-zinc-200 shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-[#15803D]" />
@@ -1500,11 +1500,11 @@ function ProfileWorkspaceInner({
          ══════════════════════════════════════════════════════════════════════ */}
       {guardianModalOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50"
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full border border-zinc-200 shadow-2xl space-y-4">
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 sm:max-w-md w-full border border-zinc-200 shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-[#15803D]" />
@@ -1595,11 +1595,11 @@ function ProfileWorkspaceInner({
          ══════════════════════════════════════════════════════════════════════ */}
       {academicModalOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50"
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full border border-zinc-200 shadow-2xl space-y-4">
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 sm:max-w-lg w-full border border-zinc-200 shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
               <div className="flex items-center gap-2">
                 {isLandlord ? (
@@ -1817,11 +1817,11 @@ function ProfileWorkspaceInner({
          ══════════════════════════════════════════════════════════════════════ */}
       {securityModalOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50"
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full border border-zinc-200 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 sm:max-w-2xl w-full border border-zinc-200 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#EAF5EC] text-[#15803D] flex items-center justify-center">

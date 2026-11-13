@@ -642,8 +642,8 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
 
       {/* ─── FORMAL CITATION LETTER / DEAN OF STUDENTS PRINT VIEW ─── */}
       {activeCitationIncident && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
-          <div className="bg-white text-slate-900 rounded-3xl w-full max-w-2xl shadow-2xl border border-slate-300 overflow-hidden animate-in max-h-[95vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white text-slate-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl w-full sm:max-w-2xl shadow-2xl border border-slate-300 overflow-hidden animate-in max-h-[95vh] flex flex-col">
             {/* Action Toolbar */}
             <div className="p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between print:hidden">
               <div className="flex items-center gap-2">

@@ -133,7 +133,7 @@ export default function LandlordFormModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 bg-black/50 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-xs"
       onClick={() => !submitting && onClose()}
     >
       <div
@@ -141,7 +141,7 @@ export default function LandlordFormModal({
         aria-modal="true"
         aria-labelledby="landlord-modal-title"
         onClick={(e) => e.stopPropagation()}
-        className="bg-white dark:bg-zinc-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5"
+        className="bg-white dark:bg-zinc-900 rounded-t-[28px] rounded-b-none sm:rounded-3xl sm:max-w-lg w-full p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 space-y-5"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
