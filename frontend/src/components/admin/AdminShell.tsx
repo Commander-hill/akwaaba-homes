@@ -438,8 +438,8 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
 
   return (
     <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 font-sans">
-      {/* ── DESKTOP SIDEBAR (Stationary, Clean Responsive Design System) ── */}
-      <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col bg-white dark:bg-[#12151D] border-r border-zinc-200 dark:border-zinc-800 sticky top-0 h-screen z-20 shadow-xs overflow-hidden">
+      {/* ── DESKTOP SIDEBAR (Fixed Stationary Sidebar) ── */}
+      <aside className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:w-60 xl:w-64 flex-col bg-white dark:bg-[#12151D] border-r border-zinc-200 dark:border-zinc-800 z-30 shadow-xs overflow-hidden">
         {renderSidebarContent()}
       </aside>
 
@@ -458,7 +458,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
       )}
 
       {/* ── MAIN WORKSPACE COLUMN ── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-60 xl:pl-64 overflow-x-hidden">
         {/* Top Header Bar matching Resident Portal Architecture */}
         <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
           {/* Left: Mobile Drawer Trigger, Breadcrumbs & Live Pulse */}

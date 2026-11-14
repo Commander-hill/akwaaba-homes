@@ -969,7 +969,7 @@ export default function AdminPayoutsPage() {
         </div>
       )}
 
-      {StepUpModal}
+      <StepUpModal />
     </div>
   );
 }
