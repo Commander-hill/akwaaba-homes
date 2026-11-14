@@ -458,7 +458,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
       )}
 
       {/* ── MAIN WORKSPACE COLUMN ── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         {/* Top Header Bar matching Resident Portal Architecture */}
         <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
           {/* Left: Mobile Drawer Trigger, Breadcrumbs & Live Pulse */}

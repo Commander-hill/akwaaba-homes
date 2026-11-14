@@ -365,18 +365,18 @@ export default function TenantBookingsPage() {
                   (activeTab === 'ACTIVE' && counts.ACTIVE > 0)) && (
                   <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-6">
                     {/* Top Section */}
-                    <div className="flex flex-col sm:flex-row items-start justify-between gap-5">
+                    <div className="flex flex-col xl:flex-row items-start justify-between gap-6">
                       {/* Left Image & Core Details */}
-                      <div className="flex flex-col sm:flex-row items-start gap-4 min-w-0 flex-1">
-                        {/* Thumbnail with Status Badge (Resolves Anomaly 6) */}
-                        <div className="w-full sm:w-36 h-36 sm:h-32 rounded-xl relative overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-800 bg-zinc-100">
+                      <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 min-w-0 flex-1 w-full">
+                        {/* Thumbnail with Status Badge */}
+                        <div className="w-full sm:w-44 h-36 sm:h-32 rounded-xl relative overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-800 bg-zinc-100">
                           <Image
                             src={primaryThumbnail}
                             alt={primaryTitle}
                             fill
                             className="object-cover"
                             sizes="(max-width: 768px) 100vw, 256px"
-/>
+                          />
                           <div className="absolute bottom-2 left-2 z-10">
                             {activeTab === 'ACTIVE' || ['ACTIVE', 'CHECKED_IN'].includes(primaryBooking.status) ? (
                               <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-xs">
@@ -393,8 +393,8 @@ export default function TenantBookingsPage() {
                         </div>
 
                         {/* Details */}
-                        <div className="space-y-1.5 min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
+                        <div className="space-y-1.5 min-w-0 flex-1 w-full">
+                          <div className="flex flex-wrap items-center gap-2">
                             {primaryRef && (
                               <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-mono px-2 py-0.5 rounded-md inline-block">
                                 {primaryRef}
@@ -414,7 +414,7 @@ export default function TenantBookingsPage() {
                             <span>{primaryLocation}</span>
                           </p>
 
-                          <div className="flex items-center gap-2 text-xs text-zinc-500 pt-0.5">
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 pt-0.5">
                             <span className="flex items-center gap-1">
                               <Bed className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                               <span>{primaryBooking.room?.roomType || 'Standard Room'}</span>
@@ -426,23 +426,25 @@ export default function TenantBookingsPage() {
                             </span>
                           </div>
 
-                          {/* Amenity Badges (Resolves Anomaly 7) */}
-                          <div className="flex flex-wrap items-center gap-1.5 pt-2">
-                            {primaryAmenities.map((amenity, idx) => (
-                              <span
-                                key={idx}
-                                className="bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium px-2.5 py-0.5 rounded-lg"
-                              >
-                                {amenity}
-                              </span>
-                            ))}
-                          </div>
+                          {/* Amenity Badges */}
+                          {primaryAmenities.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5 pt-2">
+                              {primaryAmenities.map((amenity, idx) => (
+                                <span
+                                  key={idx}
+                                  className="bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium px-2.5 py-0.5 rounded-lg whitespace-nowrap"
+                                >
+                                  {amenity}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       {/* Right: Value & Action Button */}
-                      <div className="flex flex-col items-start sm:items-end justify-between self-stretch shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100 dark:border-zinc-800 w-full sm:w-auto">
-                        <div className="space-y-0.5 sm:text-right">
+                      <div className="flex flex-row xl:flex-col items-center xl:items-end justify-between xl:justify-center self-stretch shrink-0 pt-4 xl:pt-0 border-t xl:border-t-0 border-zinc-100 dark:border-zinc-800 w-full xl:w-auto xl:min-w-[200px] xl:pl-6 xl:border-l xl:border-zinc-100 dark:xl:border-zinc-800 gap-3">
+                        <div className="space-y-0.5 text-left xl:text-right">
                           <span className="text-[11px] text-zinc-400 font-medium block">
                             Total Contract Value
                           </span>
@@ -455,11 +457,11 @@ export default function TenantBookingsPage() {
                           </span>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
+                        <div className="flex items-center gap-2">
                           {primaryBooking.id && (
                             <Link
                               href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
-                              className="px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+                              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs whitespace-nowrap"
                             >
                               <span>View Details</span>
                               <ArrowRight className="w-3.5 h-3.5" />

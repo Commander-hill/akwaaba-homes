@@ -344,14 +344,14 @@ export default function LandlordShell({
   );
 
   return (
-    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row overflow-x-hidden bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
+    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
       <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col bg-white dark:bg-[#141816] border-r border-zinc-200 dark:border-zinc-800 sticky top-0 h-screen z-20 shadow-xs overflow-hidden">
         <div className="h-16 px-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center shrink-0">{brand}</div>
         {nav()}
         {footer}
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3 sm:gap-5 min-w-0 flex-1 max-w-2xl">
             <button
