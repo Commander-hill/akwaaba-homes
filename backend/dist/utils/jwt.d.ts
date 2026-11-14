@@ -10,4 +10,10 @@ export declare const generateRefreshToken: (payload: {
 }) => string;
 export declare const verifyAccessToken: (token: string) => string | jwt.JwtPayload;
 export declare const verifyRefreshToken: (token: string) => string | jwt.JwtPayload;
+export declare const generateStepUpToken: (payload: {
+    adminId: string;
+    purpose: string;
+    actionType?: string;
+}) => string;
+export declare const verifyStepUpToken: (token: string) => string | jwt.JwtPayload;
 //# sourceMappingURL=jwt.d.ts.map

@@ -223,6 +223,9 @@ export const uploadPropertyImages = async (req: Request, res: Response): Promise
         .webp({ quality: 85 })
         .toBuffer();
 
+      // Free original multer buffer from memory immediately
+      (file as any).buffer = null;
+
       const url = await streamUpload(processedBuffer, 'properties', 'image');
       urls.push(url);
     }

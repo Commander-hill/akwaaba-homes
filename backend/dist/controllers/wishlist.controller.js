@@ -160,7 +160,7 @@ const getMyWishlist = async (req, res) => {
                     ...restProperty,
                     rooms,
                     capacity: totalCapacity > 0 ? totalCapacity : undefined,
-                    billingCycle: w.property.pricePeriod || 'Academic Year',
+                    billingCycle: w.property.pricePeriod || 'Monthly',
                     avgRating,
                     reviewCount,
                     savedAt: w.createdAt,

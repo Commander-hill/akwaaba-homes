@@ -15,25 +15,34 @@ router.get('/action-queue', admin_controller_1.getActionRequiredQueue);
 router.get('/analytics', admin_controller_1.getPlatformAnalytics);
 router.get('/activity', admin_controller_1.getSystemActivity);
 router.get('/audit-logs', admin_controller_1.getAuditLogs);
+router.get('/health-heartbeat', admin_controller_1.getLiveHealthHeartbeat);
+router.get('/webhooks/dlq', admin_controller_1.getWebhookDLQ);
+router.post('/webhooks/dlq/:id/retry', admin_controller_1.retryWebhookDelivery);
 router.get('/search', admin_controller_1.searchEntities);
 // Users (Landlords & Tenants)
 router.get('/users', admin_controller_1.getAllUsers);
+router.post('/landlords', admin_controller_1.createLandlord);
+router.post('/tenants', admin_controller_1.createTenant);
+router.put('/tenants/:id', admin_controller_1.updateTenantProfile);
+router.put('/landlords/:id', admin_controller_1.updateLandlordProfile);
 router.get('/users/:id', admin_controller_1.getUserById);
 router.put('/users/:id/suspend', admin_controller_1.toggleUserSuspension);
 router.put('/users/:id/lock', admin_controller_1.toggleUserProfileLock);
 router.put('/verify-user/:id', admin_controller_1.verifyUserCard);
-router.put('/verify-landlord/:id', admin_controller_1.verifyLandlord);
+router.put('/verify-landlord/:id', auth_middleware_1.requireStepUpAuth, admin_controller_1.verifyLandlord);
+router.put('/landlords/:id/settlement', auth_middleware_1.requireStepUpAuth, admin_controller_1.updateLandlordSettlement);
 // Breach Disputes & Deed Audits
 router.get('/breaches', adminBreach_controller_1.getAdminBreachReports);
 router.get('/disputes/:id', admin_controller_1.getDisputeById);
 router.put('/breaches/:id/resolve', adminBreach_controller_1.resolveBreachReport);
 router.get('/landlord-deeds', adminBreach_controller_1.getLandlordDeedAudits);
-router.put('/landlord-deeds/:id/audit', adminBreach_controller_1.auditLandlordDeed);
+router.put('/landlord-deeds/:id/audit', auth_middleware_1.requireStepUpAuth, adminBreach_controller_1.auditLandlordDeed);
 router.post('/landlord-deeds/:id/request-docs', adminBreach_controller_1.requestAdditionalDeedDocuments);
 router.post('/landlord-deeds/:id/attach', adminBreach_controller_1.attachLandlordDeed);
 // Properties & Moderation
 router.get('/properties', admin_controller_1.getAllProperties);
 router.get('/properties/:id', admin_controller_1.getPropertyById);
+router.put('/properties/bulk-status', admin_controller_1.bulkUpdatePropertyApproval);
 router.put('/properties/:id/status', admin_controller_1.updatePropertyApproval);
 router.put('/properties/:id/physical-verification', admin_controller_1.togglePropertyPhysicalVerification);
 // Bookings & Transactions
@@ -47,7 +56,8 @@ router.get('/transactions', admin_controller_1.getAllTransactions);
 router.get('/transactions/:id', admin_controller_1.getTransactionById);
 // Landlord Payouts & Disbursements
 router.get('/payouts', admin_controller_1.getAllPayouts);
-router.put('/payouts/:id/status', auth_middleware_1.requireSuperAdmin, admin_controller_1.updatePayoutStatus);
+router.post('/payouts/reconcile', auth_middleware_1.requireSuperAdmin, admin_controller_1.reconcileManualEscrow);
+router.put('/payouts/:id/status', auth_middleware_1.requireSuperAdmin, auth_middleware_1.requireStepUpAuth, admin_controller_1.updatePayoutStatus);
 // Reviews & Reputation
 router.get('/reviews', admin_controller_1.getAllReviews);
 router.get('/reviews/:id', admin_controller_1.getReviewById);

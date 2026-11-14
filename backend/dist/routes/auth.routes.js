@@ -31,6 +31,7 @@ router.post('/2fa/sms/send', auth_middleware_1.authenticate, auth_controller_1.s
 router.post('/2fa/sms/verify', auth_middleware_1.authenticate, auth_controller_1.verify2FASMS);
 router.post('/2fa/recovery-codes/regenerate', auth_middleware_1.authenticate, auth_controller_1.regenerateRecoveryCodes);
 // Protected routes
+router.get('/session', auth_controller_1.getSession);
 router.get('/me', auth_middleware_1.authenticate, auth_controller_1.getMe);
 router.put('/profile', auth_middleware_1.authenticate, auth_controller_1.updateProfile);
 router.post('/request-unlock', auth_middleware_1.authenticate, auth_controller_1.requestProfileUnlock);
@@ -38,5 +39,8 @@ router.post('/request-unlock', auth_middleware_1.authenticate, auth_controller_1
 router.get('/sessions', auth_middleware_1.authenticate, session_controller_1.getSessions);
 router.delete('/sessions/others', auth_middleware_1.authenticate, session_controller_1.revokeAllOtherSessions);
 router.delete('/sessions/:id', auth_middleware_1.authenticate, session_controller_1.revokeSession);
+// Workstation Auto-Lock & Step-Up Governance (Act 843 & Cyber Security Act)
+router.post('/unlock', auth_middleware_1.authenticate, auth_controller_1.verifyAdminUnlock);
+router.post('/verify-step-up', auth_middleware_1.authenticate, auth_controller_1.verifyStepUpAuth);
 exports.default = router;
 //# sourceMappingURL=auth.routes.js.map

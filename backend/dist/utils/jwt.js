@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyRefreshToken = exports.verifyAccessToken = exports.generateRefreshToken = exports.generateAccessToken = void 0;
+exports.verifyStepUpToken = exports.generateStepUpToken = exports.verifyRefreshToken = exports.verifyAccessToken = exports.generateRefreshToken = exports.generateAccessToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const isProduction = process.env.NODE_ENV === 'production';
 const rawJwtSecret = process.env.JWT_SECRET;
@@ -39,4 +39,17 @@ const verifyRefreshToken = (token) => {
     }
 };
 exports.verifyRefreshToken = verifyRefreshToken;
+const generateStepUpToken = (payload) => {
+    return jsonwebtoken_1.default.sign(payload, JWT_SECRET, { expiresIn: '5m' }); // 5 minutes validity
+};
+exports.generateStepUpToken = generateStepUpToken;
+const verifyStepUpToken = (token) => {
+    try {
+        return jsonwebtoken_1.default.verify(token, JWT_SECRET);
+    }
+    catch (error) {
+        return null;
+    }
+};
+exports.verifyStepUpToken = verifyStepUpToken;
 //# sourceMappingURL=jwt.js.map

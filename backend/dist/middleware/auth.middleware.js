@@ -3,8 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requireSuperAdmin = exports.requireAdmin = exports.authorizeRole = exports.authenticate = void 0;
+exports.requireStepUpAuth = exports.requireSuperAdmin = exports.requireAdmin = exports.authorizeRole = exports.authenticate = void 0;
 const jwt_1 = require("../utils/jwt");
+const auditLogger_1 = require("../utils/auditLogger");
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const authenticate = async (req, res, next) => {
     // Check Authorization header or cookies
@@ -82,4 +83,35 @@ const requireSuperAdmin = (req, res, next) => {
     next();
 };
 exports.requireSuperAdmin = requireSuperAdmin;
+/**
+ * ── STEP-UP AUTHENTICATION (ACT 843 §20 & CYBER SECURITY ACT 1038) ──
+ * Enforces cryptographic step-up re-authentication token for critical financial
+ * and statutory deed governance operations.
+ */
+const requireStepUpAuth = (req, res, next) => {
+    if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
+        res.status(403).json({ message: 'Access denied: Administrator clearance required.' });
+        return;
+    }
+    const stepUpToken = req.headers['x-step-up-token'] || req.body?.stepUpToken;
+    if (!stepUpToken) {
+        (0, auditLogger_1.logAudit)(req.user.id, 'STEP_UP_AUTH_MISSING', 'AdminSecurity', req.originalUrl || 'unknown', null, { method: req.method }, req.ip).catch(() => { });
+        res.status(403).json({
+            requireStepUp: true,
+            message: 'Step-up authentication required under Act 843 and Ghana Cyber Security Act governance. Please confirm your administrator credentials to proceed with this critical action.'
+        });
+        return;
+    }
+    const decoded = (0, jwt_1.verifyStepUpToken)(stepUpToken);
+    if (!decoded || decoded.purpose !== 'STEP_UP_AUTHENTICATION' || decoded.adminId !== req.user.id) {
+        (0, auditLogger_1.logAudit)(req.user.id, 'STEP_UP_AUTH_INVALID', 'AdminSecurity', req.originalUrl || 'unknown', null, { method: req.method }, req.ip).catch(() => { });
+        res.status(403).json({
+            requireStepUp: true,
+            message: 'Step-up authentication token has expired or is invalid. Please re-authenticate.'
+        });
+        return;
+    }
+    next();
+};
+exports.requireStepUpAuth = requireStepUpAuth;
 //# sourceMappingURL=auth.middleware.js.map

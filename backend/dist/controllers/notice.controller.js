@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reorderNotices = exports.deleteNotice = exports.updateNotice = exports.createNotice = exports.getAllNotices = exports.getActiveNotices = void 0;
+exports.reorderNotices = exports.deleteNotice = exports.updateNotice = exports.createNotice = exports.getAllNotices = exports.recordNoticeView = exports.getActiveNotices = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
 const socket_1 = require("../socket");
@@ -22,6 +22,21 @@ const getActiveNotices = async (req, res) => {
     }
 };
 exports.getActiveNotices = getActiveNotices;
+const recordNoticeView = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updated = await prisma_1.default.notice.update({
+            where: { id },
+            data: { views: { increment: 1 } },
+            select: { id: true, views: true }
+        });
+        res.status(200).json(updated);
+    }
+    catch (error) {
+        res.status(404).json({ message: 'Notice not found' });
+    }
+};
+exports.recordNoticeView = recordNoticeView;
 const getAllNotices = async (req, res) => {
     try {
         const notices = await prisma_1.default.notice.findMany({

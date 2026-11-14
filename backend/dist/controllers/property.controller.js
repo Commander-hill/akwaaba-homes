@@ -102,7 +102,7 @@ const createProperty = async (req, res) => {
                 type,
                 targetAudience: targetAudience || 'Open to All',
                 furnishing: furnishing || 'Unfurnished',
-                pricePeriod: pricePeriod || 'Academic Year',
+                pricePeriod: pricePeriod || 'Monthly',
                 gateLockTime: gateLockTime || 'No Curfew / 24/7 Access',
                 visitorPolicy: visitorPolicy || 'Day visitors allowed until 8 PM',
                 quietHours: quietHours || 'From 10:00 PM',

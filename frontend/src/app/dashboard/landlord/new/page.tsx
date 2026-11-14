@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 import Map from '@/components/Map';
 import { getImageUrl } from '@/lib/utils';
+import { compressImageFiles } from '@/lib/imageCompression';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import AlertBanner from '@/components/AlertBanner';
@@ -250,8 +251,8 @@ export default function NewPropertyPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    if (files.length + formData.images.length > 5) {
-      triggerError('You can upload a maximum of 5 images.');
+    if (files.length + formData.images.length > 15) {
+      triggerError('You can upload a maximum of 15 images.');
       return;
     }
 
@@ -259,9 +260,15 @@ export default function NewPropertyPage() {
     setError('');
 
     try {
+      // Client-side compression for high-res smartphone photos (4K/48MP)
+      const compressedFiles = await compressImageFiles(files, {
+        maxDimension: 1920,
+        quality: 0.82,
+      });
+
       const uploadData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        uploadData.append('images', files[i]);
+      for (let i = 0; i < compressedFiles.length; i++) {
+        uploadData.append('images', compressedFiles[i]);
       }
 
       const res = await api.post('/upload/images', uploadData, {
@@ -937,9 +944,14 @@ export default function NewPropertyPage() {
 
             {/* Photo Gallery */}
             <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
-                Property Photos (Up to 5 Images)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+                  Property Photos (Up to 15 Images)
+                </label>
+                <span className="text-[11px] font-semibold text-zinc-400">
+                  {formData.images.length} / 15 Uploaded
+                </span>
+              </div>
               
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {formData.images.map((img, i) => (
@@ -955,7 +967,7 @@ export default function NewPropertyPage() {
                   </div>
                 ))}
 
-                {formData.images.length < 5 && (
+                {formData.images.length < 15 && (
                   <label className="aspect-video rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-[#0F5132] flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors bg-zinc-50 dark:bg-zinc-800/30">
                     <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
                     {imagesUploading ? (

@@ -8,4 +8,5 @@ export declare const uploadRateLimiter: import("express-rate-limit").RateLimitRe
 export declare const apiRateLimiter: import("express-rate-limit").RateLimitRequestHandler;
 export declare const chatRateLimiter: import("express-rate-limit").RateLimitRequestHandler;
 export declare const kycRateLimiter: import("express-rate-limit").RateLimitRequestHandler;
+export declare const contactRateLimiter: import("express-rate-limit").RateLimitRequestHandler;
 //# sourceMappingURL=rateLimiter.middleware.d.ts.map

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.completeMandatory2FASetup = exports.regenerateRecoveryCodes = exports.verify2FASMS = exports.send2FASMS = exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.changePassword = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitStudentVerification = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = exports.verifyPromoCode = exports.CAMPUS_PROMO_CODES = exports.checkEmailAvailability = void 0;
+exports.verifyStepUpAuth = exports.verifyAdminUnlock = exports.completeMandatory2FASetup = exports.regenerateRecoveryCodes = exports.verify2FASMS = exports.send2FASMS = exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.changePassword = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitStudentVerification = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.getSession = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = exports.verifyPromoCode = exports.CAMPUS_PROMO_CODES = exports.checkEmailAvailability = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
@@ -84,7 +84,7 @@ exports.CAMPUS_PROMO_CODES = {
         campus: 'KNUST',
         campusName: 'Kwame Nkrumah University of Science & Technology',
         title: 'KNUST Tech Stars Ambassador Perk',
-        benefit: 'GH₵ 50 First-Semester Utility Credit & Priority Lock-in',
+        benefit: 'GH₵ 50 First-Month Utility Credit & Priority Lock-in',
         badgeText: 'KNUST Kumasi Partner',
         badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
         badgeColor: 'text-amber-800 dark:text-amber-300',
@@ -518,6 +518,7 @@ const login = async (req, res) => {
                     where: { id: user.id },
                     data: updateData
                 });
+                await (0, auditLogger_1.logAudit)(user.id, 'LOGIN_FAILED_PASSWORD', 'User', user.id, null, { attempts: newAttempts, remaining: 5 - newAttempts }, req.ip).catch(() => { });
                 const remaining = 5 - newAttempts;
                 res.status(401).json({
                     message: `Invalid credentials. (${remaining} attempt${remaining === 1 ? '' : 's'} remaining before temporary account lockout)`
@@ -763,6 +764,7 @@ const login2FA = async (req, res) => {
             }
         }
         if (!isTotpValid && !isRecoveryValid) {
+            await (0, auditLogger_1.logAudit)(user.id, 'LOGIN_FAILED_2FA', 'User', user.id, null, { method: /^\d{6}$/.test(cleanCode) ? 'totp' : 'recovery' }, req.ip).catch(() => { });
             res.status(401).json({ message: 'Invalid 2FA code or recovery code. Please try again.' });
             return;
         }
@@ -917,78 +919,127 @@ const logout = async (req, res) => {
     }
 };
 exports.logout = logout;
+const loadAuthenticatedUserProfile = async (userId) => {
+    const cacheKey = `user:me:${userId}`;
+    const cached = cache_1.default.get(cacheKey);
+    if (cached)
+        return cached;
+    const user = await prisma_1.default.user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            email: true,
+            role: true,
+            firstName: true,
+            lastName: true,
+            isEmailVerified: true,
+            ghanaCardNumber: true,
+            ghanaCardStatus: true,
+            ghanaCardFrontUrl: true,
+            ghanaCardBackUrl: true,
+            ghanaCardRejectionReason: true,
+            ghanaCardReviewedAt: true,
+            landlordDocUrl: true,
+            isVerifiedLandlord: true,
+            landlordVerificationStatus: true,
+            hostEntityType: true,
+            businessName: true,
+            primaryRegion: true,
+            portfolioSize: true,
+            payoutMethod: true,
+            payoutProvider: true,
+            payoutAccountNumber: true,
+            tinNumber: true,
+            businessRegistrationNumber: true,
+            otherNames: true,
+            phoneNumber: true,
+            gender: true,
+            dateOfBirth: true,
+            nationality: true,
+            guardianName: true,
+            guardianPhone: true,
+            avatarUrl: true,
+            campus: true,
+            studentId: true,
+            dateOfAdmission: true,
+            programmeOfStudy: true,
+            yearOfStudy: true,
+            studentType: true,
+            reputationScore: true,
+            isProfileLocked: true,
+            profileUnlockRequested: true,
+            profileUnlockReason: true,
+            _count: {
+                select: { properties: true }
+            }
+        }
+    });
+    if (!user)
+        return null;
+    if (user.ghanaCardNumber) {
+        const decrypted = (0, crypto_1.decryptData)(user.ghanaCardNumber);
+        user.ghanaCardNumber = (0, crypto_1.maskGhanaCardNumber)(decrypted);
+    }
+    if (user.ghanaCardFrontUrl) {
+        user.ghanaCardFrontUrl = (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardFrontUrl);
+    }
+    if (user.ghanaCardBackUrl) {
+        user.ghanaCardBackUrl = (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl);
+    }
+    if (user.landlordDocUrl) {
+        user.landlordDocUrl = (0, security_service_1.generateSignedDocumentUrl)(user.landlordDocUrl);
+    }
+    const hasProperty = (user._count?.properties || 0) > 0;
+    const responsePayload = { user: { ...user, hasProperty } };
+    cache_1.default.set(cacheKey, responsePayload, 60);
+    return responsePayload;
+};
+/**
+ * Passive session probe for public and auth routes; returns HTTP 200 without 401 console errors when unauthenticated.
+ */
+const getSession = async (req, res) => {
+    try {
+        let token = req.cookies?.accessToken;
+        if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+        if (!token) {
+            res.status(200).json({ authenticated: false, user: null });
+            return;
+        }
+        const decoded = (0, jwt_1.verifyAccessToken)(token);
+        if (!decoded?.id) {
+            res.status(200).json({ authenticated: false, user: null });
+            return;
+        }
+        const tokenCheck = await prisma_1.default.user.findUnique({
+            where: { id: decoded.id },
+            select: { isSuspended: true, tokenVersion: true }
+        });
+        if (!tokenCheck || tokenCheck.isSuspended || (tokenCheck.tokenVersion || 0) !== (decoded.tokenVersion || 0)) {
+            res.status(200).json({ authenticated: false, user: null });
+            return;
+        }
+        const payload = await loadAuthenticatedUserProfile(decoded.id);
+        if (!payload) {
+            res.status(200).json({ authenticated: false, user: null });
+            return;
+        }
+        res.status(200).json({ authenticated: true, ...payload });
+    }
+    catch {
+        res.status(200).json({ authenticated: false, user: null });
+    }
+};
+exports.getSession = getSession;
 const getMe = async (req, res) => {
     try {
         const userId = req.user?.id;
-        const cacheKey = `user:me:${userId}`;
-        // Serve from cache if available (60-second TTL)
-        const cached = cache_1.default.get(cacheKey);
-        if (cached) {
-            res.status(200).json(cached);
-            return;
-        }
-        const user = await prisma_1.default.user.findUnique({
-            where: { id: userId },
-            select: {
-                id: true,
-                email: true,
-                role: true,
-                firstName: true,
-                lastName: true,
-                isEmailVerified: true,
-                ghanaCardNumber: true,
-                ghanaCardStatus: true,
-                ghanaCardFrontUrl: true,
-                ghanaCardBackUrl: true,
-                ghanaCardRejectionReason: true,
-                ghanaCardReviewedAt: true,
-                landlordDocUrl: true,
-                isVerifiedLandlord: true,
-                landlordVerificationStatus: true,
-                otherNames: true,
-                phoneNumber: true,
-                gender: true,
-                dateOfBirth: true,
-                nationality: true,
-                guardianName: true,
-                guardianPhone: true,
-                avatarUrl: true,
-                campus: true,
-                studentId: true,
-                dateOfAdmission: true,
-                programmeOfStudy: true,
-                yearOfStudy: true,
-                studentType: true,
-                reputationScore: true,
-                isProfileLocked: true,
-                profileUnlockRequested: true,
-                profileUnlockReason: true,
-                _count: {
-                    select: { properties: true }
-                }
-            }
-        });
-        if (!user) {
+        const responsePayload = await loadAuthenticatedUserProfile(userId);
+        if (!responsePayload) {
             res.status(404).json({ message: 'User not found' });
             return;
         }
-        if (user.ghanaCardNumber) {
-            const decrypted = (0, crypto_1.decryptData)(user.ghanaCardNumber);
-            user.ghanaCardNumber = (0, crypto_1.maskGhanaCardNumber)(decrypted);
-        }
-        if (user.ghanaCardFrontUrl) {
-            user.ghanaCardFrontUrl = (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardFrontUrl);
-        }
-        if (user.ghanaCardBackUrl) {
-            user.ghanaCardBackUrl = (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl);
-        }
-        if (user.landlordDocUrl) {
-            user.landlordDocUrl = (0, security_service_1.generateSignedDocumentUrl)(user.landlordDocUrl);
-        }
-        const hasProperty = (user._count?.properties || 0) > 0;
-        const responsePayload = { user: { ...user, hasProperty } };
-        // Cache for 60 seconds
-        cache_1.default.set(cacheKey, responsePayload, 60);
         res.status(200).json(responsePayload);
     }
     catch (error) {
@@ -1277,7 +1328,7 @@ const submitStudentVerification = async (req, res) => {
 exports.submitStudentVerification = submitStudentVerification;
 const updateProfile = async (req, res) => {
     try {
-        const { firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, avatarUrl, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType } = req.body;
+        const { firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, avatarUrl, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType, hostEntityType, businessName, primaryRegion, portfolioSize, payoutMethod, payoutProvider, payoutAccountNumber, tinNumber, businessRegistrationNumber } = req.body;
         if (!req.user?.id) {
             res.status(401).json({ message: 'Unauthorized' });
             return;
@@ -1300,7 +1351,21 @@ const updateProfile = async (req, res) => {
                 firstName, lastName, otherNames, phoneNumber,
                 gender: gender !== undefined ? (gender ? gender.toUpperCase() : null) : existingUser.gender,
                 dateOfBirth, nationality, guardianName, guardianPhone, avatarUrl,
-                campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType,
+                campus: existingUser.role === 'LANDLORD' ? null : campus,
+                studentId: existingUser.role === 'LANDLORD' ? null : studentId,
+                dateOfAdmission: existingUser.role === 'LANDLORD' ? null : dateOfAdmission,
+                programmeOfStudy: existingUser.role === 'LANDLORD' ? null : programmeOfStudy,
+                yearOfStudy: existingUser.role === 'LANDLORD' ? null : yearOfStudy,
+                studentType: existingUser.role === 'LANDLORD' ? null : studentType,
+                ...(hostEntityType !== undefined ? { hostEntityType } : {}),
+                ...(businessName !== undefined ? { businessName } : {}),
+                ...(primaryRegion !== undefined ? { primaryRegion } : {}),
+                ...(portfolioSize !== undefined ? { portfolioSize } : {}),
+                ...(payoutMethod !== undefined ? { payoutMethod } : {}),
+                ...(payoutProvider !== undefined ? { payoutProvider } : {}),
+                ...(payoutAccountNumber !== undefined ? { payoutAccountNumber } : {}),
+                ...(tinNumber !== undefined ? { tinNumber } : {}),
+                ...(businessRegistrationNumber !== undefined ? { businessRegistrationNumber } : {}),
                 isProfileLocked: true // Lock profile upon hitting Save button
             }
         });
@@ -1911,4 +1976,115 @@ const completeMandatory2FASetup = async (req, res) => {
     }
 };
 exports.completeMandatory2FASetup = completeMandatory2FASetup;
+/**
+ * ── WORKSTATION INACTIVITY AUTO-LOCK UNLOCK (ACT 843 §20) ──
+ * Allows an administrator to unlock their idle workstation screen by verifying
+ * their password without invalidating existing application state or active forms.
+ */
+const verifyAdminUnlock = async (req, res) => {
+    try {
+        const { password } = req.body;
+        if (!password) {
+            res.status(400).json({ message: 'Administrator password is required to unlock workstation.' });
+            return;
+        }
+        if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
+            res.status(403).json({ message: 'Unauthorized access. Administrative credentials required.' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: req.user.id } });
+        if (!user) {
+            res.status(404).json({ message: 'Administrator account not found.' });
+            return;
+        }
+        const isMatch = await bcrypt_1.default.compare(password, user.password);
+        if (!isMatch) {
+            try {
+                await (0, auditLogger_1.logAudit)(user.id, 'ADMIN_WORKSTATION_UNLOCK_FAILED', 'User', user.id, null, { reason: 'Invalid password attempt', ip: req.ip }, req.ip);
+            }
+            catch (e) { }
+            res.status(401).json({ message: 'Invalid administrator password. Workstation remains secured.' });
+            return;
+        }
+        try {
+            await (0, auditLogger_1.logAudit)(user.id, 'ADMIN_WORKSTATION_UNLOCKED', 'User', user.id, null, { compliance: 'Act 843 Section 20 Compliance Auto-Lock', ip: req.ip }, req.ip);
+        }
+        catch (e) { }
+        res.status(200).json({
+            success: true,
+            message: 'Workstation successfully unlocked. Session resumed.'
+        });
+    }
+    catch (error) {
+        console.error('verifyAdminUnlock error:', error);
+        res.status(500).json({ message: 'Failed to unlock workstation. Please try again or re-login.' });
+    }
+};
+exports.verifyAdminUnlock = verifyAdminUnlock;
+/**
+ * ── STEP-UP AUTHENTICATION (ACT 843 §20 & CYBER SECURITY ACT 1038) ──
+ * Issues a 5-minute elevated action token after verifying administrator credentials,
+ * required for critical operations like escrow release, deed grants, or settlement edits.
+ */
+const verifyStepUpAuth = async (req, res) => {
+    try {
+        const { password, otp, actionType } = req.body;
+        if (!password) {
+            res.status(400).json({ message: 'Administrator password is required for step-up verification.' });
+            return;
+        }
+        if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
+            res.status(403).json({ message: 'Access denied: Elevated administrator clearance required.' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: req.user.id } });
+        if (!user) {
+            res.status(404).json({ message: 'Administrator account not found.' });
+            return;
+        }
+        const isPasswordMatch = await bcrypt_1.default.compare(password, user.password);
+        if (!isPasswordMatch) {
+            try {
+                await (0, auditLogger_1.logAudit)(user.id, 'ADMIN_STEP_UP_FAILED', 'User', user.id, null, { actionType, reason: 'Invalid password entered during step-up authorization', ip: req.ip }, req.ip);
+            }
+            catch (e) { }
+            res.status(401).json({ message: 'Incorrect administrator password. Step-up authorization denied.' });
+            return;
+        }
+        // If admin has 2FA enabled and supplied an OTP, verify TOTP
+        if (user.twoFactorEnabled && user.twoFactorSecret && otp) {
+            const cleanOtp = String(otp).trim();
+            const decryptedSecret = (0, crypto_1.decryptData)(user.twoFactorSecret);
+            const isTotpValid = (0, totp_service_1.verifyTOTPCode)(cleanOtp, decryptedSecret);
+            if (!isTotpValid) {
+                try {
+                    await (0, auditLogger_1.logAudit)(user.id, 'ADMIN_STEP_UP_FAILED', 'User', user.id, null, { actionType, reason: 'Invalid 2FA OTP entered during step-up authorization', ip: req.ip }, req.ip);
+                }
+                catch (e) { }
+                res.status(401).json({ message: 'Invalid 2FA code. Please enter the current code from your authenticator app.' });
+                return;
+            }
+        }
+        const stepUpToken = (0, jwt_1.generateStepUpToken)({
+            adminId: user.id,
+            purpose: 'STEP_UP_AUTHENTICATION',
+            actionType: actionType || 'CRITICAL_ACTION'
+        });
+        try {
+            await (0, auditLogger_1.logAudit)(user.id, 'ADMIN_STEP_UP_PASSED', 'User', user.id, null, { actionType, ip: req.ip, tokenExpiresIn: 300 }, req.ip);
+        }
+        catch (e) { }
+        res.status(200).json({
+            success: true,
+            stepUpToken,
+            expiresIn: 300,
+            message: 'Elevated administrative authorization granted for 5 minutes.'
+        });
+    }
+    catch (error) {
+        console.error('verifyStepUpAuth error:', error);
+        res.status(500).json({ message: 'Failed to verify step-up credentials.' });
+    }
+};
+exports.verifyStepUpAuth = verifyStepUpAuth;
 //# sourceMappingURL=auth.controller.js.map

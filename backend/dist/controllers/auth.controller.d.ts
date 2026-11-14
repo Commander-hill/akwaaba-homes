@@ -17,6 +17,10 @@ export declare const login: (req: Request, res: Response) => Promise<void>;
 export declare const login2FA: (req: Request, res: Response) => Promise<void>;
 export declare const refresh: (req: Request, res: Response) => Promise<void>;
 export declare const logout: (req: Request, res: Response) => Promise<void>;
+/**
+ * Passive session probe for public and auth routes; returns HTTP 200 without 401 console errors when unauthenticated.
+ */
+export declare const getSession: (req: Request, res: Response) => Promise<void>;
 export declare const getMe: (req: Request, res: Response) => Promise<void>;
 export declare const requestProfileUnlock: (req: Request, res: Response) => Promise<void>;
 export declare const submitGhanaCard: (req: Request, res: Response) => Promise<void>;
@@ -46,4 +50,16 @@ export declare const regenerateRecoveryCodes: (req: Request, res: Response) => P
  * Completes mandatory TOTP 2FA enrollment for administrative accounts during login
  */
 export declare const completeMandatory2FASetup: (req: Request, res: Response) => Promise<void>;
+/**
+ * ── WORKSTATION INACTIVITY AUTO-LOCK UNLOCK (ACT 843 §20) ──
+ * Allows an administrator to unlock their idle workstation screen by verifying
+ * their password without invalidating existing application state or active forms.
+ */
+export declare const verifyAdminUnlock: (req: Request, res: Response) => Promise<void>;
+/**
+ * ── STEP-UP AUTHENTICATION (ACT 843 §20 & CYBER SECURITY ACT 1038) ──
+ * Issues a 5-minute elevated action token after verifying administrator credentials,
+ * required for critical operations like escrow release, deed grants, or settlement edits.
+ */
+export declare const verifyStepUpAuth: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=auth.controller.d.ts.map

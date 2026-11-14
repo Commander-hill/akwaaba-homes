@@ -1,5 +1,5 @@
 /**
- * Recursively redacts sensitive fields from audit log payloads to prevent credential leakage.
+ * Recursively redacts and masks sensitive fields & Act 843 National ID PII from audit logs.
  */
 export declare const redactSensitiveData: (data: any) => any;
 export declare const logAudit: (userId: string, action: string, entity: string, entityId: string, oldData?: any, newData?: any, ipAddress?: string) => Promise<{
@@ -12,12 +12,12 @@ export declare const logAudit: (userId: string, action: string, entity: string, 
 } & {
     id: string;
     createdAt: Date;
+    userId: string;
+    ipAddress: string | null;
     action: string;
     entity: string;
     entityId: string;
     oldData: string | null;
     newData: string | null;
-    ipAddress: string | null;
-    userId: string;
 }>;
 //# sourceMappingURL=auditLogger.d.ts.map

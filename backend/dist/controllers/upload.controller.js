@@ -13,6 +13,7 @@ const cloudinary_1 = require("cloudinary");
 const streamifier_1 = __importDefault(require("streamifier"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const security_service_1 = require("../utils/security.service");
+const cors_1 = require("../utils/cors");
 dotenv_1.default.config(); // Ensure env is loaded even if imported early
 // Explicitly configure cloudinary since import hoisting might load it before server.ts dotenv
 if (process.env.CLOUDINARY_URL) {
@@ -208,6 +209,8 @@ const uploadPropertyImages = async (req, res) => {
             ])
                 .webp({ quality: 85 })
                 .toBuffer();
+            // Free original multer buffer from memory immediately
+            file.buffer = null;
             const url = await streamUpload(processedBuffer, 'properties', 'image');
             urls.push(url);
         }
@@ -242,7 +245,11 @@ const serveSecureDocument = async (req, res) => {
         if (documentResponse.headers['content-length']) {
             res.setHeader('Content-Length', documentResponse.headers['content-length']);
         }
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        const reqOrigin = req.headers.origin;
+        if (reqOrigin && (0, cors_1.isOriginAllowed)(reqOrigin)) {
+            res.setHeader('Access-Control-Allow-Origin', reqOrigin);
+            res.setHeader('Vary', 'Origin');
+        }
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');

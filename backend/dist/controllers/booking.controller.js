@@ -336,6 +336,44 @@ const createBooking = async (req, res) => {
                         };
                     }
                 }
+                else if (roomId) {
+                    // Concurrency Overlap Guard: Whole-room rental without individual beds
+                    const overlappingRoomBooking = await tx.booking.findFirst({
+                        where: {
+                            roomId,
+                            status: { in: ['PENDING', 'APPROVED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'] },
+                            AND: [
+                                { startDate: { lte: new Date(endDate) } },
+                                { endDate: { gte: new Date(startDate) } }
+                            ]
+                        }
+                    });
+                    if (overlappingRoomBooking) {
+                        throw {
+                            status: 409,
+                            message: 'Conflict: This room already has an active reservation or lease during the selected dates.'
+                        };
+                    }
+                }
+                else {
+                    // Concurrency Overlap Guard: Entire property rental (Apartment, Studio, Townhouse, House)
+                    const overlappingPropertyBooking = await tx.booking.findFirst({
+                        where: {
+                            propertyId,
+                            status: { in: ['PENDING', 'APPROVED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'] },
+                            AND: [
+                                { startDate: { lte: new Date(endDate) } },
+                                { endDate: { gte: new Date(startDate) } }
+                            ]
+                        }
+                    });
+                    if (overlappingPropertyBooking) {
+                        throw {
+                            status: 409,
+                            message: `Conflict: Property "${property.title}" already has an active reservation or lease during the selected dates.`
+                        };
+                    }
+                }
                 // Create booking record atomically
                 return await tx.booking.create({
                     data: {

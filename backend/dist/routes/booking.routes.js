@@ -4,10 +4,25 @@ const express_1 = require("express");
 const booking_controller_1 = require("../controllers/booking.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
-// Static collection routes first
-router.get('/my-active', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT', 'ADMIN']), booking_controller_1.getMyActiveBooking);
-router.get('/me', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT', 'ADMIN']), booking_controller_1.getTenantBookings);
-router.get('/my-bookings', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT', 'ADMIN']), booking_controller_1.getTenantBookings);
+// Static collection routes first (auto-routes Landlords vs Tenants so /bookings/me never 403s)
+router.get('/my-active', auth_middleware_1.authenticate, (req, res) => {
+    if (req.user?.role === 'LANDLORD') {
+        return (0, booking_controller_1.getLandlordBookings)(req, res);
+    }
+    return (0, booking_controller_1.getMyActiveBooking)(req, res);
+});
+router.get('/me', auth_middleware_1.authenticate, (req, res) => {
+    if (req.user?.role === 'LANDLORD') {
+        return (0, booking_controller_1.getLandlordBookings)(req, res);
+    }
+    return (0, booking_controller_1.getTenantBookings)(req, res);
+});
+router.get('/my-bookings', auth_middleware_1.authenticate, (req, res) => {
+    if (req.user?.role === 'LANDLORD') {
+        return (0, booking_controller_1.getLandlordBookings)(req, res);
+    }
+    return (0, booking_controller_1.getTenantBookings)(req, res);
+});
 router.get('/landlord', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['LANDLORD', 'ADMIN']), booking_controller_1.getLandlordBookings);
 router.post('/', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT', 'ADMIN']), booking_controller_1.createBooking);
 // Parameterized routes

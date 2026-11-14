@@ -9,11 +9,11 @@ export declare const saveSubscription: (userId: string, subscription: {
     id: string;
     createdAt: Date;
     userId: string;
-    auth: string;
     endpoint: string;
     p256dh: string;
+    auth: string;
 }>;
-export declare const removeSubscription: (endpoint: string) => Promise<import(".prisma/client").Prisma.BatchPayload>;
+export declare const removeSubscription: (endpoint: string) => Promise<import("@prisma/client/runtime/library").GetBatchResult>;
 export declare const sendPushToUser: (userId: string, payload: {
     title: string;
     body: string;

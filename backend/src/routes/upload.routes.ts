@@ -96,7 +96,7 @@ router.post('/avatar', uploadAvatarConfig.single('avatar'), uploadAvatar);
 
 router.post('/document', uploadDocumentConfig.single('document'), uploadDocument);
 router.post('/video', uploadVideoConfig.single('video'), uploadVideo);
-router.post('/images', uploadPropertyConfig.array('images', 5), uploadPropertyImages);
+router.post('/images', uploadPropertyConfig.array('images', 15), uploadPropertyImages);
 router.post('/media', uploadMediaConfig.single('file'), uploadMedia);
 
 export default router;

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.kycRateLimiter = exports.chatRateLimiter = exports.apiRateLimiter = exports.uploadRateLimiter = exports.adminRateLimiter = exports.otpRateLimiter = exports.passwordResetRateLimiter = exports.checkEmailRateLimiter = exports.authRateLimiter = exports.loginRateLimiter = void 0;
+exports.contactRateLimiter = exports.kycRateLimiter = exports.chatRateLimiter = exports.apiRateLimiter = exports.uploadRateLimiter = exports.adminRateLimiter = exports.otpRateLimiter = exports.passwordResetRateLimiter = exports.checkEmailRateLimiter = exports.authRateLimiter = exports.loginRateLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 // ─── Login brute-force guard (5 attempts per 15 mins per IP in prod) ──────────
 exports.loginRateLimiter = (0, express_rate_limit_1.default)({
@@ -93,6 +93,15 @@ exports.kycRateLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes window
     max: 10,
     message: { message: 'Too many identity verification submission attempts. Please try again in 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    statusCode: 429,
+});
+// ─── Public Contact & Maintenance Subscription Rate Limiter ──────────────────
+exports.contactRateLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000, // 15 minutes window
+    max: process.env.NODE_ENV === 'production' ? 10 : 100,
+    message: { message: 'Too many submissions from this IP. Please wait 15 minutes before trying again.' },
     standardHeaders: true,
     legacyHeaders: false,
     statusCode: 429,

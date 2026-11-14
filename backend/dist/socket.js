@@ -8,11 +8,17 @@ const socket_io_1 = require("socket.io");
 const prisma_1 = __importDefault(require("./utils/prisma"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const cookie_1 = require("cookie");
+const cors_1 = require("./utils/cors");
 let io;
 const initializeSocket = (server) => {
     io = new socket_io_1.Server(server, {
         cors: {
-            origin: true, // Allow any origin, reflecting it back (matches Express config)
+            origin: (origin, callback) => {
+                if (!origin || (0, cors_1.isOriginAllowed)(origin)) {
+                    return callback(null, true);
+                }
+                return callback(new Error(`CORS policy: Socket origin ${origin} is not authorized`));
+            },
             methods: ['GET', 'POST'],
             credentials: true,
         },
@@ -89,7 +95,7 @@ const initializeSocket = (server) => {
                     socket.emit('error', { message: 'Conversation not found' });
                     return;
                 }
-                const isAuthorized = conv.tenantId === userId || conv.landlordId === userId || socket.user?.role === 'ADMIN';
+                const isAuthorized = conv.tenantId === userId || conv.landlordId === userId || ['ADMIN', 'SUPER_ADMIN'].includes(socket.user?.role || '');
                 if (!isAuthorized) {
                     console.warn(`🚨 Unauthorized socket room join attempt by user ${userId} for conversation ${conversationId}`);
                     socket.emit('error', { message: 'Forbidden: You are not a participant in this conversation' });

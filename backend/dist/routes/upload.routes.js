@@ -86,13 +86,13 @@ const uploadVideoConfig = (0, multer_1.default)({
 });
 // Public signed-document proxy route (validated via HMAC signature & 15-min expiration timestamp)
 router.get('/secure-document', upload_controller_1.serveSecureDocument);
-// Public avatar upload (for user registration flow)
-router.post('/avatar', uploadAvatarConfig.single('avatar'), upload_controller_1.uploadAvatar);
+// Protected upload routes
 // Protected upload routes
 router.use(auth_middleware_1.authenticate);
+router.post('/avatar', uploadAvatarConfig.single('avatar'), upload_controller_1.uploadAvatar);
 router.post('/document', uploadDocumentConfig.single('document'), upload_controller_1.uploadDocument);
 router.post('/video', uploadVideoConfig.single('video'), upload_controller_1.uploadVideo);
-router.post('/images', uploadPropertyConfig.array('images', 5), upload_controller_1.uploadPropertyImages);
+router.post('/images', uploadPropertyConfig.array('images', 15), upload_controller_1.uploadPropertyImages);
 router.post('/media', uploadMediaConfig.single('file'), upload_controller_1.uploadMedia);
 exports.default = router;
 //# sourceMappingURL=upload.routes.js.map

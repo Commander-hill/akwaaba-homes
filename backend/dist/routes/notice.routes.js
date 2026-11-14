@@ -7,5 +7,6 @@ const router = (0, express_1.Router)();
 // Allow any authenticated user (or even public if desired, but let's stick to authenticated tenants/landlords)
 router.use(auth_middleware_1.authenticate);
 router.get('/', notice_controller_1.getActiveNotices);
+router.post('/:id/view', notice_controller_1.recordNoticeView);
 exports.default = router;
 //# sourceMappingURL=notice.routes.js.map

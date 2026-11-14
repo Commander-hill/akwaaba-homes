@@ -7,7 +7,12 @@ exports.httpServer = exports.app = void 0;
 require("dotenv/config");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-// If REFRESH_JWT_SECRET is missing, safely fallback to JWT_SECRET
+// ─── Startup environment validation & security constraints ───────────────────
+const crypto_1 = __importDefault(require("crypto"));
+// If REFRESH_JWT_SECRET is missing, safely fallback to JWT_SECRET (warn in production)
+if (process.env.NODE_ENV === 'production' && (!process.env.REFRESH_JWT_SECRET || process.env.REFRESH_JWT_SECRET === process.env.JWT_SECRET)) {
+    console.warn('⚠️ SECURITY WARNING: REFRESH_JWT_SECRET should be set to a distinct high-entropy secret from JWT_SECRET in production.');
+}
 if (!process.env.REFRESH_JWT_SECRET && process.env.JWT_SECRET) {
     process.env.REFRESH_JWT_SECRET = process.env.JWT_SECRET;
 }
@@ -85,6 +90,7 @@ const billSplit_routes_1 = __importDefault(require("./routes/billSplit.routes"))
 const rateLimiter_middleware_1 = require("./middleware/rateLimiter.middleware");
 const xss_middleware_1 = require("./middleware/xss.middleware");
 const errorHandler_middleware_1 = require("./middleware/errorHandler.middleware");
+const cors_2 = require("./utils/cors");
 const config_middleware_1 = require("./middleware/config.middleware");
 const config_service_1 = require("./utils/config.service");
 const notification_service_1 = require("./utils/notification.service");
@@ -99,6 +105,21 @@ const port = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 // ─── Disable X-Powered-By Header ─────────────────────────────────────────────
 app.disable('x-powered-by');
+// --- Request Correlation ID & Slow-Request Telemetry ---
+app.use((req, res, next) => {
+    const existingId = req.headers['x-request-id'];
+    const requestId = typeof existingId === 'string' && existingId.trim() ? existingId.trim() : crypto_1.default.randomUUID();
+    req.headers['x-request-id'] = requestId;
+    res.setHeader('X-Request-Id', requestId);
+    const startedAt = Date.now();
+    res.on('finish', () => {
+        const durationMs = Date.now() - startedAt;
+        if (durationMs > 1500) {
+            console.warn(`[SLOW REQUEST] [${requestId}] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${durationMs}ms)`);
+        }
+    });
+    next();
+});
 // ─── Initialize Socket.io ────────────────────────────────────────────────────
 (0, socket_1.initializeSocket)(httpServer);
 // ─── Trust proxy (Render / Vercel / Railway) ────────────────────────────────
@@ -117,7 +138,7 @@ app.use((0, helmet_1.default)({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://js.paystack.co'],
+            scriptSrc: ["'self'", 'https://js.paystack.co'],
             frameSrc: ["'self'", 'https://checkout.paystack.com', 'https://*.paystack.co'],
             imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', 'https://*.tile.openstreetmap.org', 'https://*.openstreetmap.org'],
             connectSrc: ["'self'", 'wss:', 'ws:', 'https://checkout.paystack.com', 'https://api.paystack.co'],
@@ -169,7 +190,7 @@ app.use((0, cors_1.default)({
         }
         // Allow private LAN origins in development (e.g. mobile/tablet testing on 192.168.x.x, 10.x.x.x, 172.16-31.x.x)
         const isPrivateNetwork = /^(http:\/\/|https:\/\/)?(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(cleanOrigin);
-        if (isPrivateNetwork) {
+        if (!isProduction && isPrivateNetwork) {
             return callback(null, true);
         }
         // Strictly anchored official Akwaaba Vercel deployments & preview branches
@@ -187,13 +208,53 @@ app.use((0, cors_1.default)({
 }));
 // ─── Body parsing & cookies (preserves rawBody for webhook HMAC verification) ──
 app.use(express_1.default.json({
-    limit: '10mb',
+    limit: '2mb',
     verify: (req, _res, buf) => {
         req.rawBody = buf;
     },
 }));
-app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express_1.default.urlencoded({ extended: true, limit: '2mb' }));
 app.use((0, cookie_parser_1.default)());
+// ─── CSRF Origin Guard for Cookie-Authenticated State-Changing Requests ─────
+const SAFE_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const CSRF_EXEMPT_PATHS = [
+    '/api/v1/transactions/webhook',
+    '/api/v1/payouts/webhook',
+    '/api/v1/subscriptions/webhook',
+];
+app.use((req, res, next) => {
+    if (SAFE_HTTP_METHODS.has(req.method))
+        return next();
+    if (CSRF_EXEMPT_PATHS.some((p) => req.path.startsWith(p)))
+        return next();
+    const hasAuthCookies = Boolean(req.cookies?.accessToken || req.cookies?.refreshToken);
+    const hasBearerHeader = Boolean(req.headers.authorization?.startsWith('Bearer '));
+    if (!hasAuthCookies || hasBearerHeader)
+        return next();
+    const rawOrigin = req.headers.origin || (() => {
+        const ref = req.headers.referer;
+        if (!ref)
+            return null;
+        try {
+            return new URL(ref).origin;
+        }
+        catch {
+            return null;
+        }
+    })();
+    if (!rawOrigin) {
+        if (!isProduction)
+            return next();
+        res.status(403).json({ message: 'CSRF validation failed: missing Origin header.' });
+        return;
+    }
+    if (!(0, cors_2.isOriginAllowed)(rawOrigin)) {
+        console.warn(`🚨 Blocked potential CSRF ${req.method} ${req.originalUrl} from origin: ${rawOrigin}`);
+        res.status(403).json({ message: 'CSRF validation failed: unauthorized origin.' });
+        return;
+    }
+    next();
+});
 // ─── HTTP Compression ────────────────────────────────────────────────────────
 app.use((0, compression_1.default)());
 // ─── HTTP Request Logging ────────────────────────────────────────────────────
@@ -211,7 +272,30 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date().toISOString(),
         commit: process.env.RENDER_GIT_COMMIT || 'local-dev',
         uptime: Math.round(process.uptime()),
+        memoryRssMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
     });
+});
+app.get('/api/health/ready', async (req, res) => {
+    try {
+        await Promise.race([
+            prisma_1.default.$queryRaw `SELECT 1`,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('DB readiness timeout')), 2000)),
+        ]);
+        res.status(200).json({
+            status: 'ready',
+            database: 'connected',
+            timestamp: new Date().toISOString(),
+            uptime: Math.round(process.uptime()),
+        });
+    }
+    catch (err) {
+        res.status(503).json({
+            status: 'degraded',
+            database: 'disconnected',
+            error: err?.message || 'Database check failed',
+            timestamp: new Date().toISOString(),
+        });
+    }
 });
 // ─── Global Rate Limiting (High-Throughput Safe Ceiling) ───────────────────────
 app.use('/api', rateLimiter_middleware_1.apiRateLimiter);
@@ -242,7 +326,7 @@ app.get('/api/v1/config/public', async (req, res) => {
     }
 });
 // ─── Maintenance Mode Email Subscription ─────────────────────────────────────
-app.post('/api/v1/config/subscribe-maintenance', async (req, res) => {
+app.post('/api/v1/config/subscribe-maintenance', rateLimiter_middleware_1.contactRateLimiter, async (req, res) => {
     try {
         const { email } = req.body;
         if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -262,7 +346,7 @@ app.post('/api/v1/config/subscribe-maintenance', async (req, res) => {
     }
 });
 // ─── Public Contact & Support Inquiry Endpoint ───────────────────────────────
-app.post('/api/v1/contact', async (req, res) => {
+app.post('/api/v1/contact', rateLimiter_middleware_1.contactRateLimiter, async (req, res) => {
     try {
         const { name, email, phone, subject, message } = req.body;
         if (!name || typeof name !== 'string' || !name.trim()) {
@@ -350,11 +434,28 @@ process.on('uncaughtException', (err) => {
     httpServer.close(() => process.exit(1));
 });
 // ─── Graceful shutdown on SIGTERM / SIGINT ──────────────────────────────────
+let bookingCleanupTimer = null;
 const shutdownGracefully = (signal) => {
-    console.log(`📴 ${signal} received — starting graceful shutdown...`);
-    httpServer.close(() => {
-        console.log('✅ HTTP server closed.');
-        process.exit(0);
+    console.log(`[SHUTDOWN] ${signal} received -- starting graceful shutdown...`);
+    if (bookingCleanupTimer) {
+        clearInterval(bookingCleanupTimer);
+        bookingCleanupTimer = null;
+    }
+    const forceExitTimer = setTimeout(() => {
+        console.error('[SHUTDOWN] Forced shutdown after 10s grace period.');
+        process.exit(1);
+    }, 10000);
+    forceExitTimer.unref();
+    httpServer.close(async () => {
+        try {
+            await prisma_1.default.$disconnect();
+            console.log('[SHUTDOWN] HTTP server & Prisma disconnected cleanly.');
+            process.exit(0);
+        }
+        catch (err) {
+            console.error('[SHUTDOWN] Error disconnecting Prisma during shutdown:', err);
+            process.exit(1);
+        }
     });
 };
 process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
@@ -382,9 +483,10 @@ if (process.env.NODE_ENV !== 'test') {
         // Initial startup cleanup for expired bed reservations
         (0, bookingCleanup_1.cleanupExpiredBookings)().catch(console.error);
         // Periodic background cleanup every 2 minutes
-        setInterval(() => {
+        bookingCleanupTimer = setInterval(() => {
             (0, bookingCleanup_1.cleanupExpiredBookings)().catch(console.error);
         }, 2 * 60 * 1000);
+        bookingCleanupTimer.unref();
     });
 }
 //# sourceMappingURL=server.js.map
