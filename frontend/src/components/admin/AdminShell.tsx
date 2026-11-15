@@ -424,9 +424,9 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
       )}
 
       {/* ── MAIN WORKSPACE COLUMN ── */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-60 xl:pl-64 overflow-x-hidden">
-        {/* Top Header Bar matching Resident Portal Architecture */}
-        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-60 xl:pl-64 pt-16 overflow-x-hidden">
+        {/* Top Header Bar (Fixed Stationary Header) */}
+        <header className="fixed top-0 left-0 right-0 lg:left-60 xl:left-64 h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between z-30">
           {/* Left: Mobile Drawer Trigger, Breadcrumbs & Live Pulse */}
           <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1 max-w-2xl">
             <button
