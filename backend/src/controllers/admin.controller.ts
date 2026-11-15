@@ -118,7 +118,7 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
       prisma.auditLog.findMany({
         where,
         include: {
-          user: { select: { id: true, firstName: true, lastName: true, email: true, role: true } }
+          user: { select: { id: true, firstName: true, lastName: true, email: true, role: true, avatarUrl: true } }
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -153,6 +153,34 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
 
     const availableEntities = allEntitiesRaw.map((e: { entity: string }) => e.entity).filter(Boolean).sort();
     const uniqueIpsCount = new Set(logs.map((l: { ipAddress: string | null }) => l.ipAddress).filter(Boolean)).size;
+    const uniqueActorsCount = new Set(logs.map((l: { userId: string }) => l.userId).filter(Boolean)).size;
+
+    const [securityEventsCount, failedActionsCount] = await Promise.all([
+      prisma.auditLog.count({
+        where: {
+          OR: [
+            { action: { contains: 'LOGIN', mode: 'insensitive' } },
+            { action: { contains: '2FA', mode: 'insensitive' } },
+            { action: { contains: 'PASSWORD', mode: 'insensitive' } },
+            { action: { contains: 'SECURITY', mode: 'insensitive' } },
+            { action: { contains: 'SUSPEND', mode: 'insensitive' } },
+            { action: { contains: 'LOCK', mode: 'insensitive' } },
+            { action: { contains: 'REVOKE', mode: 'insensitive' } }
+          ]
+        }
+      }),
+      prisma.auditLog.count({
+        where: {
+          OR: [
+            { action: { contains: 'FAIL', mode: 'insensitive' } },
+            { action: { contains: 'REJECT', mode: 'insensitive' } },
+            { action: { contains: 'DENIED', mode: 'insensitive' } },
+            { action: { contains: 'ERROR', mode: 'insensitive' } },
+            { action: { contains: 'INVALID', mode: 'insensitive' } }
+          ]
+        }
+      })
+    ]);
 
     res.status(200).json({
       logs,
@@ -166,7 +194,10 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
         total,
         sanctions: totalSanctions,
         approvals: totalApprovals,
-        uniqueIps: uniqueIpsCount
+        uniqueIps: uniqueIpsCount,
+        uniqueActors: uniqueActorsCount,
+        securityEvents: securityEventsCount,
+        failedActions: failedActionsCount
       },
       availableEntities
     });

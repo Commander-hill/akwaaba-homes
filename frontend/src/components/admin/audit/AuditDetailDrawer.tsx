@@ -31,6 +31,7 @@ export interface AuditLogItem {
     lastName: string;
     email: string;
     role: string;
+    avatarUrl?: string | null;
   };
   action: string;
   entity: string;

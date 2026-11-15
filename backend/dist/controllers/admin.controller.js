@@ -118,7 +118,7 @@ const getAuditLogs = async (req, res) => {
             prisma_1.default.auditLog.findMany({
                 where,
                 include: {
-                    user: { select: { id: true, firstName: true, lastName: true, email: true, role: true } }
+                    user: { select: { id: true, firstName: true, lastName: true, email: true, role: true, avatarUrl: true } }
                 },
                 orderBy: { createdAt: 'desc' },
                 skip,
@@ -152,6 +152,33 @@ const getAuditLogs = async (req, res) => {
         ]);
         const availableEntities = allEntitiesRaw.map((e) => e.entity).filter(Boolean).sort();
         const uniqueIpsCount = new Set(logs.map((l) => l.ipAddress).filter(Boolean)).size;
+        const uniqueActorsCount = new Set(logs.map((l) => l.userId).filter(Boolean)).size;
+        const [securityEventsCount, failedActionsCount] = await Promise.all([
+            prisma_1.default.auditLog.count({
+                where: {
+                    OR: [
+                        { action: { contains: 'LOGIN', mode: 'insensitive' } },
+                        { action: { contains: '2FA', mode: 'insensitive' } },
+                        { action: { contains: 'PASSWORD', mode: 'insensitive' } },
+                        { action: { contains: 'SECURITY', mode: 'insensitive' } },
+                        { action: { contains: 'SUSPEND', mode: 'insensitive' } },
+                        { action: { contains: 'LOCK', mode: 'insensitive' } },
+                        { action: { contains: 'REVOKE', mode: 'insensitive' } }
+                    ]
+                }
+            }),
+            prisma_1.default.auditLog.count({
+                where: {
+                    OR: [
+                        { action: { contains: 'FAIL', mode: 'insensitive' } },
+                        { action: { contains: 'REJECT', mode: 'insensitive' } },
+                        { action: { contains: 'DENIED', mode: 'insensitive' } },
+                        { action: { contains: 'ERROR', mode: 'insensitive' } },
+                        { action: { contains: 'INVALID', mode: 'insensitive' } }
+                    ]
+                }
+            })
+        ]);
         res.status(200).json({
             logs,
             pagination: {
@@ -164,7 +191,10 @@ const getAuditLogs = async (req, res) => {
                 total,
                 sanctions: totalSanctions,
                 approvals: totalApprovals,
-                uniqueIps: uniqueIpsCount
+                uniqueIps: uniqueIpsCount,
+                uniqueActors: uniqueActorsCount,
+                securityEvents: securityEventsCount,
+                failedActions: failedActionsCount
             },
             availableEntities
         });
