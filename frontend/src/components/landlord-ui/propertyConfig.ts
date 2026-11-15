@@ -277,3 +277,43 @@ export function resolvePropertyCategory(typeString?: string): PropertyCategory {
   }
   return 'Apartment';
 }
+
+export function isHostelProperty(typeString?: string): boolean {
+  return resolvePropertyCategory(typeString) === 'Hostel';
+}
+
+/**
+ * Formats a unit/room label so Apartments, Studios, and Houses never display
+ * hostel-specific strings like "1 in a room" or "Bed 1".
+ */
+export function formatBookingUnitLabel(
+  propertyType?: string,
+  roomType?: string,
+  blockName?: string | null
+): string {
+  const category = resolvePropertyCategory(propertyType);
+  const raw = (roomType || '').trim();
+  const lower = raw.toLowerCase();
+  const prefix = blockName ? `${blockName} · ` : '';
+
+  if (category === 'Hostel') {
+    return `${prefix}${raw || 'Standard Room'}`;
+  }
+
+  // Normalize legacy "N in a room" strings for non-hostel properties
+  if (lower.includes('in a room') || lower === 'single' || lower === 'double') {
+    const countMatch = lower.match(/\d+/);
+    const beds = countMatch ? parseInt(countMatch[0], 10) : 1;
+    if (category === 'Studio') return `${prefix}Executive Studio`;
+    if (category === 'House') return `${prefix}${beds}-Bedroom House`;
+    return `${prefix}${beds}-Bedroom Apartment`;
+  }
+
+  if (raw) {
+    return `${prefix}${raw}`;
+  }
+
+  if (category === 'Studio') return `${prefix}Executive Studio`;
+  if (category === 'House') return `${prefix}Entire House`;
+  return `${prefix}Self-Contained Apartment`;
+}

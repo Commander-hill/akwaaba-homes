@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/axios';
+import { formatBookingUnitLabel, isHostelProperty } from '@/components/landlord-ui/propertyConfig';
 import toast from 'react-hot-toast';
 import {
   ArrowLeft,
@@ -301,11 +302,11 @@ export default function TenantBookingDetailsPage() {
             <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs text-[#242925] dark:text-[#E5E7E4]">
               {booking.room && (
                 <span className="font-medium">
-                  Room: {booking.room.name || booking.room.roomType}
+                  {isHostelProperty(prop.type) ? 'Room' : 'Unit'}: {formatBookingUnitLabel(prop.type, booking.room.name || booking.room.roomType, booking.room.blockName)}
                 </span>
               )}
               {booking.roomUnit && <span>• Unit: {booking.roomUnit.name}</span>}
-              {booking.bed && <span>• Bed: {booking.bed.label}</span>}
+              {isHostelProperty(prop.type) && booking.bed && <span>• Bed: {booking.bed.label}</span>}
             </div>
           </div>
         </div>

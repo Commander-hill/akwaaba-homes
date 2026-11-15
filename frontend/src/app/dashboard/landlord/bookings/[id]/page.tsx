@@ -12,6 +12,7 @@ import {
   ExternalLink, ChevronRight, ChevronDown, Check, MoreVertical
 } from 'lucide-react';
 import api from '@/lib/axios';
+import { formatBookingUnitLabel, isHostelProperty } from '@/components/landlord-ui/propertyConfig';
 import { Button } from '@/components/ui/Button';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
@@ -424,10 +425,10 @@ export default function BookingDetailPage() {
           <span className="text-zinc-500 block text-[11px]">Assigned Unit</span>
           <span className="font-semibold text-zinc-900 dark:text-white block mt-0.5">
             {unit.unitNumber ? `Unit ${unit.unitNumber}` : 'Standard Unit'}
-            {bed.bedNumber && ` · ${bed.bedNumber}`}
+            {isHostelProperty(property.type) && bed.bedNumber ? ` · ${bed.bedNumber}` : ''}
           </span>
           <span className="text-[11px] text-zinc-500 block mt-0.5">
-            {room.roomType ? decodeHtml(room.roomType) : decodeHtml(property.type) || 'Accommodation'}
+            {room.roomType ? formatBookingUnitLabel(property.type, decodeHtml(room.roomType), room.blockName) : decodeHtml(property.type) || 'Accommodation'}
           </span>
         </div>
 

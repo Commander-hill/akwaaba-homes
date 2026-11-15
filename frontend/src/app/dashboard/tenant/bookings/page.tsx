@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import { formatBookingUnitLabel } from '@/components/landlord-ui/propertyConfig';
 import {
   Calendar,
   CalendarCheck,
@@ -417,7 +418,7 @@ export default function TenantBookingsPage() {
                           <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 pt-0.5">
                             <span className="flex items-center gap-1">
                               <Bed className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                              <span>{primaryBooking.room?.roomType || 'Standard Room'}</span>
+                              <span>{formatBookingUnitLabel(primaryBooking.property?.type, primaryBooking.room?.roomType, primaryBooking.room?.blockName)}</span>
                             </span>
                             <span>|</span>
                             <span className="flex items-center gap-1">
@@ -817,7 +818,7 @@ export default function TenantBookingsPage() {
                               </p>
                               <div className="flex items-center gap-2 text-[11px] text-zinc-500">
                                 <span className="flex items-center gap-1">
-                                  <Bed className="w-3 h-3" /> {b.room?.roomType || 'Standard Room'}
+                                  <Bed className="w-3 h-3" /> {formatBookingUnitLabel(b.property?.type, b.room?.roomType, b.room?.blockName)}
                                 </span>
                                 <span>|</span>
                                 <span className="flex items-center gap-1">
