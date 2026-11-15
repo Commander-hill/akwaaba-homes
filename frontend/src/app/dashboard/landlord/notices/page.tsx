@@ -43,6 +43,7 @@ export default function LandlordNoticesPage() {
   const { confirm } = useDialog();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('ALL');
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
 
   const { data: propertiesData } = useQuery({
     queryKey: ['properties', 'landlord', 'mine'],
@@ -297,25 +298,52 @@ export default function LandlordNoticesPage() {
                 <h3 className="text-sm font-black text-zinc-950 dark:text-white leading-snug">
                   {notice.title}
                 </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line line-clamp-4">
+                <p
+                  className={clsx(
+                    'text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line',
+                    !expandedIds[notice.id] && 'line-clamp-4'
+                  )}
+                >
                   {notice.message}
                 </p>
+                {((notice.message || '').length > 180 || (notice.message || '').split('\n').length > 4) && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedIds((prev) => ({ ...prev, [notice.id]: !prev[notice.id] }))
+                    }
+                    className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 cursor-pointer"
+                  >
+                    {expandedIds[notice.id] ? 'Show less' : 'Show more'}
+                  </button>
+                )}
               </div>
 
-              <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
-                <div className="flex items-center gap-1.5 truncate max-w-[65%]">
+              <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                <div className="flex items-center gap-1.5 truncate max-w-[55%]">
                   <Building className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0" />
                   <span className="truncate font-semibold text-zinc-700 dark:text-zinc-300">
                     {notice.property?.title || 'Assigned Property'}
                   </span>
                 </div>
-                <span>
-                  {new Date(notice.createdAt).toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  {notice.expiresAt && (
+                    <span className="text-[10px] text-zinc-400">
+                      {isExpired ? 'Expired' : 'Expires'}{' '}
+                      {new Date(notice.expiresAt).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </span>
+                  )}
+                  <span>
+                    {new Date(notice.createdAt).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
               </div>
             </div>
             );
