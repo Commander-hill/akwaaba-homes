@@ -158,13 +158,6 @@ function VerifyEmailContent() {
                     href="/verify-email/pending"
                     className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
                   >
-                    <span>Resend Verification Email</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                  <Link
-                    href="/verify-email/pending"
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
-                  >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Request New Verification Link</span>
                   </Link>
@@ -198,8 +191,15 @@ function VerifyEmailContent() {
 
                 <div className="space-y-2.5 pt-2">
                   <Link
-                    href="/login"
+                    href="/verify-email/pending"
                     className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Request New Verification Link</span>
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="w-full h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors"
                   >
                     <span>Try Signing In</span>
                     <ArrowRight className="w-3.5 h-3.5" />

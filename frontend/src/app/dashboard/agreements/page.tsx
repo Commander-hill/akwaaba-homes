@@ -91,25 +91,30 @@ export default function TenancyAgreementsPage() {
         return [];
       }
     },
+    enabled: !!session?.role,
   });
 
   const agreements: any[] = Array.isArray(agreementsData) ? agreementsData : [];
   const primaryAgreement = agreements[0] || null;
 
-  // Derived agreement metadata (seamlessly merges live backend data with reference defaults)
+  // Derived agreement metadata from real agreement (no fake GLACIER STUDIO / Carefree Chelsea / Stephen Darko fallbacks)
   const propertyTitle = (
-    primaryAgreement?.booking?.property?.title || 'GLACIER STUDIO'
+    primaryAgreement?.booking?.property?.title || 'Tenancy Agreement'
   ).toUpperCase();
   const propertyLocation =
-    primaryAgreement?.booking?.property?.location || 'Achimota, Accra';
-  const landlordName = primaryAgreement?.booking?.property?.owner
-    ? `${primaryAgreement.booking.property.owner.firstName || ''} ${
-        primaryAgreement.booking.property.owner.lastName || ''
-      }`.trim()
-    : 'Carefree Chelsea';
-  const tenantName = primaryAgreement?.booking?.tenant ? `${primaryAgreement.booking.tenant.firstName || ''} ${primaryAgreement.booking.tenant.lastName || ''}`.trim() : session && session.role !== 'LANDLORD'
-    ? `${session.firstName || 'Stephen'} ${session.lastName || 'Darko'}`.trim()
-    : 'Stephen Darko';
+    primaryAgreement?.booking?.property?.location ||
+    primaryAgreement?.booking?.property?.address ||
+    '';
+  const landlordObj =
+    primaryAgreement?.booking?.property?.landlord || primaryAgreement?.booking?.property?.owner;
+  const landlordName = landlordObj
+    ? `${landlordObj.firstName || ''} ${landlordObj.lastName || ''}`.trim()
+    : 'Property Landlord';
+  const tenantName = primaryAgreement?.booking?.tenant
+    ? `${primaryAgreement.booking.tenant.firstName || ''} ${primaryAgreement.booking.tenant.lastName || ''}`.trim()
+    : session && session.role !== 'LANDLORD'
+    ? `${session.firstName || ''} ${session.lastName || ''}`.trim()
+    : 'Tenant';
 
   const startDate = primaryAgreement?.booking?.startDate
     ? new Date(primaryAgreement.booking.startDate).toLocaleDateString('en-GB', {
@@ -117,29 +122,28 @@ export default function TenancyAgreementsPage() {
         month: 'short',
         year: 'numeric',
       })
-    : '6 Sep 2026';
+    : '—';
   const endDate = primaryAgreement?.booking?.endDate
     ? new Date(primaryAgreement.booking.endDate).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
       })
-    : '6 Sep 2027';
+    : '—';
 
   const rentAmountNum =
     primaryAgreement?.booking?.room?.price ||
     primaryAgreement?.booking?.property?.price ||
-    20000;
+    0;
   const rentDisplay = `GH₵${Number(rentAmountNum).toLocaleString()}`;
   const agreementRef = primaryAgreement?.id
     ? `AKW/2026/${primaryAgreement.id.slice(0, 8).toUpperCase()}`
-    : 'AKW/2026/E8CD84EA';
+    : '—';
 
-  const activeCount = Math.max(1, agreements.length);
-  const executedCount = Math.max(
-    1,
-    agreements.filter((a) => a.status === 'COMPLETED' || a.status === 'SIGNED').length
-  );
+  const activeCount = agreements.length;
+  const executedCount = agreements.filter(
+    (a) => a.status === 'COMPLETED' || a.status === 'SIGNED'
+  ).length;
   const awaitingCount = agreements.filter(
     (a) => a.status === 'PENDING_TENANT' || a.status === 'PENDING'
   ).length;
@@ -528,6 +532,27 @@ export default function TenancyAgreementsPage() {
         {/* ════════════════════════════════════════════════════════════════════
             3. MAIN TWO-COLUMN WORKSPACE (Left 8 Cols | Right 4 Cols)
            ════════════════════════════════════════════════════════════════════ */}
+        {agreements.length === 0 ? (
+          <div className="bg-white dark:bg-[#141A17] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-10 text-center space-y-3 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
+            <div className="w-12 h-12 rounded-2xl bg-[#DDEFE2] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center mx-auto">
+              <FileText className="w-6 h-6" />
+            </div>
+            <h2 className="text-lg font-black text-[#14221A] dark:text-white">
+              No Tenancy Agreements Found
+            </h2>
+            <p className="text-xs text-[#4F6054] dark:text-zinc-400 max-w-md mx-auto">
+              Once a booking is approved, your digital tenancy agreement under the Ghana Rent Act (Act 220) will appear here for review and cryptographic signing.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/properties"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-sm transition"
+              >
+                <span>Browse Verified Properties</span>
+              </Link>
+            </div>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           {/* ──── LEFT COLUMN (8 Cols) ──── */}
           <div className="lg:col-span-8 space-y-3.5">
@@ -1231,6 +1256,7 @@ export default function TenancyAgreementsPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════

@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.invalidateConfigCache = exports.getSystemConfig = void 0;
+exports.normalizeSubscriptionCategory = normalizeSubscriptionCategory;
+exports.resolveSubscriptionFeeForType = resolveSubscriptionFeeForType;
 const prisma_1 = __importDefault(require("./prisma"));
 const socket_1 = require("../socket");
 const notification_service_1 = require("./notification.service");
@@ -49,6 +51,10 @@ const getSystemConfig = async () => {
             ghanaCardVerificationEnabled: true,
             bookingGracePeriodHours: 48,
             platformCommissionPercent: 5.0,
+            subscriptionFeeStudioGhs: 100.0,
+            subscriptionFeeApartmentGhs: 150.0,
+            subscriptionFeeHouseGhs: 200.0,
+            subscriptionFeeHostelGhs: 300.0,
             roommateFinderEnabled: true,
             maintenanceMode: false,
             maintenanceEndTime: null,
@@ -115,6 +121,29 @@ const autoDeactivateMaintenance = async () => {
         return cachedConfig;
     }
 };
+function normalizeSubscriptionCategory(propertyType) {
+    const normalized = String(propertyType || '').trim().toLowerCase();
+    if (normalized.includes('hostel'))
+        return 'Hostel';
+    if (normalized.includes('house') || normalized.includes('detached') || normalized.includes('villa'))
+        return 'House';
+    if (normalized.includes('studio'))
+        return 'Studio';
+    return 'Apartment';
+}
+async function resolveSubscriptionFeeForType(propertyType, existingConfig) {
+    const config = existingConfig || (await (0, exports.getSystemConfig)());
+    const envFallback = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+    const feeSchedule = {
+        Studio: Number(config?.subscriptionFeeStudioGhs ?? envFallback) || 100,
+        Apartment: Number(config?.subscriptionFeeApartmentGhs ?? 150) || 150,
+        House: Number(config?.subscriptionFeeHouseGhs ?? 200) || 200,
+        Hostel: Number(config?.subscriptionFeeHostelGhs ?? 300) || 300,
+    };
+    const category = normalizeSubscriptionCategory(propertyType);
+    const feeGhs = propertyType ? feeSchedule[category] : envFallback;
+    return { category, feeGhs, feeSchedule };
+}
 const invalidateConfigCache = () => {
     cachedConfig = null;
     lastFetch = 0;

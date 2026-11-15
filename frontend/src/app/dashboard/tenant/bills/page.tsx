@@ -106,50 +106,10 @@ export default function TenantBillsPage() {
     );
   }
 
-  // Fallback demo splits if empty
-  const splits = rawSplits.length > 0 ? rawSplits : [
-    {
-      id: 'BS-9021',
-      title: 'ECG Prepaid Electricity Meter Top-Up',
-      category: 'ELECTRICITY',
-      totalAmount: 400,
-      sharePerPerson: 100,
-      dueDate: new Date(Date.now() + 86400000 * 5).toISOString(),
-      status: 'ACTIVE',
-      property: {
-        title: 'GLACIER STUDIO',
-        location: 'Achimota, Accra'
-      },
-      participants: [
-        { id: 'p1', name: 'You (Tenant)', isPaid: true, amount: 100 },
-        { id: 'p2', name: 'Kwame M.', isPaid: true, amount: 100 },
-        { id: 'p3', name: 'Esi O.', isPaid: false, amount: 100 },
-        { id: 'p4', name: 'Kofi B.', isPaid: false, amount: 100 }
-      ]
-    },
-    {
-      id: 'BS-9022',
-      title: 'Starlink High-Speed Fiber Internet',
-      category: 'INTERNET',
-      totalAmount: 600,
-      sharePerPerson: 150,
-      dueDate: new Date(Date.now() + 86400000 * 12).toISOString(),
-      status: 'ACTIVE',
-      property: {
-        title: 'GLACIER STUDIO',
-        location: 'Achimota, Accra'
-      },
-      participants: [
-        { id: 'p5', name: 'You (Tenant)', isPaid: true, amount: 150 },
-        { id: 'p6', name: 'Kwame M.', isPaid: false, amount: 150 },
-        { id: 'p7', name: 'Esi O.', isPaid: false, amount: 150 },
-        { id: 'p8', name: 'Kofi B.', isPaid: false, amount: 150 }
-      ]
-    }
-  ];
+  const splits = rawSplits;
 
   const filteredSplits = splits.filter((s: any) => {
-    if (activeTab === 'ACTIVE') return s.status === 'ACTIVE' || !s.status;
+    if (activeTab === 'ACTIVE') return s.status === 'OPEN' || s.status === 'ACTIVE' || !s.status;
     if (activeTab === 'SETTLED') return s.status === 'SETTLED' || s.status === 'COMPLETED';
     return true;
   });
@@ -338,7 +298,7 @@ export default function TenantBillsPage() {
                         className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50"
                       >
                         <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                          {p.name || p.user?.firstName || 'Roommate'}
+                          {p.userName || p.name || p.user?.firstName || 'Roommate'}
                         </span>
                         <div className="flex items-center gap-2">
                           <span

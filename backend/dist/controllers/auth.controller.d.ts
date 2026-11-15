@@ -13,6 +13,7 @@ export declare const CAMPUS_PROMO_CODES: Record<string, {
 export declare const verifyPromoCode: (req: Request, res: Response) => Promise<void>;
 export declare const register: (req: Request, res: Response) => Promise<void>;
 export declare const verifyEmail: (req: Request, res: Response) => Promise<void>;
+export declare const resendVerificationEmail: (req: Request, res: Response) => Promise<void>;
 export declare const login: (req: Request, res: Response) => Promise<void>;
 export declare const login2FA: (req: Request, res: Response) => Promise<void>;
 export declare const refresh: (req: Request, res: Response) => Promise<void>;

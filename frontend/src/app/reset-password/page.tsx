@@ -83,7 +83,7 @@ function ResetPasswordForm() {
     staleTime: 60_000,
   });
 
-  const activeSessionsCount = sessionsData?.length || 2;
+  const activeSessionsCount = sessionsData?.length ?? 0;
 
   // Fetch 2FA status if authenticated
   const { data: twoFactorData } = useQuery({
@@ -101,7 +101,7 @@ function ResetPasswordForm() {
     staleTime: 60_000,
   });
 
-  const is2FAEnabled = Boolean(twoFactorData?.is2FAEnabled);
+  const is2FAEnabled = Boolean(twoFactorData?.twoFactorEnabled ?? twoFactorData?.is2FAEnabled);
 
   // Password Validation Criteria matching mockup
   const hasAtLeast12Chars = newPassword.length >= 12;

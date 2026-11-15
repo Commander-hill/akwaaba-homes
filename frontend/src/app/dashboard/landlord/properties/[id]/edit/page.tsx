@@ -440,7 +440,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setFormData(prev => ({ ...prev, videoUrl: res.data.url }));
+      setFormData(prev => ({ ...prev, videoUrl: res.data.videoUrl || res.data.url }));
     } catch (err: any) {
       triggerError(err.response?.data?.error || 'Failed to upload video');
       setVideoFile(null);

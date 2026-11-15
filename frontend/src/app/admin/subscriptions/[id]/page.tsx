@@ -197,7 +197,7 @@ export default function AdminSubscriptionDetailPage({
               <div className="flex items-center justify-between py-2 border-b border-zinc-100 dark:border-zinc-800">
                 <span className="text-zinc-500 font-medium">Paystack Gateway Reference</span>
                 <code className="font-mono text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded">
-                  {subscription.paymentRef || 'N/A'}
+                  {subscription.paymentReference || subscription.paymentRef || 'N/A'}
                 </code>
               </div>
 

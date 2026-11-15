@@ -1013,7 +1013,7 @@ function PropertyDetailsContent({ propertyId, initialProperty, initialReviews }:
                               type="button"
                               onClick={async () => {
                                 try {
-                                  await api.post(`/reviews/${r.id}/flag`, {
+                                  await api.put(`/reviews/${r.id}/flag`, {
                                     reason: 'Reported from property page',
                                   });
                                   toast.success('Review reported for moderation.');

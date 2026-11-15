@@ -16,6 +16,7 @@ router.post('/login/2fa/mandatory-setup', rateLimiter_middleware_1.loginRateLimi
 router.post('/logout', auth_controller_1.logout);
 router.post('/refresh', rateLimiter_middleware_1.authRateLimiter, auth_controller_1.refresh);
 router.post('/verify-email', rateLimiter_middleware_1.otpRateLimiter, auth_controller_1.verifyEmail);
+router.post('/resend-verification', rateLimiter_middleware_1.otpRateLimiter, auth_controller_1.resendVerificationEmail);
 router.post('/ghana-card', auth_middleware_1.authenticate, rateLimiter_middleware_1.kycRateLimiter, auth_controller_1.submitGhanaCard);
 router.post('/landlord-verification', auth_middleware_1.authenticate, rateLimiter_middleware_1.kycRateLimiter, auth_controller_1.submitLandlordVerification);
 router.post('/student-verification', auth_middleware_1.authenticate, auth_controller_1.submitStudentVerification);

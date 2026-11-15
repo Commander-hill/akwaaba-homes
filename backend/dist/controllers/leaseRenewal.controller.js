@@ -7,6 +7,7 @@ exports.respondLeaseRenewal = exports.getLandlordRenewals = exports.getTenantRen
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 const cache_1 = __importDefault(require("../utils/cache"));
+const billingPeriod_1 = require("../utils/billingPeriod");
 /**
  * Submit a lease renewal request
  */
@@ -139,7 +140,7 @@ const respondLeaseRenewal = async (req, res) => {
         }
         const renewal = await prisma_1.default.leaseRenewalRequest.findUnique({
             where: { id },
-            include: { property: true }
+            include: { property: true, booking: true }
         });
         if (!renewal) {
             res.status(404).json({ message: 'Lease renewal request not found' });
@@ -163,6 +164,28 @@ const respondLeaseRenewal = async (req, res) => {
                 property: { select: { id: true, title: true, location: true } }
             }
         });
+        if (status === 'ACCEPTED' && renewal.status !== 'ACCEPTED' && renewal.booking) {
+            const extendedEndDate = new Date(renewal.proposedStartDate);
+            extendedEndDate.setMonth(extendedEndDate.getMonth() + (renewal.proposedDurationMonths || 12));
+            const finalEndDate = extendedEndDate > new Date(renewal.booking.endDate)
+                ? extendedEndDate
+                : new Date(renewal.booking.endDate);
+            const baseDue = renewal.booking.nextRentDueDate
+                ? new Date(renewal.booking.nextRentDueDate)
+                : new Date(renewal.proposedStartDate);
+            let nextDue = (0, billingPeriod_1.addBillingPeriod)(baseDue, renewal.property?.pricePeriod);
+            if (nextDue > finalEndDate) {
+                nextDue = finalEndDate;
+            }
+            await prisma_1.default.booking.update({
+                where: { id: renewal.bookingId },
+                data: {
+                    endDate: finalEndDate,
+                    nextRentDueDate: nextDue,
+                    lastRentReminderSentAt: null,
+                },
+            });
+        }
         await prisma_1.default.notification.create({
             data: {
                 userId: renewal.tenantId,

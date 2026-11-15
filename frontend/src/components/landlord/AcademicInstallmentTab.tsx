@@ -122,11 +122,12 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
       const firstSemRequired = Math.round((totalAcademicFee * (installmentRatio / 100)) * 100) / 100;
       const secondSemRequired = Math.round((totalAcademicFee - firstSemRequired) * 100) / 100;
 
-      // Actual amount recorded in primary transaction
-      const totalPaid = booking.transaction?.amount || firstSemRequired;
+      // Actual amount recorded in primary transaction (do not assume 1st sem is paid when transaction is null)
+      const totalPaid = booking.transaction ? Number(booking.transaction.amount || 0) : 0;
+      const isFirstSemCleared = totalPaid >= firstSemRequired;
       const secondSemPaid = Math.max(0, totalPaid - firstSemRequired);
-      const secondSemOutstanding = Math.max(0, secondSemRequired - secondSemPaid);
-      const isFullyCleared = secondSemOutstanding <= 0;
+      const secondSemOutstanding = Math.max(0, totalAcademicFee - totalPaid);
+      const isFullyCleared = totalPaid >= totalAcademicFee;
       const isOverdue = !isFullyCleared && now > dueDate;
 
       // Key clearance is allowed if cleared or explicitly toggled by landlord
@@ -138,6 +139,7 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
         firstSemRequired,
         secondSemRequired,
         totalPaid,
+        isFirstSemCleared,
         secondSemPaid,
         secondSemOutstanding,
         isFullyCleared,
@@ -384,11 +386,15 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
                     </span>
                   ) : item.isOverdue ? (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-600 border border-rose-500/30">
-                      Tranche 2 Overdue
+                      {item.isFirstSemCleared ? 'Tranche 2 Overdue' : 'Tranche 1 & 2 Overdue'}
+                    </span>
+                  ) : item.isFirstSemCleared ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600">
+                      Tranche 1 Paid • Tranche 2 Due
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600">
-                      Tranche 1 Paid • Tranche 2 Due
+                      Awaiting 1st Semester Payment
                     </span>
                   )}
                 </div>
@@ -414,7 +420,9 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
                 <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-0.5 min-w-[130px]">
                   <div className="text-[10px] uppercase font-bold text-slate-400">1st Semester ({installmentRatio}%)</div>
                   <div className="font-extrabold text-slate-900 dark:text-white">GHS {item.firstSemRequired.toLocaleString()}</div>
-                  <span className="text-[10px] font-bold text-emerald-600">Cleared</span>
+                  <span className={clsx("text-[10px] font-bold", item.isFirstSemCleared ? "text-emerald-600" : "text-amber-600")}>
+                    {item.isFirstSemCleared ? 'Cleared' : 'Pending'}
+                  </span>
                 </div>
 
                 {/* 2nd Sem */}

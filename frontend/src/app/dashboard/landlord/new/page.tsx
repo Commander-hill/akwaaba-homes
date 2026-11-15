@@ -185,7 +185,7 @@ export default function NewPropertyPage() {
     }
   });
 
-  const requiredProfileFields = ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality', 'guardianName', 'guardianPhone'];
+  const requiredProfileFields = ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality'];
   const isProfileIncomplete = session && requiredProfileFields.some(field => !session[field] || !String(session[field]).trim());
   const isVerificationIncomplete = session && (!session.ghanaCardStatus || session.ghanaCardStatus === 'NOT_SUBMITTED');
   const isListingBlocked = isProfileIncomplete || isVerificationIncomplete;
@@ -365,7 +365,7 @@ export default function NewPropertyPage() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setFormData(prev => ({ ...prev, videoUrl: res.data.url }));
+      setFormData(prev => ({ ...prev, videoUrl: res.data.videoUrl || res.data.url }));
     } catch (err: any) {
       triggerError(err.response?.data?.error || 'Failed to upload video');
       setVideoFile(null);

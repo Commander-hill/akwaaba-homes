@@ -31,6 +31,7 @@ import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import { useQueryClient } from '@tanstack/react-query';
+import { useStepUpAuth } from '@/hooks/useStepUpAuth';
 
 export interface PropertySummary {
   id: string;
@@ -71,6 +72,7 @@ export default function TitleDeedDrawer({
   onAuditSuccess
 }: TitleDeedDrawerProps) {
   const queryClient = useQueryClient();
+  const { requestStepUp, StepUpModal } = useStepUpAuth();
 
   // Audit form states
   const [isAuditing, setIsAuditing] = useState(false);
@@ -107,11 +109,17 @@ export default function TitleDeedDrawer({
       return;
     }
 
+    requestStepUp({ title: status === 'VERIFIED' ? 'Approve & Verify Title Deed' : 'Reject Title Deed', description: `Confirm ${status === 'VERIFIED' ? 'approval' : 'rejection'} of title deed for ${landlord.firstName} ${landlord.lastName}.`, actionType: 'DEED_VERIFICATION', onSuccess: (stepUpToken: string) => { executeAudit(status, stepUpToken); } });
+  };
+
+  const executeAudit = async (status: 'VERIFIED' | 'REJECTED', stepUpToken?: string) => {
     try {
       setIsAuditing(true);
       await api.put(`/admin/landlord-deeds/${landlord.id}/audit`, {
         status,
         notes: status === 'REJECTED' ? rejectionNotes : undefined
+      }, {
+        headers: stepUpToken ? { 'x-step-up-token': stepUpToken } : {}
       });
 
       toast.success(
@@ -166,6 +174,7 @@ export default function TitleDeedDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
+      <StepUpModal />
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
@@ -286,7 +295,7 @@ export default function TitleDeedDrawer({
                     <div className="flex items-center gap-2">
                       <AdminStatusBadge status={prop.approvalStatus} size="sm" />
                       <Link
-                        href={`/admin/properties`}
+                        href={`/admin/properties/${prop.id}`}
                         className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 rounded"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />

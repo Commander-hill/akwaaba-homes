@@ -177,6 +177,7 @@ export default function AdminLandlordDetailPage({
 
   return (
     <div className="space-y-6 pb-12">
+      <StepUpModal />
       <AdminPageHeader
         title={`${landlord.firstName} ${landlord.lastName}`}
         subtitle={`Registered Host & Landlord · Member since ${new Date(landlord.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}`}
@@ -702,7 +703,7 @@ export default function AdminLandlordDetailPage({
           } else if (confirmDialog.type === 'UNSUSPEND') {
             await suspensionMutation.mutateAsync({ isSuspended: false, reason });
           } else if (confirmDialog.type === 'VERIFY_DEED') {
-            await deedMutation.mutateAsync({ status: 'VERIFIED', reason });
+            requestStepUp({ title: 'Approve Ownership Deed', description: `Confirm official Verified Landlord status for ${landlord.firstName} ${landlord.lastName}.`, actionType: 'DEED_VERIFICATION', onSuccess: async (stepUpToken: string) => { await deedMutation.mutateAsync({ status: 'VERIFIED', reason, stepUpToken }); } });
           }
         }}
       />

@@ -109,37 +109,7 @@ export default function TenantVisitorsPage() {
     );
   }
 
-  // Fallback demo passes if user hasn't generated passes yet
-  const passes = rawPasses.length > 0 ? rawPasses : [
-    {
-      id: 'VP-882190',
-      passCode: 'AKW-8821',
-      visitorName: 'Kwame Mensah',
-      visitorPhone: '+233 24 111 2233',
-      purpose: 'Delivery / Courier (Food/Jumia/Bolt)',
-      status: 'ACTIVE',
-      validFrom: new Date(Date.now() - 3600000).toISOString(),
-      validUntil: new Date(Date.now() + 7200000).toISOString(),
-      property: {
-        title: 'GLACIER STUDIO',
-        location: 'Achimota, Accra'
-      }
-    },
-    {
-      id: 'VP-882144',
-      passCode: 'AKW-3091',
-      visitorName: 'Esi Osei',
-      visitorPhone: '+233 20 888 4455',
-      purpose: 'Guest / Friend Visit',
-      status: 'EXPIRED',
-      validFrom: new Date(Date.now() - 86400000).toISOString(),
-      validUntil: new Date(Date.now() - 43200000).toISOString(),
-      property: {
-        title: 'GLACIER STUDIO',
-        location: 'Achimota, Accra'
-      }
-    }
-  ];
+  const passes = rawPasses;
 
   const filteredPasses = passes.filter((p: any) => {
     const isPassActive = p.status === 'ACTIVE' || new Date(p.validUntil) > new Date();
@@ -150,10 +120,11 @@ export default function TenantVisitorsPage() {
         ? isPassActive && p.status !== 'REVOKED'
         : !isPassActive || p.status === 'REVOKED' || p.status === 'EXPIRED';
 
+    const codeStr = p.accessCode || p.passCode || '';
     const matchesSearch =
       searchQuery.trim() === '' ||
       p.visitorName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.passCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      codeStr.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.purpose?.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesTab && matchesSearch;
@@ -314,13 +285,13 @@ export default function TenantVisitorsPage() {
                       SECURITY GATE CODE
                     </span>
                     <span className="font-mono font-black text-lg text-zinc-950 dark:text-white tracking-widest">
-                      {p.passCode || 'AKW-8821'}
+                      {p.accessCode || p.passCode || '—'}
                     </span>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => handleCopyCode(p.passCode || 'AKW-8821', p.id)}
+                    onClick={() => handleCopyCode(p.accessCode || p.passCode || '', p.id)}
                     className="p-2 rounded-lg bg-white dark:bg-zinc-700 hover:bg-zinc-50 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 text-xs font-bold transition cursor-pointer"
                     title="Copy code"
                   >

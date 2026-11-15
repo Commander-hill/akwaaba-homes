@@ -259,15 +259,15 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      <StepUpModal />
       
-      {/* Header */}
       <AdminPageHeader
         title={`Audit Workstation: ${landlord.firstName} ${landlord.lastName}`}
         subtitle="Examine property deed documents, inspect cadastral plans, verify Lands Commission Act 1036 compliance, and enforce statutory standards."
         backUrl="/admin/deeds"
         backLabel="Back to Title Deeds"
         breadcrumbs={[
-          { label: 'Admin', href: '/admin' },
+          { label: 'Admin', href: '/admin/dashboard' },
           { label: 'Title Deeds & Ownership', href: '/admin/deeds' },
           { label: `${landlord.firstName} ${landlord.lastName}` }
         ]}

@@ -450,12 +450,8 @@ function MessagesContent() {
         avatarIcon: 'IMAGE' as const,
       }));
     }
-    // Only showcase mockups if query explicitly requested demo mode
-    if (isDemo) {
-      return MOCKUP_CONVERSATIONS;
-    }
     return [];
-  }, [liveConversations, isDemo]);
+  }, [liveConversations]);
 
   // Keep active conversation aligned with URL parameters or conversation list
   useEffect(() => {
@@ -493,10 +489,6 @@ function MessagesContent() {
     queryKey: ['conversationMessages', activeConversation?.id],
     queryFn: async () => {
       if (!activeConversation?.id) return [];
-      if (activeConversation.id.startsWith('conv-')) {
-        const mock = MOCKUP_CONVERSATIONS.find((m) => m.id === activeConversation.id);
-        return mock?.messages || [];
-      }
       try {
         const { data } = await api.get(`/chat/${activeConversation.id}/messages`);
         if (Array.isArray(data)) return data;

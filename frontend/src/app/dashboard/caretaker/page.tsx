@@ -403,7 +403,9 @@ function CaretakerPortalContent() {
             : 'NORMAL',
         notes: meterForm.notes.trim() || undefined,
       };
-      const res = await api.post(`/inspections/property/${activeProperty.id}/meters`, payload);
+      const res = await api.post(`/inspections/property/${activeProperty.id}/meters`, {
+        reading: { id: `mtr-${Date.now()}`, ...payload },
+      });
       return res.data;
     },
     onSuccess: () => {

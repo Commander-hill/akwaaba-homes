@@ -193,7 +193,7 @@ const updateTicketStatus = async (req, res) => {
                 canManageTickets: true
             }
         });
-        const isAuthorized = req.user.role === 'ADMIN' ||
+        const isAuthorized = ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role) ||
             ticket.property.landlordId === req.user.id ||
             Boolean(isStaff);
         if (!isAuthorized) {
@@ -359,7 +359,7 @@ const checkAndEscalateTickets = async (req, res) => {
 exports.checkAndEscalateTickets = checkAndEscalateTickets;
 const getAdminEscalatedTickets = async (req, res) => {
     try {
-        if (!req.user || req.user.role !== 'ADMIN') {
+        if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
             res.status(403).json({ message: 'Admin access required' });
             return;
         }
@@ -396,7 +396,7 @@ const getTicketById = async (req, res) => {
             where: { id },
             include: {
                 property: {
-                    select: { title: true, location: true, address: true, landlord: { select: { firstName: true, lastName: true, phoneNumber: true } } }
+                    select: { title: true, location: true, landlord: { select: { firstName: true, lastName: true, phoneNumber: true } } }
                 },
                 tenant: {
                     select: { firstName: true, lastName: true, email: true, phoneNumber: true }
@@ -445,7 +445,7 @@ const addTicketNote = async (req, res) => {
                 canManageTickets: true
             }
         });
-        const isAuthorized = req.user.role === 'ADMIN' ||
+        const isAuthorized = ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role) ||
             ticket.tenantId === req.user.id ||
             ticket.property.landlordId === req.user.id ||
             Boolean(isStaff);
@@ -476,7 +476,6 @@ const addTicketNote = async (req, res) => {
                     select: {
                         title: true,
                         location: true,
-                        address: true,
                         landlord: { select: { firstName: true, lastName: true, phoneNumber: true } }
                     }
                 },

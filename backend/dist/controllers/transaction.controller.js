@@ -7,6 +7,7 @@ exports.exportGRATaxReport = exports.getLandlordFinancialLedger = exports.verify
 const axios_1 = __importDefault(require("axios"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const config_service_1 = require("../utils/config.service");
+const billingPeriod_1 = require("../utils/billingPeriod");
 const pdf_service_1 = require("../utils/pdf.service");
 const auditLogger_1 = require("../utils/auditLogger");
 const getLandlordCashflows = async (req, res) => {
@@ -470,7 +471,8 @@ const fulfillBookingPayment = async (params) => {
             where: { id: booking.id },
             data: {
                 status: 'COMPLETED',
-                paymentReference: reference
+                paymentReference: reference,
+                nextRentDueDate: (0, billingPeriod_1.computeInitialNextRentDueDate)(booking.startDate, booking.endDate, booking.property?.pricePeriod)
             }
         }),
         prisma_1.default.transaction.create({

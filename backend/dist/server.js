@@ -461,6 +461,7 @@ const shutdownGracefully = (signal) => {
 process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
 process.on('SIGINT', () => shutdownGracefully('SIGINT'));
 const bookingCleanup_1 = require("./utils/bookingCleanup");
+const booking_controller_1 = require("./controllers/booking.controller");
 if (process.env.NODE_ENV !== 'test') {
     let listenRetries = 0;
     const maxRetries = 5;
@@ -487,6 +488,11 @@ if (process.env.NODE_ENV !== 'test') {
             (0, bookingCleanup_1.cleanupExpiredBookings)().catch(console.error);
         }, 2 * 60 * 1000);
         bookingCleanupTimer.unref();
+        // Periodic rent-due reminder sweep every 6 hours
+        const rentReminderTimer = setInterval(() => {
+            (0, booking_controller_1.processRentDueReminders)().catch(console.error);
+        }, 6 * 60 * 60 * 1000);
+        rentReminderTimer.unref();
     });
 }
 //# sourceMappingURL=server.js.map

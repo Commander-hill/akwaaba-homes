@@ -268,9 +268,6 @@ export default function AdminDashboardPage() {
               <span className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
                 GH₵ {Number(totalRevenue).toLocaleString()}
               </span>
-              <span className="text-xs font-bold text-[#04793d] dark:text-emerald-400 flex items-center">
-                ↑ 12.5%
-              </span>
             </div>
           </div>
         </Link>
@@ -288,9 +285,6 @@ export default function AdminDashboardPage() {
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
                 {Number(totalUsers).toLocaleString()}
-              </span>
-              <span className="text-xs font-bold text-[#04793d] dark:text-emerald-400 flex items-center">
-                ↑ 8.2%
               </span>
             </div>
           </div>
@@ -310,9 +304,6 @@ export default function AdminDashboardPage() {
               <span className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
                 {Number(totalProperties).toLocaleString()}
               </span>
-              <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 flex items-center">
-                → 0%
-              </span>
             </div>
           </div>
         </Link>
@@ -330,9 +321,6 @@ export default function AdminDashboardPage() {
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
                 {Number(totalBookings).toLocaleString()}
-              </span>
-              <span className="text-xs font-bold text-[#04793d] dark:text-emerald-400 flex items-center">
-                ↑ 100%
               </span>
             </div>
           </div>

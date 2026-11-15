@@ -66,7 +66,7 @@ function formatPhoneNumber(phone?: string | null): string {
 }
 
 function formatActivityTime(dateStr?: string | null): string {
-  if (!dateStr) return '1h ago';
+  if (!dateStr) return '—';
   const now = new Date();
   const date = new Date(dateStr);
   const diffMs = Math.max(0, now.getTime() - date.getTime());
@@ -131,9 +131,8 @@ export default function AdminUsersPage() {
 
   const users: any[] = useMemo(() => {
     if (!rawUsers) return [];
-    if (Array.isArray(rawUsers)) return rawUsers;
-    if (Array.isArray(rawUsers.users)) return rawUsers.users;
-    return [];
+    const list = Array.isArray(rawUsers) ? rawUsers : Array.isArray(rawUsers.users) ? rawUsers.users : [];
+    return list.filter((u: any) => u.role !== 'ADMIN' && u.role !== 'SUPER_ADMIN');
   }, [rawUsers]);
 
   // KPI Calculations

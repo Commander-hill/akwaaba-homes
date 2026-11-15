@@ -80,8 +80,8 @@ router.put('/administrators/:id/status', auth_middleware_1.requireSuperAdmin, ad
 router.get('/config', admin_controller_1.getConfig);
 router.put('/config', auth_middleware_1.requireSuperAdmin, admin_controller_1.updateConfig);
 router.get('/maintenance/history', admin_controller_1.getMaintenanceHistory);
-router.post('/check-expirations', auth_middleware_1.requireSuperAdmin, subscription_controller_1.checkExpirations);
-router.post('/notifications/broadcast', auth_middleware_1.requireSuperAdmin, admin_controller_1.broadcastNotification);
-router.get('/notifications/broadcasts/history', auth_middleware_1.requireSuperAdmin, admin_controller_1.getBroadcastHistory);
+router.post('/check-expirations', subscription_controller_1.checkExpirations);
+router.post('/notifications/broadcast', admin_controller_1.broadcastNotification);
+router.get('/notifications/broadcasts/history', admin_controller_1.getBroadcastHistory);
 exports.default = router;
 //# sourceMappingURL=admin.routes.js.map

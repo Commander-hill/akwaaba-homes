@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMoMoAccountName = exports.handleTransferWebhook = exports.getPayoutHistory = exports.requestPayout = exports.requestPayoutOTP = void 0;
+exports.getGhanaBanks = exports.verifyMoMoAccountName = exports.handleTransferWebhook = exports.getPayoutHistory = exports.requestPayout = exports.requestPayoutOTP = void 0;
 const axios_1 = __importDefault(require("axios"));
 const crypto_1 = __importDefault(require("crypto"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
@@ -599,4 +599,47 @@ const verifyMoMoAccountName = async (req, res) => {
     }
 };
 exports.verifyMoMoAccountName = verifyMoMoAccountName;
+const FALLBACK_GHANA_BANKS = [
+    { name: 'GCB Bank', code: 'GH040100' },
+    { name: 'Ecobank Ghana', code: 'GH130100' },
+    { name: 'Absa Bank Ghana', code: 'GH030100' },
+    { name: 'Access Bank Ghana', code: 'GH280100' },
+    { name: 'Stanbic Bank Ghana', code: 'GH190100' },
+    { name: 'Fidelity Bank Ghana', code: 'GH240100' },
+    { name: 'First National Bank', code: 'GH330100' },
+    { name: 'Agricultural Development Bank (ADB)', code: 'GH080100' },
+    { name: 'National Investment Bank (NIB)', code: 'GH050100' },
+    { name: 'Zenith Bank Ghana', code: 'GH120100' },
+    { name: 'UBA Ghana', code: 'GH230100' },
+    { name: 'CalBank', code: 'GH140100' },
+    { name: 'Consolidated Bank Ghana (CBG)', code: 'GH340100' },
+    { name: 'Standard Chartered Bank', code: 'GH020100' },
+];
+/**
+ * Fetch Ghanaian Commercial Banks with Paystack GhIPSS codes
+ */
+const getGhanaBanks = async (_req, res) => {
+    try {
+        const secretKey = process.env.PAYSTACK_SECRET_KEY;
+        if (!secretKey) {
+            res.status(200).json({ banks: FALLBACK_GHANA_BANKS });
+            return;
+        }
+        const response = await axios_1.default.get(`${PAYSTACK_BASE}/bank?country=ghana&type=ghipss`, {
+            headers: { Authorization: `Bearer ${secretKey}` },
+            timeout: 8000,
+        });
+        const banks = Array.isArray(response.data?.data)
+            ? response.data.data
+                .filter((b) => b?.active !== false && b?.code && b?.name)
+                .map((b) => ({ name: String(b.name), code: String(b.code) }))
+            : FALLBACK_GHANA_BANKS;
+        res.status(200).json({ banks: banks.length > 0 ? banks : FALLBACK_GHANA_BANKS });
+    }
+    catch (error) {
+        console.warn('[Payout] Falling back to static Ghana banks list:', error);
+        res.status(200).json({ banks: FALLBACK_GHANA_BANKS });
+    }
+};
+exports.getGhanaBanks = getGhanaBanks;
 //# sourceMappingURL=payout.controller.js.map

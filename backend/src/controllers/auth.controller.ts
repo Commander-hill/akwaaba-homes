@@ -1306,7 +1306,6 @@ export const submitGhanaCard = async (req: Request, res: Response): Promise<void
         ghanaCardBackUrl,
         ghanaCardStatus: 'PENDING',
         ghanaCardRejectionReason: null,
-        kycManualReviewReason: (req.body.simulateNiaDowntime === true ? "NIA_SERVICE_UNAVAILABLE" : null),
       }
     });
 
@@ -1379,7 +1378,7 @@ export const submitLandlordVerification = async (req: Request, res: Response): P
       return;
     }
 
-    if (req.user.role !== 'LANDLORD' && req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'LANDLORD' && !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
       res.status(403).json({ message: 'Only landlords can submit landlord verification' });
       return;
     }
@@ -1536,7 +1535,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     }
 
     // Strict Immutability Check: If profile is locked and user is not ADMIN, block edits
-    if (existingUser.isProfileLocked && req.user.role !== 'ADMIN') {
+    if (existingUser.isProfileLocked && !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
       res.status(403).json({ 
         message: 'Your profile is locked and read-only. Only an administrator can grant access to modify your credentials.' 
       });

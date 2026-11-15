@@ -74,15 +74,25 @@ export default function VerificationPage() {
       return;
     }
 
+    const effectiveGhanaCardNumber = (ghanaCardNumber || session?.ghanaCardNumber || '').trim();
+    if (!effectiveGhanaCardNumber) {
+      setLandlordMsg({
+        text: 'Please complete your Ghana Card verification first before submitting ownership documents.',
+        type: 'error',
+      });
+      setIsSubmittingLandlord(false);
+      return;
+    }
+
     try {
       const landlordDocUrl = await uploadDoc(landlordDoc);
       const frontUrl = frontImage ? await uploadDoc(frontImage) : session?.ghanaCardFrontUrl;
       const backUrl = backImage ? await uploadDoc(backImage) : session?.ghanaCardBackUrl;
 
       await api.post('/auth/landlord-verification', {
-        ghanaCardNumber: ghanaCardNumber || session?.ghanaCardNumber || 'GHA-000000000-0',
-        ghanaCardFrontUrl: frontUrl || 'N/A',
-        ghanaCardBackUrl: backUrl || 'N/A',
+        ghanaCardNumber: effectiveGhanaCardNumber,
+        ...(frontUrl ? { ghanaCardFrontUrl: frontUrl } : {}),
+        ...(backUrl ? { ghanaCardBackUrl: backUrl } : {}),
         landlordDocUrl
       });
 

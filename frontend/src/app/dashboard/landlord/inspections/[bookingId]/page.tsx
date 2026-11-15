@@ -114,7 +114,7 @@ export default function InspectionDetailPage({
     onSuccess: (resData) => {
       toast.success(resData.message || 'Inspection checklist successfully recorded and signed.');
       queryClient.invalidateQueries({ queryKey: ['inspections', bookingId] });
-      router.push('/dashboard/landlord?tab=bookings');
+      router.push('/dashboard/landlord/bookings');
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to save inspection report.');
@@ -154,7 +154,7 @@ export default function InspectionDetailPage({
             Dashboard
           </Link>
           <ChevronRight className="w-3.5 h-3.5" />
-          <Link href="/dashboard/landlord?tab=bookings" className="hover:text-emerald-600 transition">
+          <Link href="/dashboard/landlord/bookings" className="hover:text-emerald-600 transition">
             Tenancies
           </Link>
           <ChevronRight className="w-3.5 h-3.5" />

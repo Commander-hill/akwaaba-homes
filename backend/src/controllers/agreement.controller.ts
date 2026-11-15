@@ -98,7 +98,7 @@ export const getAgreementByBooking = async (req: Request, res: Response): Promis
     });
     const isTenant = agreement.booking.tenantId === userId;
     const isLandlord = agreement.booking.property.landlordId === userId;
-    const isAdmin = role === 'ADMIN';
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(role);
 
     if (!isTenant && !isLandlord && !isAdmin && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not have access to this lease agreement' });

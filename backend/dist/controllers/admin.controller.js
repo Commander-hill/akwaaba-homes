@@ -183,7 +183,7 @@ const getSystemStats = async (req, res) => {
             return;
         }
         const [totalUsers, totalLandlords, totalTenants, totalProperties, verifiedProperties, verifiedUsers, verifiedLandlords, totalBookings, pendingProperties, pendingKyc, pendingLandlordDeeds, openBreaches, activeSubscriptions] = await Promise.all([
-            prisma_1.default.user.count(),
+            prisma_1.default.user.count({ where: { role: { notIn: ['ADMIN', 'SUPER_ADMIN'] } } }),
             prisma_1.default.user.count({ where: { role: 'LANDLORD' } }),
             prisma_1.default.user.count({ where: { role: 'TENANT' } }),
             prisma_1.default.property.count(),
@@ -211,7 +211,7 @@ const getSystemStats = async (req, res) => {
             const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
             const monthName = monthStart.toLocaleString('en-US', { month: 'short' });
             const [userCount, propCount, txSum] = await Promise.all([
-                prisma_1.default.user.count({ where: { createdAt: { lte: monthEnd } } }),
+                prisma_1.default.user.count({ where: { role: { notIn: ['ADMIN', 'SUPER_ADMIN'] }, createdAt: { lte: monthEnd } } }),
                 prisma_1.default.property.count({ where: { createdAt: { lte: monthEnd } } }),
                 prisma_1.default.transaction.aggregate({
                     _sum: { amount: true },
@@ -447,24 +447,34 @@ const getPlatformAnalytics = async (req, res) => {
             count: categoryCounts[name]
         }))
             .filter(item => item.count > 0);
-        // 5. Monthly Signup & Growth Trends (6 months)
-        const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-        const totalUsers = await prisma_1.default.user.count();
-        const totalProperties = await prisma_1.default.property.count();
-        const monthlyTrends = months.map((month, index) => {
-            const factor = (index + 1) / 6;
-            return {
+        // 5. Monthly Signup & Growth Trends (last 6 calendar months from real DB records)
+        const nowDate = new Date();
+        const monthlyTrends = [];
+        for (let i = 5; i >= 0; i--) {
+            const mStart = new Date(nowDate.getFullYear(), nowDate.getMonth() - i, 1);
+            const mEnd = new Date(nowDate.getFullYear(), nowDate.getMonth() - i + 1, 0, 23, 59, 59, 999);
+            const month = mStart.toLocaleString('en-US', { month: 'short' });
+            const [mTenants, mLandlords, mProps, mBookings, mRev] = await Promise.all([
+                prisma_1.default.user.count({ where: { role: 'TENANT', createdAt: { lte: mEnd } } }),
+                prisma_1.default.user.count({ where: { role: 'LANDLORD', createdAt: { lte: mEnd } } }),
+                prisma_1.default.property.count({ where: { approvalStatus: 'APPROVED', createdAt: { lte: mEnd } } }),
+                prisma_1.default.booking.count({ where: { createdAt: { gte: mStart, lte: mEnd } } }),
+                prisma_1.default.transaction.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS', createdAt: { gte: mStart, lte: mEnd } } })
+            ]);
+            monthlyTrends.push({
                 month,
-                tenants: Math.round(totalUsers * 0.75 * factor),
-                landlords: Math.round(totalUsers * 0.25 * factor),
-                approvedProperties: Math.round(totalProperties * factor),
-                revenueGhs: Math.round(totalRevenueGhs * factor)
-            };
-        });
+                tenants: mTenants,
+                landlords: mLandlords,
+                users: mTenants + mLandlords,
+                approvedProperties: mProps,
+                bookings: mBookings,
+                revenueGhs: mRev._sum.amount || 0
+            });
+        }
         // 6. Digital Tenancy Agreement Compliance
         const totalDeeds = await prisma_1.default.leaseAgreement.count();
         const completedDeeds = await prisma_1.default.leaseAgreement.count({ where: { status: 'COMPLETED' } });
-        const deedExecutionRate = totalDeeds > 0 ? Math.round((completedDeeds / totalDeeds) * 100) : 100;
+        const deedExecutionRate = totalDeeds > 0 ? Math.round((completedDeeds / totalDeeds) * 100) : 0;
         const analyticsData = {
             funnel: {
                 totalBookings,
@@ -1027,11 +1037,11 @@ const searchEntities = async (req, res) => {
         const results = [
             ...users.map(u => ({
                 id: u.id,
-                type: u.role === 'LANDLORD' ? 'LANDLORD' : (u.role === 'ADMIN' ? 'ADMIN' : 'TENANT'),
+                type: u.role === 'LANDLORD' ? 'LANDLORD' : (['ADMIN', 'SUPER_ADMIN'].includes(u.role) ? 'ADMIN' : 'TENANT'),
                 title: `${u.firstName} ${u.lastName}`,
                 subtitle: u.email,
                 status: u.isSuspended ? 'SUSPENDED' : 'ACTIVE',
-                url: u.role === 'LANDLORD' ? `/admin/landlords/${u.id}` : `/admin/tenants/${u.id}`
+                url: u.role === 'LANDLORD' ? `/admin/landlords/${u.id}` : (['ADMIN', 'SUPER_ADMIN'].includes(u.role) ? '/admin/administrators' : `/admin/tenants/${u.id}`)
             })),
             ...properties.map(p => ({
                 id: p.id,
@@ -1381,13 +1391,13 @@ const getAllBookings = async (req, res) => {
                     }
                 },
                 room: {
-                    select: { id: true, name: true, price: true, type: true }
+                    select: { id: true, blockName: true, roomType: true, bedsPerRoom: true, price: true }
                 },
                 roomUnit: {
                     select: { unitNumber: true }
                 },
                 transaction: {
-                    select: { id: true, amount: true, status: true, reference: true, paymentMethod: true, createdAt: true }
+                    select: { id: true, amount: true, status: true, reference: true, createdAt: true }
                 },
                 leaseAgreement: {
                     select: { id: true, status: true, tenantSignedAt: true, landlordSignedAt: true, cryptographicHash: true }
@@ -2040,6 +2050,7 @@ const getSystemActivity = async (req, res) => {
                 }
             }),
             prisma_1.default.user.findMany({
+                where: { role: { in: ['TENANT', 'LANDLORD'] } },
                 take: 12,
                 orderBy: { createdAt: 'desc' },
                 select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, ghanaCardStatus: true, isVerifiedLandlord: true, createdAt: true }
@@ -2163,7 +2174,7 @@ const getSystemActivity = async (req, res) => {
                 type: 'PAYMENT',
                 severity: s.paymentStatus === 'COMPLETED' ? 'COMPLIANCE' : 'NOTICE',
                 title: 'Landlord Listing License Fee',
-                message: `Annual Landlord Listing Permit transaction: GH₵ 100/yr for "${s.property?.title || 'Property'}"`,
+                message: `Annual Landlord Listing Permit transaction: GH₵ ${(s.quotedAmountGhs || 100).toLocaleString()}/yr for "${s.property?.title || 'Property'}"`,
                 actor: {
                     name: s.property?.landlord ? `${s.property.landlord.firstName} ${s.property.landlord.lastName}` : 'Landlord',
                     email: s.property?.landlord?.email,
@@ -2173,7 +2184,7 @@ const getSystemActivity = async (req, res) => {
                     type: 'Subscription Permit',
                     id: s.id,
                     title: `License #${(s.paymentReference || s.id).slice(0, 8)}`,
-                    financialAmount: 'GH₵ 100'
+                    financialAmount: `GH₵ ${(s.quotedAmountGhs || 100).toLocaleString()}`
                 },
                 status: s.paymentStatus,
                 createdAt: s.createdAt
@@ -2269,7 +2280,24 @@ const getConfig = async (req, res) => {
 exports.getConfig = getConfig;
 const updateConfig = async (req, res) => {
     try {
-        const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode, maintenanceEndTime, maintenanceStartTime, maintenanceScheduled, maintenanceTitle, maintenanceMessage, maintenanceScope, maintenanceReason, maintenanceContactEmail, maintenanceContactPhone, } = req.body;
+        const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, subscriptionFeeStudioGhs, subscriptionFeeApartmentGhs, subscriptionFeeHouseGhs, subscriptionFeeHostelGhs, roommateFinderEnabled, maintenanceMode, maintenanceEndTime, maintenanceStartTime, maintenanceScheduled, maintenanceTitle, maintenanceMessage, maintenanceScope, maintenanceReason, maintenanceContactEmail, maintenanceContactPhone, } = req.body;
+        const feeUpdates = {};
+        const feeFields = [
+            ['subscriptionFeeStudioGhs', subscriptionFeeStudioGhs],
+            ['subscriptionFeeApartmentGhs', subscriptionFeeApartmentGhs],
+            ['subscriptionFeeHouseGhs', subscriptionFeeHouseGhs],
+            ['subscriptionFeeHostelGhs', subscriptionFeeHostelGhs],
+        ];
+        for (const [key, val] of feeFields) {
+            if (val !== undefined) {
+                const num = Number(val);
+                if (!Number.isFinite(num) || num < 1) {
+                    res.status(400).json({ message: `${key} must be a valid amount of at least GHS 1.` });
+                    return;
+                }
+                feeUpdates[key] = num;
+            }
+        }
         const previousConfig = await prisma_1.default.systemConfig.findUnique({ where: { id: 'GLOBAL' } });
         const adminIdentity = req.user?.firstName
             ? `${req.user.firstName} ${req.user.lastName} (${req.user.email})`
@@ -2280,6 +2308,7 @@ const updateConfig = async (req, res) => {
                 ...(ghanaCardVerificationEnabled !== undefined && { ghanaCardVerificationEnabled }),
                 ...(bookingGracePeriodHours !== undefined && { bookingGracePeriodHours }),
                 ...(platformCommissionPercent !== undefined && { platformCommissionPercent }),
+                ...feeUpdates,
                 ...(roommateFinderEnabled !== undefined && { roommateFinderEnabled }),
                 ...(maintenanceMode !== undefined && { maintenanceMode }),
                 ...(maintenanceEndTime !== undefined && { maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null }),
@@ -2298,6 +2327,10 @@ const updateConfig = async (req, res) => {
                 ghanaCardVerificationEnabled: ghanaCardVerificationEnabled ?? true,
                 bookingGracePeriodHours: bookingGracePeriodHours ?? 48,
                 platformCommissionPercent: platformCommissionPercent ?? 5.0,
+                subscriptionFeeStudioGhs: feeUpdates.subscriptionFeeStudioGhs ?? 100.0,
+                subscriptionFeeApartmentGhs: feeUpdates.subscriptionFeeApartmentGhs ?? 150.0,
+                subscriptionFeeHouseGhs: feeUpdates.subscriptionFeeHouseGhs ?? 200.0,
+                subscriptionFeeHostelGhs: feeUpdates.subscriptionFeeHostelGhs ?? 300.0,
                 roommateFinderEnabled: roommateFinderEnabled ?? true,
                 maintenanceMode: maintenanceMode ?? false,
                 maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null,
@@ -2576,7 +2609,7 @@ const broadcastNotification = async (req, res) => {
         }
         else {
             users = await prisma_1.default.user.findMany({
-                where: { isSuspended: false },
+                where: { isSuspended: false, role: { notIn: ['ADMIN', 'SUPER_ADMIN'] } },
                 select: { id: true, email: true, firstName: true, lastName: true }
             });
         }
@@ -3318,51 +3351,6 @@ const getWebhookDLQ = async (req, res) => {
                 lastRetriedAt: retryStats ? retryStats.lastRetriedAt : (metadata.lastRetriedAt || null)
             };
         });
-        // If no dropped webhooks in current DB session, provide initial baseline sample records so DLQ viewer is populated
-        if (items.length === 0) {
-            const sampleItem = {
-                id: 'dlq-sample-1',
-                provider: 'Paystack',
-                event: 'charge.success',
-                reference: 'AKW-MOMO-8492019',
-                failureReason: 'Gateway timeout (HTTP 504) during high-throughput intake rush',
-                payload: {
-                    event: 'charge.success',
-                    data: {
-                        reference: 'AKW-MOMO-8492019',
-                        amount: 140000,
-                        channel: 'mobile_money',
-                        gateway_response: 'Successful',
-                        paid_at: new Date(Date.now() - 45 * 60 * 1000).toISOString()
-                    }
-                },
-                retryCount: 1,
-                status: 'PENDING_RETRY',
-                createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-                lastRetriedAt: new Date(Date.now() - 15 * 60 * 1000).toISOString()
-            };
-            const sampleItem2 = {
-                id: 'dlq-sample-2',
-                provider: 'Paystack',
-                event: 'transfer.success',
-                reference: 'akwaaba-payout-739102',
-                failureReason: 'Database connection pool busy during bulk audit export',
-                payload: {
-                    event: 'transfer.success',
-                    data: {
-                        reference: 'akwaaba-payout-739102',
-                        amount: 280000,
-                        recipient: { name: 'Kwadwo Mensah' },
-                        transferred_at: new Date(Date.now() - 120 * 60 * 1000).toISOString()
-                    }
-                },
-                retryCount: 0,
-                status: 'PENDING_RETRY',
-                createdAt: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
-                lastRetriedAt: null
-            };
-            items = [sampleItem, sampleItem2];
-        }
         res.status(200).json({
             success: true,
             count: items.length,

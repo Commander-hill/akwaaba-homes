@@ -17,7 +17,7 @@ export declare const processSuccessfulSubscriptionPayment: (reference: string, a
 /**
  * Get Subscription Status for a specific property
  */
-export declare const getSubscriptionFee: (_req: AuthRequest, res: Response) => Promise<void>;
+export declare const getSubscriptionFee: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const getSubscriptionStatus: (req: AuthRequest, res: Response) => Promise<void>;
 /**
  * Initialize Subscription Payment

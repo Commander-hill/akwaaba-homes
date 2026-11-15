@@ -77,8 +77,8 @@ function ServicesContent() {
 
   const user = userResponse?.user;
   const initials = user
-    ? `${user.firstName?.[0] || 'S'}${user.lastName?.[0] || 'D'}`.toUpperCase()
-    : 'SD';
+    ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'U'
+    : '';
   const dashboardHref =
     user?.role === 'LANDLORD'
       ? '/dashboard/landlord'
@@ -188,16 +188,13 @@ function ServicesContent() {
               <span>Bookings</span>
             </Link>
 
-            {/* Bell with Red 1 Badge */}
+            {/* Bell */}
             <Link
               href={user ? '/dashboard/notifications' : '/login'}
               className="relative w-8 h-8 rounded-lg bg-white/85 hover:bg-white flex items-center justify-center text-[#14221A] shadow-xs transition"
               title="Notifications"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#DC2626] text-white text-[9px] font-extrabold flex items-center justify-center">
-                1
-              </span>
             </Link>
 
             {/* My Account Button */}
@@ -205,10 +202,12 @@ function ServicesContent() {
               href={user ? dashboardHref : '/login'}
               className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#15803D] hover:bg-[#166534] text-white transition-colors shadow-xs"
             >
-              <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[10px] font-extrabold flex items-center justify-center">
-                {initials}
-              </span>
-              <span className="hidden sm:inline">{user ? 'My Account' : 'My Account'}</span>
+              {initials && (
+                <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[10px] font-extrabold flex items-center justify-center">
+                  {initials}
+                </span>
+              )}
+              <span className="hidden sm:inline">{user ? 'My Account' : 'Sign In'}</span>
               <ChevronDown className="w-3 h-3 opacity-80" />
             </Link>
           </div>

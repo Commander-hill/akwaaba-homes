@@ -226,7 +226,7 @@ export default function TenantDocumentsAndVerificationPage() {
         studentId: activeStudentId.trim(),
         programmeOfStudy: (programmeOfStudy || session?.programmeOfStudy || '').trim(),
         yearOfStudy: (yearOfStudy || session?.yearOfStudy || '').trim(),
-        dateOfAdmission: institutionalEmail.trim() || session?.dateOfAdmission || undefined,
+        dateOfAdmission: session?.dateOfAdmission || undefined,
         studentType: studentDocUrl || 'VERIFIED',
       });
 
@@ -312,7 +312,7 @@ export default function TenantDocumentsAndVerificationPage() {
     setStudentId(session?.studentId || '');
     setProgrammeOfStudy(session?.programmeOfStudy || '');
     setYearOfStudy(session?.yearOfStudy || 'Level 100');
-    setInstitutionalEmail(session?.dateOfAdmission || session?.email || '');
+    setInstitutionalEmail(session?.email || '');
     setStudentMsg(null);
     setStudentModalMode(mode);
     setStudentModalOpen(true);
@@ -813,7 +813,7 @@ export default function TenantDocumentsAndVerificationPage() {
                       <div className="flex items-center gap-2.5">
                         {primaryAgreement?.id ? (
                           <Link
-                            href={`/dashboard/agreements/${primaryAgreement.id}`}
+                            href={`/dashboard/agreements/${primaryAgreement.bookingId || primaryAgreement.id}`}
                             className="px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/25 text-white text-xs font-bold inline-flex items-center gap-1.5 transition"
                           >
                             <Eye className="w-3.5 h-3.5" />

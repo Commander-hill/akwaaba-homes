@@ -20,6 +20,7 @@ import {
   User,
 } from 'lucide-react';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 import { publicGet, usePublicResource } from '@/lib/publicFetch';
 
 // ── BRAND SVG ICONS ──
@@ -59,6 +60,13 @@ function LoginForm() {
       isRegistered: params.get('registered') === 'true',
       redirectParam: params.get('redirect'),
     });
+    try {
+      const saved = localStorage.getItem('akwaaba_remembered_identifier');
+      if (saved) {
+        setIdentifier(saved);
+        setRememberMe(true);
+      }
+    } catch {}
   }, []);
 
   const { isTimeout, isRegistered, redirectParam } = searchMeta;
@@ -106,7 +114,7 @@ function LoginForm() {
     } else if (user.role === 'CARETAKER' || user.role === 'STAFF') {
       window.location.href = '/dashboard/caretaker';
     } else {
-      if (user.isStudent && !user.studentId) {
+      if (user.campus && !user.studentId) {
         window.location.href = '/onboarding';
       } else {
         window.location.href = '/dashboard/tenant';
@@ -191,6 +199,11 @@ function LoginForm() {
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('akwaaba_last_active', String(Date.now()));
+        if (rememberMe) {
+          localStorage.setItem('akwaaba_remembered_identifier', identifier.trim());
+        } else {
+          localStorage.removeItem('akwaaba_remembered_identifier');
+        }
       }
 
       redirectByRole(response.data.user);
@@ -239,6 +252,11 @@ function LoginForm() {
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('akwaaba_last_active', String(Date.now()));
+        if (rememberMe) {
+          localStorage.setItem('akwaaba_remembered_identifier', identifier.trim());
+        } else {
+          localStorage.removeItem('akwaaba_remembered_identifier');
+        }
       }
 
       redirectByRole(response.data.user);
@@ -346,7 +364,7 @@ function LoginForm() {
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
-                onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/google`}
+                onClick={() => toast('Social sign-in is not enabled on this environment.')}
                 className="flex items-center justify-center gap-1.5 h-9 xl:h-10 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] xl:text-xs font-semibold transition cursor-pointer shadow-2xs"
               >
                 <GoogleIcon />
@@ -355,7 +373,7 @@ function LoginForm() {
 
               <button
                 type="button"
-                onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/microsoft`}
+                onClick={() => toast('Social sign-in is not enabled on this environment.')}
                 className="flex items-center justify-center gap-1.5 h-9 xl:h-10 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] xl:text-xs font-semibold transition cursor-pointer shadow-2xs"
               >
                 <MicrosoftIcon />

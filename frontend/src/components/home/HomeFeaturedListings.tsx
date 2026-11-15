@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 
 
+import { getImageUrl } from '@/lib/utils';
+
 export interface ShowcasePropertyItem {
   id: string;
   title: string;
@@ -27,57 +29,6 @@ export interface ShowcasePropertyItem {
   image: string;
   href: string;
 }
-
-const SHOWCASE_PROPERTIES: ShowcasePropertyItem[] = [
-  {
-    id: 'glacier-studio',
-    title: 'Glacier Studio',
-    location: 'Legon, Accra',
-    price: 2500,
-    rooms: 1,
-    type: 'Studio',
-    badge: 'Verified',
-    badgeColor: 'green',
-    image: '/images/home/glacier-living.jpg',
-    href: '/properties/glacier-studio',
-  },
-  {
-    id: 'aduana-apartment',
-    title: 'Aduana Apartment',
-    location: 'Kumasi',
-    price: 1800,
-    rooms: 2,
-    type: 'Apartment',
-    badge: 'Verified',
-    badgeColor: 'green',
-    image: '/images/home/aduana-bedroom.jpg',
-    href: '/properties/aduana-apartment',
-  },
-  {
-    id: 'executive-studio',
-    title: 'Executive Studio',
-    location: 'Airport Residential, Accra',
-    price: 4000,
-    rooms: 1,
-    type: 'Studio',
-    badge: 'Popular',
-    badgeColor: 'orange',
-    image: '/images/home/executive-living.jpg',
-    href: '/properties/executive-studio',
-  },
-  {
-    id: 'seaside-apartments',
-    title: 'Seaside Apartments',
-    location: 'Cape Coast',
-    price: 2000,
-    rooms: 2,
-    type: 'Apartment',
-    badge: 'Verified',
-    badgeColor: 'green',
-    image: '/images/home/seaside-exterior.jpg',
-    href: '/properties/seaside-apartments',
-  },
-];
 
 export default function HomeFeaturedListings({
   initialLiveListings = [],
@@ -113,16 +64,23 @@ export default function HomeFeaturedListings({
     },
   );
 
-  const liveListings: any[] = propertiesResponse?.data || propertiesResponse?.properties || initialLiveListings;
+  const liveProperties: any[] = propertiesResponse?.data || propertiesResponse?.properties || initialLiveListings || [];
 
-  const featuredCards = SHOWCASE_PROPERTIES.map((prop, index) => {
-    const matchedLive =
-      liveListings.find((l) => l.title?.toLowerCase().includes(prop.title.split(' ')[0].toLowerCase())) ||
-      liveListings[index];
+  const featuredCards: ShowcasePropertyItem[] = liveProperties.slice(0, 4).map((prop: any) => {
+    const rawImages = Array.isArray(prop.images) ? prop.images : [];
+    const firstImg = rawImages.length > 0 ? getImageUrl(rawImages[0]?.url || rawImages[0]) : '/images/home/glacier-living.jpg';
+    const roomCount = Array.isArray(prop.rooms) && prop.rooms.length > 0 ? prop.rooms.length : (prop.bedrooms || 1);
     return {
-      ...prop,
-      href: matchedLive?.id ? `/properties/${matchedLive.id}` : prop.href,
-      liveId: matchedLive?.id || prop.id,
+      id: prop.id,
+      title: prop.title || 'Verified Residence',
+      location: prop.location || prop.city || 'Accra, Ghana',
+      price: Number(prop.price || prop.rooms?.[0]?.price || 0),
+      rooms: roomCount,
+      type: prop.type || 'Apartment',
+      badge: prop.isVerified !== false ? 'Verified' : 'Featured',
+      badgeColor: 'green',
+      image: firstImg,
+      href: `/properties/${prop.id}`,
     };
   });
 
@@ -141,15 +99,23 @@ export default function HomeFeaturedListings({
     );
     try {
       const { default: api } = await import('@/lib/axios');
-      if (isRemoving) {
-        await api.delete(`/wishlist/${id}`);
-      } else {
-        await api.post(`/wishlist/${id}`);
-      }
+      await api.post('/wishlist/toggle', { propertyId: id });
     } catch {
       // Guest user wishlist is persisted in localStorage
     }
   };
+
+  if (featuredCards.length === 0) {
+    return (
+      <div className="rounded-2xl border border-zinc-200/70 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 text-center space-y-2">
+        <Home className="w-8 h-8 text-emerald-600 mx-auto" />
+        <h3 className="text-sm font-bold text-zinc-900 dark:text-white">No Featured Properties Yet</h3>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          Verified residences and student hostels will appear here as soon as they are published.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -188,16 +154,16 @@ export default function HomeFeaturedListings({
             {/* Wishlist Heart (top right) */}
             <button
               type="button"
-              aria-label={wishlist.includes(prop.liveId) ? `Remove ${prop.title} from wishlist` : `Save ${prop.title} to wishlist`}
+              aria-label={wishlist.includes(prop.id) ? `Remove ${prop.title} from wishlist` : `Save ${prop.title} to wishlist`}
               onClick={(e) => {
                 e.preventDefault();
-                toggleWishlist(prop.liveId, prop.title);
+                toggleWishlist(prop.id, prop.title);
               }}
               className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/95 dark:bg-zinc-900/95 flex items-center justify-center shadow-xs hover:scale-110 transition cursor-pointer"
             >
               <Heart
                 className={`w-3.5 h-3.5 transition ${
-                  wishlist.includes(prop.liveId)
+                  wishlist.includes(prop.id)
                     ? 'fill-rose-500 text-rose-500'
                     : 'text-zinc-500'
                 }`}

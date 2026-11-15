@@ -92,8 +92,8 @@ export default function AdminAdministratorsPage() {
   });
 
   const toggleStatusMutation = useMutation({
-    mutationFn: async ({ id, isSuspended }: { id: string; isSuspended: boolean }) => {
-      const res = await api.put(`/admin/administrators/${id}/status`, { isSuspended });
+    mutationFn: async ({ id, isSuspended, reason }: { id: string; isSuspended: boolean; reason?: string }) => {
+      const res = await api.put(`/admin/administrators/${id}/status`, { isSuspended, reason });
       return res.data;
     },
     onSuccess: (data) => {
@@ -112,7 +112,7 @@ export default function AdminAdministratorsPage() {
       render: (a) => (
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-700 dark:text-zinc-300">
-            {a.firstName[0]}{a.lastName[0]}
+            {a.firstName?.[0] || ''}{a.lastName?.[0] || ''}
           </div>
           <div className="min-w-0">
             <div className="font-bold text-xs text-zinc-900 dark:text-white flex items-center gap-1.5">
@@ -411,11 +411,11 @@ export default function AdminAdministratorsPage() {
         requireReason={true}
         reasonLabel="Audited Governance Rationale"
         reasonPlaceholder="e.g. Security audit finding, staff departure, or credential reset."
-        onConfirm={async () => {
+        onConfirm={async (reason) => {
           if (!suspendDialog.adminId) return;
           await toggleStatusMutation.mutateAsync({
             id: suspendDialog.adminId,
-            isSuspended: suspendDialog.isSuspended
+            isSuspended: suspendDialog.isSuspended, reason
           });
         }}
       />

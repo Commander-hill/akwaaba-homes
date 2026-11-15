@@ -198,7 +198,7 @@ export default function AdminTenantsPage() {
 
     const total = tenants.length;
     const retentionRate =
-      total > 0 ? Math.max(0, Math.min(100, Math.round(((total - exited) / total) * 100))) : 94;
+      total > 0 ? Math.max(0, Math.min(100, Math.round(((total - exited) / total) * 100))) : 0;
     const activeRate = total > 0 ? Math.round((active / total) * 100) : 0;
 
     return {
@@ -214,8 +214,8 @@ export default function AdminTenantsPage() {
         active,
         pending,
         suspended,
-        totalTrendPct: total > 0 ? Math.max(4, Math.round((recentCount / total) * 100)) : 12,
-        activeTrendPct: activeRate || 10,
+        totalTrendPct: total > 0 ? Math.round((recentCount / total) * 100) : 0,
+        activeTrendPct: activeRate,
         pendingSharePct: total > 0 ? Math.round((pending / total) * 100) : 0,
         suspendedSharePct: total > 0 ? Math.round((suspended / total) * 100) : 0,
       },
@@ -1143,7 +1143,7 @@ export default function AdminTenantsPage() {
                 </p>
               </div>
               <Link
-                href="/admin/disputes"
+                href="/admin/tickets"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#bbf7d0] hover:bg-white text-[#064e2b] text-xs font-bold transition shadow-xs"
               >
                 <span>Contact Support</span>

@@ -220,7 +220,7 @@ export default function AdminTransactionsPage() {
     const payoutEntries: LedgerEntry[] = (rawPayouts as any[]).map((p) => {
       const rawStatus = String(p.status || 'PENDING').toUpperCase();
       let status: LedgerStatus = 'PROCESSING';
-      if (rawStatus === 'PAID' || rawStatus === 'COMPLETED' || rawStatus === 'APPROVED') {
+      if (rawStatus === 'PAID' || rawStatus === 'COMPLETED' || rawStatus === 'APPROVED' || rawStatus === 'SUCCESS') {
         status = 'SUCCESSFUL';
       } else if (rawStatus === 'REJECTED' || rawStatus === 'FAILED') {
         status = 'FAILED';
@@ -245,7 +245,7 @@ export default function AdminTransactionsPage() {
         reference: p.transferReference || `PAY-${String(p.id).slice(0, 8).toUpperCase()}`,
         createdAt: p.createdAt,
         category: 'DISBURSEMENT',
-        typeLabel: rawStatus === 'PAID' || rawStatus === 'COMPLETED' ? 'Disbursement' : 'Payout',
+        typeLabel: rawStatus === 'PAID' || rawStatus === 'COMPLETED' || rawStatus === 'APPROVED' || rawStatus === 'SUCCESS' ? 'Disbursement' : 'Payout',
         partyName,
         partyEmail: p.landlord?.email || p.accountNumber || '',
         partyAvatar: p.landlord?.avatarUrl || null,
@@ -306,7 +306,7 @@ export default function AdminTransactionsPage() {
 
     const totalCount = dateFilteredEntries.length;
     const totalVolume = inflows + outflows;
-    const successRate = totalCount > 0 ? (successful / totalCount) * 100 : 100;
+    const successRate = totalCount > 0 ? (successful / totalCount) * 100 : 0;
 
     return {
       all: totalCount,

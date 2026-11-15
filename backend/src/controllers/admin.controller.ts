@@ -199,7 +199,7 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
       openBreaches,
       activeSubscriptions
     ] = await Promise.all([
-      prisma.user.count(),
+      prisma.user.count({ where: { role: { notIn: ['ADMIN', 'SUPER_ADMIN'] } } }),
       prisma.user.count({ where: { role: 'LANDLORD' } }),
       prisma.user.count({ where: { role: 'TENANT' } }),
       prisma.property.count(),
@@ -230,7 +230,7 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
       const monthName = monthStart.toLocaleString('en-US', { month: 'short' });
 
       const [userCount, propCount, txSum] = await Promise.all([
-        prisma.user.count({ where: { createdAt: { lte: monthEnd } } }),
+        prisma.user.count({ where: { role: { notIn: ['ADMIN', 'SUPER_ADMIN'] }, createdAt: { lte: monthEnd } } }),
         prisma.property.count({ where: { createdAt: { lte: monthEnd } } }),
         prisma.transaction.aggregate({
           _sum: { amount: true },
@@ -473,26 +473,35 @@ export const getPlatformAnalytics = async (req: Request, res: Response): Promise
       }))
       .filter(item => item.count > 0);
 
-    // 5. Monthly Signup & Growth Trends (6 months)
-    const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-    const totalUsers = await prisma.user.count();
-    const totalProperties = await prisma.property.count();
-
-    const monthlyTrends = months.map((month, index) => {
-      const factor = (index + 1) / 6;
-      return {
+    // 5. Monthly Signup & Growth Trends (last 6 calendar months from real DB records)
+    const nowDate = new Date();
+    const monthlyTrends = [];
+    for (let i = 5; i >= 0; i--) {
+      const mStart = new Date(nowDate.getFullYear(), nowDate.getMonth() - i, 1);
+      const mEnd = new Date(nowDate.getFullYear(), nowDate.getMonth() - i + 1, 0, 23, 59, 59, 999);
+      const month = mStart.toLocaleString('en-US', { month: 'short' });
+      const [mTenants, mLandlords, mProps, mBookings, mRev] = await Promise.all([
+        prisma.user.count({ where: { role: 'TENANT', createdAt: { lte: mEnd } } }),
+        prisma.user.count({ where: { role: 'LANDLORD', createdAt: { lte: mEnd } } }),
+        prisma.property.count({ where: { approvalStatus: 'APPROVED', createdAt: { lte: mEnd } } }),
+        prisma.booking.count({ where: { createdAt: { gte: mStart, lte: mEnd } } }),
+        prisma.transaction.aggregate({ _sum: { amount: true }, where: { status: 'SUCCESS', createdAt: { gte: mStart, lte: mEnd } } })
+      ]);
+      monthlyTrends.push({
         month,
-        tenants: Math.round(totalUsers * 0.75 * factor),
-        landlords: Math.round(totalUsers * 0.25 * factor),
-        approvedProperties: Math.round(totalProperties * factor),
-        revenueGhs: Math.round(totalRevenueGhs * factor)
-      };
-    });
+        tenants: mTenants,
+        landlords: mLandlords,
+        users: mTenants + mLandlords,
+        approvedProperties: mProps,
+        bookings: mBookings,
+        revenueGhs: mRev._sum.amount || 0
+      });
+    }
 
     // 6. Digital Tenancy Agreement Compliance
     const totalDeeds = await prisma.leaseAgreement.count();
     const completedDeeds = await prisma.leaseAgreement.count({ where: { status: 'COMPLETED' } });
-    const deedExecutionRate = totalDeeds > 0 ? Math.round((completedDeeds / totalDeeds) * 100) : 100;
+    const deedExecutionRate = totalDeeds > 0 ? Math.round((completedDeeds / totalDeeds) * 100) : 0;
 
     const analyticsData = {
       funnel: {
@@ -1078,11 +1087,11 @@ export const searchEntities = async (req: Request, res: Response): Promise<void>
     const results = [
       ...users.map(u => ({
         id: u.id,
-        type: u.role === 'LANDLORD' ? 'LANDLORD' : (u.role === 'ADMIN' ? 'ADMIN' : 'TENANT'),
+        type: u.role === 'LANDLORD' ? 'LANDLORD' : (['ADMIN', 'SUPER_ADMIN'].includes(u.role) ? 'ADMIN' : 'TENANT'),
         title: `${u.firstName} ${u.lastName}`,
         subtitle: u.email,
         status: u.isSuspended ? 'SUSPENDED' : 'ACTIVE',
-        url: u.role === 'LANDLORD' ? `/admin/landlords/${u.id}` : `/admin/tenants/${u.id}`
+        url: u.role === 'LANDLORD' ? `/admin/landlords/${u.id}` : (['ADMIN', 'SUPER_ADMIN'].includes(u.role) ? '/admin/administrators' : `/admin/tenants/${u.id}`)
       })),
       ...properties.map(p => ({
         id: p.id,
@@ -1499,13 +1508,13 @@ export const getAllBookings = async (req: Request, res: Response): Promise<void>
           } 
         },
         room: { 
-          select: { id: true, name: true, price: true, type: true } 
+          select: { id: true, blockName: true, roomType: true, bedsPerRoom: true, price: true } 
         },
         roomUnit: { 
           select: { unitNumber: true } 
         },
         transaction: { 
-          select: { id: true, amount: true, status: true, reference: true, paymentMethod: true, createdAt: true } 
+          select: { id: true, amount: true, status: true, reference: true, createdAt: true } 
         },
         leaseAgreement: { 
           select: { id: true, status: true, tenantSignedAt: true, landlordSignedAt: true, cryptographicHash: true } 
@@ -2271,6 +2280,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
         }
       }),
       prisma.user.findMany({
+        where: { role: { in: ['TENANT', 'LANDLORD'] } },
         take: 12,
         orderBy: { createdAt: 'desc' },
         select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, ghanaCardStatus: true, isVerifiedLandlord: true, createdAt: true }
@@ -2398,7 +2408,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
         type: 'PAYMENT',
         severity: s.paymentStatus === 'COMPLETED' ? 'COMPLIANCE' : 'NOTICE',
         title: 'Landlord Listing License Fee',
-        message: `Annual Landlord Listing Permit transaction: GH₵ 100/yr for "${s.property?.title || 'Property'}"`,
+        message: `Annual Landlord Listing Permit transaction: GH₵ ${(s.quotedAmountGhs || 100).toLocaleString()}/yr for "${s.property?.title || 'Property'}"`,
         actor: {
           name: s.property?.landlord ? `${s.property.landlord.firstName} ${s.property.landlord.lastName}` : 'Landlord',
           email: s.property?.landlord?.email,
@@ -2408,7 +2418,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
           type: 'Subscription Permit',
           id: s.id,
           title: `License #${(s.paymentReference || s.id).slice(0, 8)}`,
-          financialAmount: 'GH₵ 100'
+          financialAmount: `GH₵ ${(s.quotedAmountGhs || 100).toLocaleString()}`
         },
         status: s.paymentStatus,
         createdAt: s.createdAt
@@ -2889,7 +2899,7 @@ export const broadcastNotification = async (req: Request, res: Response): Promis
       });
     } else {
       users = await prisma.user.findMany({ 
-        where: { isSuspended: false },
+        where: { isSuspended: false, role: { notIn: ['ADMIN', 'SUPER_ADMIN'] } },
         select: { id: true, email: true, firstName: true, lastName: true } 
       });
     }
@@ -3716,52 +3726,6 @@ export const getWebhookDLQ = async (req: Request, res: Response): Promise<void> 
         lastRetriedAt: retryStats ? retryStats.lastRetriedAt : (metadata.lastRetriedAt || null)
       };
     });
-
-    // If no dropped webhooks in current DB session, provide initial baseline sample records so DLQ viewer is populated
-    if (items.length === 0) {
-      const sampleItem = {
-        id: 'dlq-sample-1',
-        provider: 'Paystack',
-        event: 'charge.success',
-        reference: 'AKW-MOMO-8492019',
-        failureReason: 'Gateway timeout (HTTP 504) during high-throughput intake rush',
-        payload: {
-          event: 'charge.success',
-          data: {
-            reference: 'AKW-MOMO-8492019',
-            amount: 140000,
-            channel: 'mobile_money',
-            gateway_response: 'Successful',
-            paid_at: new Date(Date.now() - 45 * 60 * 1000).toISOString()
-          }
-        },
-        retryCount: 1,
-        status: 'PENDING_RETRY',
-        createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-        lastRetriedAt: new Date(Date.now() - 15 * 60 * 1000).toISOString()
-      };
-      const sampleItem2 = {
-        id: 'dlq-sample-2',
-        provider: 'Paystack',
-        event: 'transfer.success',
-        reference: 'akwaaba-payout-739102',
-        failureReason: 'Database connection pool busy during bulk audit export',
-        payload: {
-          event: 'transfer.success',
-          data: {
-            reference: 'akwaaba-payout-739102',
-            amount: 280000,
-            recipient: { name: 'Kwadwo Mensah' },
-            transferred_at: new Date(Date.now() - 120 * 60 * 1000).toISOString()
-          }
-        },
-        retryCount: 0,
-        status: 'PENDING_RETRY',
-        createdAt: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
-        lastRetriedAt: null
-      };
-      items = [sampleItem, sampleItem2];
-    }
 
     res.status(200).json({
       success: true,

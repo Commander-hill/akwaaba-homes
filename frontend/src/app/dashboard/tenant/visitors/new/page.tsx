@@ -139,7 +139,7 @@ function NewVisitorPassContent() {
     onSuccess: () => {
       toast.success('Visitor gate pass generated! Security desk notified.');
       queryClient.invalidateQueries({ queryKey: ['visitorPasses', 'tenant'] });
-      router.push('/dashboard/tenant?tab=living');
+      router.push('/dashboard/tenant/visitors');
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to generate gate pass');
@@ -197,10 +197,10 @@ function NewVisitorPassContent() {
       {/* Header */}
       <div>
         <button
-          onClick={() => router.push('/dashboard/tenant?tab=living')}
+          onClick={() => router.push('/dashboard/tenant/visitors')}
           className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-3 transition-colors cursor-pointer"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Living &amp; Amenities
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Visitor &amp; Gate Passes
         </button>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -276,6 +276,11 @@ function NewVisitorPassContent() {
               </label>
               {loadingProperties ? (
                 <div className="h-11 bg-zinc-100 dark:bg-zinc-800 rounded-xl animate-pulse" />
+              ) : propertyList.length === 0 ? (
+                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 space-y-2">
+                  <p className="font-bold">No active residence booking found.</p>
+                  <p>You need an active residence booking before issuing visitor gate passes.</p>
+                </div>
               ) : (
                 <select
                   value={propertyId}

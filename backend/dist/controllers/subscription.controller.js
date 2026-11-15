@@ -12,6 +12,7 @@ const PaymentFactory_1 = require("../services/payment/PaymentFactory");
 const PaystackProvider_1 = require("../services/payment/PaystackProvider");
 const HubtelProvider_1 = require("../services/payment/HubtelProvider");
 const apiResponse_1 = require("../utils/apiResponse");
+const config_service_1 = require("../utils/config.service");
 /**
  * Shared Idempotent Payment Processor
  * Atomically marks subscription active, publishes property, emits notifications, and clears cache.
@@ -35,7 +36,10 @@ const processSuccessfulSubscriptionPayment = async (reference, amountPesewas, pr
         }
         return { success: true, alreadyProcessed: true, subscription: existingSub };
     }
-    const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+    const quotedGhs = Number(existingSub.quotedAmountGhs);
+    const feeInGhs = Number.isFinite(quotedGhs) && quotedGhs > 0
+        ? quotedGhs
+        : (await (0, config_service_1.resolveSubscriptionFeeForType)(existingSub.property?.type)).feeGhs;
     const expectedPesewas = Math.round(feeInGhs * 100);
     if (amountPesewas < expectedPesewas) {
         console.warn(`[Payment] Amount mismatch for ${reference}: expected ${expectedPesewas}, received ${amountPesewas}`);
@@ -91,9 +95,25 @@ exports.processSuccessfulSubscriptionPayment = processSuccessfulSubscriptionPaym
 /**
  * Get Subscription Status for a specific property
  */
-const getSubscriptionFee = async (_req, res) => {
-    const feeGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
-    res.status(200).json({ feeGhs, durationDays: 365 });
+const getSubscriptionFee = async (req, res) => {
+    try {
+        const propertyId = typeof req.query.propertyId === 'string' ? req.query.propertyId : undefined;
+        let propertyType = typeof req.query.type === 'string' ? req.query.type : undefined;
+        if (!propertyType && propertyId) {
+            const prop = await prisma_1.default.property.findUnique({
+                where: { id: propertyId },
+                select: { type: true }
+            });
+            propertyType = prop?.type;
+        }
+        const { category, feeGhs, feeSchedule } = await (0, config_service_1.resolveSubscriptionFeeForType)(propertyType);
+        res.status(200).json({ feeGhs, propertyCategory: category, durationDays: 365, feeSchedule });
+    }
+    catch (error) {
+        console.error('Error resolving subscription fee:', error);
+        const fallback = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+        res.status(200).json({ feeGhs: fallback, propertyCategory: 'Apartment', durationDays: 365 });
+    }
 };
 exports.getSubscriptionFee = getSubscriptionFee;
 const getSubscriptionStatus = async (req, res) => {
@@ -205,7 +225,7 @@ const initializePayment = async (req, res) => {
         if (existingActiveSub && new Date() < new Date(existingActiveSub.endDate)) {
             throw new apiResponse_1.ConflictException('This property already has an active subscription.');
         }
-        const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+        const { feeGhs: feeInGhs } = await (0, config_service_1.resolveSubscriptionFeeForType)(property.type);
         const amountPesewas = Math.round(feeInGhs * 100);
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         const callbackUrl = `${frontendUrl.replace(/\/$/, '')}/dashboard/landlord/properties?verify=true&provider=${providerType}`;
@@ -249,12 +269,14 @@ const initializePayment = async (req, res) => {
             update: {
                 paymentReference: reference,
                 paymentStatus: 'PENDING',
+                quotedAmountGhs: feeInGhs,
                 isActive: false
             },
             create: {
                 propertyId,
                 paymentReference: reference,
                 paymentStatus: 'PENDING',
+                quotedAmountGhs: feeInGhs,
                 startDate: new Date(),
                 endDate: new Date(),
                 isActive: false
@@ -300,7 +322,7 @@ const verifyPayment = async (req, res) => {
             throw new apiResponse_1.NotFoundException('Subscription record not found for this reference');
         }
         // Check ownership if not admin
-        if (req.user?.role !== 'ADMIN' && existingSub.property.landlordId !== landlordId) {
+        if (!['ADMIN', 'SUPER_ADMIN'].includes(req.user?.role || '') && existingSub.property.landlordId !== landlordId) {
             throw new apiResponse_1.ConflictException('Forbidden: You do not own this property');
         }
         // Idempotency: Already completed
@@ -319,7 +341,10 @@ const verifyPayment = async (req, res) => {
         if (!providerType) {
             providerType = paymentReference.includes('HUBTEL') ? 'HUBTEL' : 'PAYSTACK';
         }
-        const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+        const quotedGhs = Number(existingSub.quotedAmountGhs);
+        const feeInGhs = Number.isFinite(quotedGhs) && quotedGhs > 0
+            ? quotedGhs
+            : (await (0, config_service_1.resolveSubscriptionFeeForType)(existingSub.property?.type)).feeGhs;
         const expectedPesewas = Math.round(feeInGhs * 100);
         const isTestRef = paymentReference.includes('TEST_') || paymentReference.startsWith('SUB_TEST_');
         const isTestEnv = !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_') || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
@@ -421,7 +446,7 @@ const checkExpirations = async (req, res) => {
     try {
         const cronSecretHeader = req.headers['x-cron-secret'];
         const validCronSecret = process.env.CRON_SECRET && cronSecretHeader === process.env.CRON_SECRET;
-        const isAdmin = req.user?.role === 'ADMIN';
+        const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(req.user?.role || '');
         if (!isAdmin && !validCronSecret) {
             res.status(403).json({ message: 'Forbidden: Admin access or valid CRON secret required' });
             return;
@@ -515,14 +540,17 @@ const getLandlordSubscriptionsOverview = async (req, res) => {
             res.status(401).json({ message: 'Unauthorized' });
             return;
         }
-        const properties = await prisma_1.default.property.findMany({
-            where: { landlordId },
-            include: {
-                subscription: true
-            }
-        });
+        const [properties, sysConfig] = await Promise.all([
+            prisma_1.default.property.findMany({
+                where: { landlordId },
+                include: {
+                    subscription: true
+                }
+            }),
+            (0, config_service_1.getSystemConfig)(),
+        ]);
         const now = new Date();
-        const overview = properties.map((property) => {
+        const overview = await Promise.all(properties.map(async (property) => {
             const sub = property.subscription || null;
             let daysLeft = 0;
             let isActive = false;
@@ -534,9 +562,13 @@ const getLandlordSubscriptionsOverview = async (req, res) => {
                 isActive = sub.isActive && endDate > now;
                 needsRenewalSoon = isActive && daysLeft <= 7;
             }
+            const { category: propertyCategory, feeGhs: annualFeeGhs } = await (0, config_service_1.resolveSubscriptionFeeForType)(property.type, sysConfig);
             return {
                 propertyId: property.id,
                 propertyTitle: property.title,
+                propertyType: property.type,
+                propertyCategory,
+                annualFeeGhs,
                 location: property.location,
                 isAvailable: property.isAvailable,
                 subscription: sub
@@ -552,7 +584,7 @@ const getLandlordSubscriptionsOverview = async (req, res) => {
                     }
                     : null
             };
-        });
+        }));
         const stats = {
             totalProperties: properties.length,
             activeSubscriptions: overview.filter((p) => p.subscription?.isActive).length,

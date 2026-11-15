@@ -122,6 +122,7 @@ function NewDisciplinaryIncidentContent() {
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [propertyId, setPropertyId] = useState(initialPropertyId);
+  const [selectedTenantId, setSelectedTenantId] = useState('');
   const [residentName, setResidentName] = useState('');
   const [residentPhone, setResidentPhone] = useState('');
   const [roomUnit, setRoomUnit] = useState('RM 101');
@@ -141,15 +142,36 @@ function NewDisciplinaryIncidentContent() {
   const { data: propertiesData, isLoading: loadingProperties, isError: isPropsError, refetch: refetchProps, isFetching: isFetchingProps } = useQuery({
     queryKey: ['properties', 'landlord', 'mine'],
     queryFn: async () => {
+      const res = await api.get('/properties/landlord/mine');
+      return res.data?.data || res.data?.properties || res.data || [];
+    },
+  });
+
+  // Fetch landlord bookings to resolve tenantId / bookingId for breaches
+  const { data: bookingsData } = useQuery({
+    queryKey: ['bookings', 'landlord', 'disciplinary'],
+    queryFn: async () => {
       try {
-        const res = await api.get('/properties/landlord/mine');
-        return res.data?.data || [];
+        const res = await api.get('/bookings/landlord');
+        return res.data?.bookings || res.data || [];
       } catch {
-        const fallback = await api.get('/properties/my-properties');
-        return fallback.data?.properties || fallback.data?.data || [];
+        return [];
       }
     },
   });
+
+  const propertyResidents = (Array.isArray(bookingsData) ? bookingsData : [])
+    .filter((b: any) => (b.propertyId || b.property?.id) === propertyId && b.tenant?.id)
+    .map((b: any) => ({
+      tenantId: b.tenant.id,
+      bookingId: b.id,
+      name: `${b.tenant.firstName || ''} ${b.tenant.lastName || ''}`.trim() || 'Resident',
+      phone: b.tenant.phoneNumber || '',
+      roomUnit: b.roomUnit?.unitNumber || b.room?.roomType || 'RM 101',
+    }));
+
+  const selectedResident = propertyResidents.find((r: any) => r.tenantId === selectedTenantId) ||
+    propertyResidents.find((r: any) => r.name.toLowerCase() === residentName.trim().toLowerCase());
 
   const properties = (propertiesData || [])
     .map((p: any) => ({
@@ -243,11 +265,19 @@ function NewDisciplinaryIncidentContent() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
 
     setIsSubmitting(true);
     const refCode = `DISC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+
+    const selectedPropertyId = propertyId;
+    const effectiveTenantId = selectedTenantId || selectedResident?.tenantId;
+    const infractionCategory = infraction;
+    const severity = strikeLevel === 3 ? 'CRITICAL' : strikeLevel === 2 ? 'MODERATE' : 'MINOR';
+    const infractionTitle = selectedInfraction.label;
+    const incidentDescription = description;
+    const evidenceUrls: string[] = [];
 
     const newIncident: DisciplinaryIncident = {
       id: `disc_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
@@ -268,6 +298,20 @@ function NewDisciplinaryIncidentContent() {
     };
 
     try {
+      if (effectiveTenantId) {
+        await api.post('/breaches/report', {
+          propertyId: selectedPropertyId,
+          tenantId: effectiveTenantId,
+          bookingId: selectedResident?.bookingId,
+          category: infractionCategory,
+          severity,
+          title: infractionTitle,
+          description: incidentDescription.trim(),
+          fineAmount: fineAmount ? Number(fineAmount) : undefined,
+          evidenceUrls,
+        });
+      }
+
       const storageKey = `akwaaba_disciplinary_incidents_${propertyId}`;
       const saved = localStorage.getItem(storageKey);
       const existing = saved ? JSON.parse(saved) : [];
@@ -276,8 +320,8 @@ function NewDisciplinaryIncidentContent() {
 
       toast.success(`Disciplinary dossier ${refCode} logged successfully!`);
       router.push('/dashboard/landlord/operations?tab=disciplinary');
-    } catch {
-      triggerError('Failed to save disciplinary record.');
+    } catch (err: any) {
+      triggerError(err?.response?.data?.message || 'Failed to save disciplinary record.');
     } finally {
       setIsSubmitting(false);
     }
@@ -420,6 +464,35 @@ function NewDisciplinaryIncidentContent() {
                     </button>
                   );
                 })}
+              </div>
+            )}
+
+            {propertyResidents.length > 0 && (
+              <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Select Active Resident (Auto-fills particulars)
+                </label>
+                <select
+                  value={selectedTenantId}
+                  onChange={(e) => {
+                    const tid = e.target.value;
+                    setSelectedTenantId(tid);
+                    const found = propertyResidents.find((r: any) => r.tenantId === tid);
+                    if (found) {
+                      setResidentName(found.name);
+                      setResidentPhone(found.phone);
+                      setRoomUnit(found.roomUnit);
+                    }
+                  }}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                >
+                  <option value="">Select resident from booking roster...</option>
+                  {propertyResidents.map((r: any) => (
+                    <option key={r.bookingId} value={r.tenantId}>
+                      {r.name} ({r.roomUnit})
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 

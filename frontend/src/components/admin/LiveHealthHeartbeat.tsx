@@ -32,10 +32,10 @@ export function LiveHealthHeartbeat() {
   });
 
   const services = data?.services || {
-    database: { status: 'HEALTHY', latencyMs: 8, provider: 'PostgreSQL (Prisma)', details: 'Connection Pool Active' },
-    paystack: { status: 'OPERATIONAL', latencyMs: 120, provider: 'Paystack Gateway', details: 'HMAC SHA512 Verified' },
-    smsGateway: { status: 'DISPATCHING', latencyMs: 38, provider: 'Arkesel / Twilio', details: 'Ghana Telco Conduits Active' },
-    socketCluster: { status: 'OPTIMAL', connectedClients: 1, clusterMode: 'WebSocket Active', details: 'Telemetry Stream Active' }
+    database: { status: 'HEALTHY', latencyMs: 0, provider: 'PostgreSQL (Prisma)', details: 'Connection Pool Active' },
+    paystack: { status: 'OPERATIONAL', latencyMs: 0, provider: 'Paystack Gateway', details: 'HMAC SHA512 Verified' },
+    smsGateway: { status: 'DISPATCHING', latencyMs: 0, provider: 'Arkesel / Twilio', details: 'Ghana Telco Conduits Active' },
+    socketCluster: { status: 'OPTIMAL', connectedClients: 0, clusterMode: 'WebSocket Active', details: 'Telemetry Stream Active' }
   };
 
   const handleManualPing = async () => {
@@ -221,7 +221,7 @@ export function LiveHealthHeartbeat() {
                   <span className="text-xs font-bold text-zinc-900 dark:text-white">Socket Cluster</span>
                 </div>
                 <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-300">
-                  {services.socketCluster?.connectedClients || 1} live
+                  {services.socketCluster?.connectedClients ?? 0} live
                 </span>
               </div>
 

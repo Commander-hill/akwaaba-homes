@@ -175,6 +175,47 @@ export default function AdminBroadcastsPage() {
     return { tenants, landlords, total };
   }, [stats]);
 
+  const broadcastMetrics = useMemo(() => {
+    if (history.length === 0) {
+      return {
+        deliveryRate: null as number | null,
+        readRate: null as number | null,
+        channelShares: { inApp: 0, socket: 0, email: 0 },
+      };
+    }
+
+    let delivered = 0;
+    let totalCount = 0;
+    let inAppCount = 0;
+    let socketCount = 0;
+    let emailCount = 0;
+
+    for (const rec of history as Array<BroadcastRecord & { channels?: string[]; readCount?: number; status?: string }>) {
+      const reach = Number(rec.count || 0);
+      totalCount += reach;
+      if (rec.status !== 'FAILED') {
+        delivered += reach;
+      }
+      const channels = Array.isArray(rec.channels) && rec.channels.length > 0 ? rec.channels : ['IN_APP'];
+      if (channels.includes('IN_APP')) inAppCount++;
+      if (channels.includes('SOCKET')) socketCount++;
+      if (channels.includes('EMAIL')) emailCount++;
+    }
+
+    const totalChannels = Math.max(1, inAppCount + socketCount + emailCount);
+    const deliveryRate = totalCount > 0 ? Math.round((delivered / totalCount) * 1000) / 10 : 100;
+
+    return {
+      deliveryRate,
+      readRate: null as number | null,
+      channelShares: {
+        inApp: Math.round((inAppCount / totalChannels) * 100),
+        socket: Math.round((socketCount / totalChannels) * 100),
+        email: Math.round((emailCount / totalChannels) * 100),
+      },
+    };
+  }, [history]);
+
   const recentFour = useMemo(() => {
     return [...history]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -387,9 +428,6 @@ export default function AdminBroadcastsPage() {
               <span className="block text-2xl font-black text-zinc-900 dark:text-white leading-tight mt-0.5">
                 {history.length}
               </span>
-              <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#16A34A] mt-0.5">
-                ↑ 12%
-              </span>
             </div>
           </div>
           {/* Mini Green Sparkline */}
@@ -419,9 +457,6 @@ export default function AdminBroadcastsPage() {
               <span className="block text-2xl font-black text-zinc-900 dark:text-white leading-tight mt-0.5">
                 {audienceMetrics.total.toLocaleString()}
               </span>
-              <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#16A34A] mt-0.5">
-                ↑ 8%
-              </span>
             </div>
           </div>
           {/* Mini Blue Sparkline */}
@@ -449,10 +484,7 @@ export default function AdminBroadcastsPage() {
                 Delivery Rate
               </span>
               <span className="block text-2xl font-black text-zinc-900 dark:text-white leading-tight mt-0.5">
-                98.5%
-              </span>
-              <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#16A34A] mt-0.5">
-                ↑ 0.3%
+                {broadcastMetrics.deliveryRate !== null ? `${broadcastMetrics.deliveryRate}%` : '—'}
               </span>
             </div>
           </div>
@@ -481,10 +513,7 @@ export default function AdminBroadcastsPage() {
                 Read Rate
               </span>
               <span className="block text-2xl font-black text-zinc-900 dark:text-white leading-tight mt-0.5">
-                87.2%
-              </span>
-              <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#16A34A] mt-0.5">
-                ↑ 4.1%
+                {broadcastMetrics.readRate !== null ? `${broadcastMetrics.readRate}%` : '—'}
               </span>
             </div>
           </div>
@@ -855,63 +884,32 @@ export default function AdminBroadcastsPage() {
                     </g>
                   ))}
 
-                  {/* Area Fill */}
-                  <path
-                    d="M40 75 C85 65, 110 42, 165 40 C215 38, 250 18, 295 22 C335 26, 360 44, 395 36 C430 28, 455 17, 485 19 C515 21, 535 28, 550 32 L550 135 L40 135 Z"
-                    fill="url(#perfArea)"
-                  />
-
-                  {/* Main Curve Line */}
-                  <path
-                    d="M40 75 C85 65, 110 42, 165 40 C215 38, 250 18, 295 22 C335 26, 360 44, 395 36 C430 28, 455 17, 485 19 C515 21, 535 28, 550 32"
-                    fill="none"
-                    stroke="#16A34A"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
-
-                  {/* Data Nodes */}
-                  {[
-                    { cx: 40, cy: 75 },
-                    { cx: 95, cy: 59 },
-                    { cx: 165, cy: 40 },
-                    { cx: 235, cy: 28 },
-                    { cx: 295, cy: 22 },
-                    { cx: 365, cy: 41 },
-                    { cx: 485, cy: 19, peak: true },
-                    { cx: 550, cy: 32 },
-                  ].map((pt, i) => (
-                    <circle
-                      key={i}
-                      cx={pt.cx}
-                      cy={pt.cy}
-                      r={pt.peak ? 5 : 3.5}
-                      fill="#16A34A"
-                      stroke="#FFFFFF"
-                      strokeWidth="2"
-                    />
-                  ))}
-
-                  {/* Peak Tooltip Badge (98.5%) */}
-                  <g transform="translate(457, -12)">
-                    <rect width="56" height="24" rx="12" fill="#0B5E2E" />
-                    <text x="28" y="16" textAnchor="middle" className="fill-white text-[11px] font-bold">
-                      98.5%
+                  {/* Area & Line: only render when broadcast history exists */}
+                  {history.length === 0 ? (
+                    <text x="295" y="78" textAnchor="middle" className="fill-zinc-400 text-[12px] font-medium">
+                      No broadcast delivery data yet
                     </text>
-                  </g>
-
-                  {/* X-Axis Labels */}
-                  {[
-                    { x: 55, label: 'Oct 22' },
-                    { x: 170, label: 'Oct 24' },
-                    { x: 295, label: 'Oct 26' },
-                    { x: 420, label: 'Oct 28' },
-                    { x: 530, label: 'Oct 30' },
-                  ].map((d) => (
-                    <text key={d.label} x={d.x} y="152" textAnchor="middle" className="fill-zinc-400 text-[10px] font-medium">
-                      {d.label}
-                    </text>
-                  ))}
+                  ) : (
+                    <>
+                      <path
+                        d="M40 75 C85 65, 110 42, 165 40 C215 38, 250 18, 295 22 C335 26, 360 44, 395 36 C430 28, 455 17, 485 19 C515 21, 535 28, 550 32 L550 135 L40 135 Z"
+                        fill="url(#perfArea)"
+                      />
+                      <path
+                        d="M40 75 C85 65, 110 42, 165 40 C215 38, 250 18, 295 22 C335 26, 360 44, 395 36 C430 28, 455 17, 485 19 C515 21, 535 28, 550 32"
+                        fill="none"
+                        stroke="#16A34A"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                      <g transform="translate(457, -12)">
+                        <rect width="56" height="24" rx="12" fill="#0B5E2E" />
+                        <text x="28" y="16" textAnchor="middle" className="fill-white text-[11px] font-bold">
+                          {broadcastMetrics.deliveryRate ?? 100}%
+                        </text>
+                      </g>
+                    </>
+                  )}
                 </svg>
               </div>
             </div>
@@ -926,30 +924,30 @@ export default function AdminBroadcastsPage() {
                 <div>
                   <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
                     <span className="text-zinc-600 dark:text-zinc-300">In-App Notifications</span>
-                    <span className="font-bold text-zinc-900 dark:text-white">72%</span>
+                    <span className="font-bold text-zinc-900 dark:text-white">{broadcastMetrics.channelShares.inApp}%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                    <div className="h-full rounded-full bg-[#16A34A]" style={{ width: '72%' }} />
+                    <div className="h-full rounded-full bg-[#16A34A]" style={{ width: `${broadcastMetrics.channelShares.inApp}%` }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
+                    <span className="text-zinc-600 dark:text-zinc-300">Live Socket</span>
+                    <span className="font-bold text-zinc-900 dark:text-white">{broadcastMetrics.channelShares.socket}%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                    <div className="h-full rounded-full bg-[#3B82F6]" style={{ width: `${broadcastMetrics.channelShares.socket}%` }} />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
                     <span className="text-zinc-600 dark:text-zinc-300">Email</span>
-                    <span className="font-bold text-zinc-900 dark:text-white">18%</span>
+                    <span className="font-bold text-zinc-900 dark:text-white">{broadcastMetrics.channelShares.email}%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                    <div className="h-full rounded-full bg-[#3B82F6]" style={{ width: '18%' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
-                    <span className="text-zinc-600 dark:text-zinc-300">SMS</span>
-                    <span className="font-bold text-zinc-900 dark:text-white">10%</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                    <div className="h-full rounded-full bg-[#F97316]" style={{ width: '10%' }} />
+                    <div className="h-full rounded-full bg-[#F97316]" style={{ width: `${broadcastMetrics.channelShares.email}%` }} />
                   </div>
                 </div>
               </div>

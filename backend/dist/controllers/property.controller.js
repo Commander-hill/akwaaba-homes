@@ -582,6 +582,19 @@ const updateProperty = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: Your landlord account is suspended. You cannot edit property details.' });
             return;
         }
+        // Safeguard: Prevent changing property type while an active subscription is in effect (affects annual tier pricing)
+        if (type !== undefined && type !== property.type && !isAdmin) {
+            const activeSub = await prisma_1.default.propertySubscription.findUnique({
+                where: { propertyId: id }
+            });
+            const isSubActive = activeSub && activeSub.isActive && new Date() < new Date(activeSub.endDate);
+            if (isSubActive) {
+                res.status(403).json({
+                    message: 'Property type cannot be changed while an active annual listing subscription is in effect. Contact support if you need to reclassify this property.'
+                });
+                return;
+            }
+        }
         // Strict Publication Gating: If enabling availability, require an active unexpired subscription
         if (isAvailable === true && !property.isAvailable && !isAdmin) {
             const activeSub = await prisma_1.default.propertySubscription.findUnique({

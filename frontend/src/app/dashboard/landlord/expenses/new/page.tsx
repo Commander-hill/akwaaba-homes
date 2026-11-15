@@ -285,11 +285,11 @@ export default function NewExpensePage() {
     } catch {
       try {
         const fallbackForm = new FormData();
-        fallbackForm.append('document', file);
+        fallbackForm.append('file', file);
         const res = await api.post('/upload/document', fallbackForm, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        const fallbackUrl = res.data?.url || res.data?.documentUrl;
+        const fallbackUrl = res.data?.documentUrl || res.data?.url;
         if (fallbackUrl) {
           setReceiptUrl(fallbackUrl);
           toast.success('Receipt attached successfully!');

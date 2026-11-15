@@ -381,7 +381,7 @@ export default function BookingDetailPage() {
             )}
 
             {lease?.id && (
-              <Link href={`/lease-agreement/${lease.id}`} target="_blank">
+              <Link href={`/lease-agreement/${booking.id}`} target="_blank">
                 <Button variant="outline" size="sm" leftIcon={<FileText className="w-3.5 h-3.5 text-zinc-500" />}>
                   View Agreement
                 </Button>
@@ -472,7 +472,7 @@ export default function BookingDetailPage() {
           </span>
           {lease?.id ? (
             <Link 
-              href={`/lease-agreement/${lease.id}`}
+              href={`/lease-agreement/${booking.id}`}
               target="_blank"
               className="text-[11px] text-[#16A34A] hover:underline inline-flex items-center gap-0.5 mt-0.5 font-medium"
             >
@@ -834,7 +834,7 @@ export default function BookingDetailPage() {
             </div>
 
             {lease?.id ? (
-              <Link href={`/lease-agreement/${lease.id}`} target="_blank" className="block pt-1">
+              <Link href={`/lease-agreement/${booking.id}`} target="_blank" className="block pt-1">
                 <Button variant="outline" size="sm" className="w-full" rightIcon={<ExternalLink className="w-3.5 h-3.5" />}>
                   Open Signed Agreement
                 </Button>

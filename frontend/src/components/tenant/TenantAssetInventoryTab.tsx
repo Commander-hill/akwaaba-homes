@@ -57,8 +57,12 @@ export default function TenantAssetInventoryTab({
     if (!hasValidProperty) return;
     setIsLoading(true);
     api
-      .get(`/inspections/property/${propertyId}`)
+      .get(`/inspections/property/${propertyId}/inventory`)
       .then((res) => {
+        const items = res.data?.inventory || res.data?.items || [];
+        if (Array.isArray(items) && items.length > 0) {
+          setAssets(items);
+        }
         const inspections = res.data?.inspections || [];
         if (inspections.length > 0) {
           const latest = inspections[0];
@@ -102,23 +106,20 @@ export default function TenantAssetInventoryTab({
 
   const syncWithBackend = async (updatedAssets: AssetItem[], lock: boolean = ledgerLocked) => {
     try {
-      if (inspectionId) {
-        await api.put(`/inspections/${inspectionId}/sign`, {
-          checklist: updatedAssets,
-          overallNotes: lock
-            ? 'Signed & locked by resident for caution deposit protection'
-            : 'Draft update by resident',
-        });
-      } else {
-        const res = await api.post('/inspections', {
+      await api.post(`/inspections/property/${propertyId}/inventory`, {
+        inventory: updatedAssets,
+        items: updatedAssets,
+      });
+      if (activeBooking?.id) {
+        await api.post('/inspections', {
+          bookingId: activeBooking.id,
           propertyId,
           type: 'MOVE_IN',
-          checklist: updatedAssets,
-          overallNotes: 'Initial move-in condition audit logged by resident',
+          items: updatedAssets,
+          notes: lock
+            ? 'Signed & locked by resident for caution deposit protection'
+            : 'Initial move-in condition audit logged by resident',
         });
-        if (res.data?.inspection?.id) {
-          setInspectionId(res.data.inspection.id);
-        }
       }
     } catch {
       // non-blocking

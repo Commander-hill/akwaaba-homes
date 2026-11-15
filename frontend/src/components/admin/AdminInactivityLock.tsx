@@ -364,7 +364,7 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
                 <div className="flex-1 min-w-0">
                   <div className="text-[11px] text-emerald-200/90 font-medium">Need Help?</div>
                   <Link
-                    href="/support"
+                    href="/contact"
                     className="text-xs font-bold text-white hover:underline flex items-center gap-1 mt-0.5"
                   >
                     <span>Contact Support</span>

@@ -99,7 +99,7 @@ export default function AdminBookingsPage() {
       `"${b.tenant?.email || ''}"`,
       `"${b.property?.landlord?.firstName || ''} ${b.property?.landlord?.lastName || ''}"`,
       `"${b.property?.title || ''}"`,
-      `"${b.room?.title || b.roomUnit?.unitNumber || ''} ${b.bed?.bedNumber || ''}"`,
+      `"${b.room?.title || b.room?.roomType || b.room?.blockName || b.roomUnit?.unitNumber || 'Standard Room'} ${b.bed?.bedNumber || ''}"`,
       new Date(b.startDate).toISOString().slice(0, 10),
       new Date(b.endDate).toISOString().slice(0, 10),
       b.status || 'PENDING',

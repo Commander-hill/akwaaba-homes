@@ -64,12 +64,24 @@ function CaretakerParcelContent() {
   const { data: propertiesData, isLoading: loadingProperties } = useQuery({
     queryKey: ['properties', 'caretaker-active'],
     queryFn: async () => {
-      const res = await api.get('/properties');
-      return res.data;
+      try {
+        const res = await api.get('/staff/mine');
+        const assignments = res.data?.assignments || [];
+        if (assignments.length > 0) {
+          return {
+            properties: assignments.map((a: any) => a.property).filter(Boolean),
+          };
+        }
+      } catch {
+        // Fall back to landlord properties if called by landlord
+      }
+      const fallback = await api.get('/properties/landlord/mine');
+      return fallback.data;
     }
   });
 
-  const propertyList: PropertyOption[] = (propertiesData?.properties || propertiesData?.data || []).map((p: any) => ({
+  const rawProps = propertiesData?.properties || propertiesData?.data || (Array.isArray(propertiesData) ? propertiesData : []);
+  const propertyList: PropertyOption[] = rawProps.map((p: any) => ({
     id: p.id,
     title: p.title || 'Residential Property',
     location: p.location || ''
@@ -86,14 +98,32 @@ function CaretakerParcelContent() {
     queryFn: async () => {
       if (!propertyId) return [];
       try {
-        const res = await api.get(`/bookings/property/${propertyId}`);
+        const staffRes = await api.get('/staff/mine');
+        const assignments = staffRes.data?.assignments || [];
+        const match = assignments.find((a: any) => a.property?.id === propertyId);
+        if (match?.property?.bookings) {
+          return match.property.bookings
+            .map((b: any) => ({
+              id: b.tenantId || b.tenant?.id,
+              name: `${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}`.trim() || 'Resident',
+              phone: b.tenant?.phoneNumber || '',
+              roomNumber: b.roomNumber || b.roomUnit?.unitNumber || b.room?.unitNumber || ''
+            }))
+            .filter((t: any) => Boolean(t.id));
+        }
+      } catch {
+        // Fallback to /bookings/landlord
+      }
+      try {
+        const res = await api.get('/bookings/landlord');
         const bookings = res.data?.bookings || res.data || [];
-        return bookings
+        return (Array.isArray(bookings) ? bookings : [])
+          .filter((b: any) => (b.propertyId || b.property?.id) === propertyId)
           .map((b: any) => ({
             id: b.tenantId || b.tenant?.id,
             name: `${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}`.trim() || 'Resident',
             phone: b.tenant?.phoneNumber || '',
-            roomNumber: b.roomNumber || b.room?.unitNumber || ''
+            roomNumber: b.roomNumber || b.roomUnit?.unitNumber || b.room?.unitNumber || ''
           }))
           .filter((t: any) => Boolean(t.id));
       } catch {

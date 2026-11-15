@@ -1026,7 +1026,25 @@ function ProfileWorkspaceInner({
                           `${formData.firstName || 'Landlord'} ${formData.lastName || ''} Properties`.trim()}
                       </p>
                       <p className="text-xs text-[#4A5A50] dark:text-zinc-400 font-medium truncate">
-                        {`${formData.hostEntityType || 'Individual Landlord'} • ${formData.primaryRegion || 'Greater Accra Region'}`}
+                        {`${
+                          ({
+                            INDIVIDUAL_OWNER: 'Individual Landlord',
+                            REGISTERED_HOSTEL_COMPANY: 'Registered Hostel / Property Company',
+                            PROPERTY_MANAGER: 'Property Manager / Agency',
+                          } as Record<string, string>)[formData.hostEntityType] ||
+                          formData.hostEntityType ||
+                          'Individual Landlord'
+                        } • ${
+                          ({
+                            ACCRA_LEGON_UPSA: 'Greater Accra (Legon / UPSA / East Legon)',
+                            KUMASI_KNUST: 'Ashanti Region (KNUST / Kumasi)',
+                            CAPE_COAST_UCC: 'Central Region (UCC / Cape Coast)',
+                            WINNEBA_UEW: 'Central Region (UEW / Winneba)',
+                            TAMALE_UDS: 'Northern Region (UDS / Tamale)',
+                          } as Record<string, string>)[formData.primaryRegion] ||
+                          formData.primaryRegion ||
+                          'Greater Accra Region'
+                        }`}
                       </p>
                     </div>
                   </div>
@@ -1037,7 +1055,17 @@ function ProfileWorkspaceInner({
                   <div>
                     <p className="text-xs font-extrabold text-[#14221A] dark:text-white flex items-center gap-1">
                       <Wallet className="w-3.5 h-3.5 text-[#15803D]" />
-                      <span>{formData.payoutProvider || 'MTN Mobile Money'}</span>
+                      <span>
+                        {({
+                          MTN: 'MTN Mobile Money',
+                          TELECEL: 'Telecel Cash',
+                          AT: 'AT Money',
+                          MOMO: 'Mobile Money (MoMo)',
+                          BANK_TRANSFER: 'Bank Transfer',
+                        } as Record<string, string>)[formData.payoutProvider] ||
+                          formData.payoutProvider ||
+                          'MTN Mobile Money'}
+                      </span>
                     </p>
                     <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 font-mono mt-0.5">
                       {formData.payoutAccountNumber || formData.phoneNumber || 'Not configured'}
@@ -1665,8 +1693,11 @@ function ProfileWorkspaceInner({
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
                   >
                     <option value="Individual Landlord">Individual Landlord</option>
+                    <option value="INDIVIDUAL_OWNER">Individual Property Owner</option>
                     <option value="Registered Property Company">Registered Property Company</option>
+                    <option value="REGISTERED_HOSTEL_COMPANY">Registered Hostel Company</option>
                     <option value="Real Estate Agency">Real Estate Agency</option>
+                    <option value="PROPERTY_MANAGER">Property Manager / Agent</option>
                     <option value="Hostel / Hall Management">Hostel / Hall Management</option>
                   </select>
                 </div>
@@ -1682,12 +1713,46 @@ function ProfileWorkspaceInner({
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
                   >
                     <option value="Greater Accra Region">Greater Accra Region</option>
+                    <option value="ACCRA_LEGON_UPSA">Greater Accra (Legon / UPSA / East Legon)</option>
                     <option value="Ashanti Region">Ashanti Region</option>
+                    <option value="KUMASI_KNUST">Ashanti Region (KNUST / Kumasi)</option>
                     <option value="Central Region">Central Region</option>
+                    <option value="CAPE_COAST_UCC">Central Region (UCC / Cape Coast)</option>
+                    <option value="WINNEBA_UEW">Central Region (UEW / Winneba)</option>
                     <option value="Eastern Region">Eastern Region</option>
                     <option value="Western Region">Western Region</option>
                     <option value="Northern Region">Northern Region</option>
+                    <option value="TAMALE_UDS">Northern Region (UDS / Tamale)</option>
                     <option value="Volta Region">Volta Region</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-zinc-700 mb-1">Portfolio Size</label>
+                  <select
+                    disabled={isLocked}
+                    value={formData.portfolioSize}
+                    onChange={(e) => setFormData({ ...formData, portfolioSize: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
+                  >
+                    <option value="1 - 5 Properties">1 - 5 Properties</option>
+                    <option value="1_TO_5_UNITS">1 - 5 Units</option>
+                    <option value="6_TO_20_ROOMS">6 - 20 Rooms</option>
+                    <option value="20_PLUS_ROOMS">20+ Rooms / Full Hostel</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-zinc-700 mb-1">Payout Method</label>
+                  <select
+                    disabled={isLocked}
+                    value={formData.payoutMethod}
+                    onChange={(e) => setFormData({ ...formData, payoutMethod: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
+                  >
+                    <option value="Mobile Money (MoMo)">Mobile Money (MoMo)</option>
+                    <option value="MOMO">Mobile Money (MoMo)</option>
+                    <option value="BANK_TRANSFER">Bank Transfer</option>
                   </select>
                 </div>
 
@@ -1714,8 +1779,11 @@ function ProfileWorkspaceInner({
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
                   >
                     <option value="MTN Mobile Money">MTN Mobile Money</option>
+                    <option value="MTN">MTN Mobile Money</option>
                     <option value="Telecel Cash">Telecel Cash</option>
+                    <option value="TELECEL">Telecel Cash</option>
                     <option value="AT Money">AT Money</option>
+                    <option value="AT">AT Money</option>
                     <option value="GCB Bank">GCB Bank</option>
                     <option value="Ecobank Ghana">Ecobank Ghana</option>
                     <option value="Fidelity Bank">Fidelity Bank</option>

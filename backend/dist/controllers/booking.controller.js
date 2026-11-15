@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBooking = exports.cancelPendingBooking = exports.getMyActiveBooking = exports.verifyPayment = exports.payBooking = exports.updateBookingStatus = exports.getLandlordBookings = exports.getBookingById = exports.getTenantBookings = exports.createBooking = exports.downloadAgreementPDF = void 0;
+exports.checkRentDueReminders = exports.processRentDueReminders = exports.deleteBooking = exports.cancelPendingBooking = exports.getMyActiveBooking = exports.verifyPayment = exports.payBooking = exports.updateBookingStatus = exports.getLandlordBookings = exports.getBookingById = exports.getTenantBookings = exports.createBooking = exports.downloadAgreementPDF = void 0;
 const axios_1 = __importDefault(require("axios"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
@@ -13,6 +13,7 @@ const json_1 = require("../utils/json");
 const cache_1 = __importDefault(require("../utils/cache"));
 const bookingCleanup_1 = require("../utils/bookingCleanup");
 const pdf_service_1 = require("../utils/pdf.service");
+const billingPeriod_1 = require("../utils/billingPeriod");
 const downloadAgreementPDF = async (req, res) => {
     try {
         const { id } = req.params;
@@ -543,6 +544,7 @@ const getTenantBookings = async (req, res) => {
                 ...b,
                 price: effectivePrice,
                 transactions: b.transaction ? [b.transaction] : [],
+                rentDueSummary: (0, billingPeriod_1.getRentDueSummary)(b, b.property?.pricePeriod),
                 property: {
                     ...b.property,
                     images: (0, json_1.safeJsonParse)(b.property.images, []),
@@ -631,7 +633,7 @@ const getBookingById = async (req, res) => {
         }
         const isOwnerTenant = booking.tenantId === userId;
         const isOwnerLandlord = booking.property?.landlordId === userId;
-        const isAdmin = userRole === 'ADMIN';
+        const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(userRole);
         const isAssignedStaff = await prisma_1.default.propertyStaff.findFirst({
             where: { propertyId: booking.propertyId, userId }
         });
@@ -644,6 +646,7 @@ const getBookingById = async (req, res) => {
             ...booking,
             price: effectivePrice,
             transactions: booking.transaction ? [booking.transaction] : [],
+            rentDueSummary: (0, billingPeriod_1.getRentDueSummary)(booking, booking.property?.pricePeriod),
             property: {
                 ...booking.property,
                 images: (0, json_1.safeJsonParse)(booking.property.images, []),
@@ -745,6 +748,8 @@ const getLandlordBookings = async (req, res) => {
             orderBy: { createdAt: 'desc' }
         });
         const parsedBookings = bookings.map((b) => ({
+            ...b,
+            rentDueSummary: (0, billingPeriod_1.getRentDueSummary)(b, b.property?.pricePeriod),
             ...b,
             price: b.room?.price ?? b.property?.price ?? 0,
             property: b.property
@@ -1479,4 +1484,107 @@ const deleteBooking = async (req, res) => {
     }
 };
 exports.deleteBooking = deleteBooking;
+/**
+ * Checks active/paid bookings whose nextRentDueDate is within 7 days or overdue,
+ * and dispatches deduplicated in-app + socket reminders to tenants and landlords.
+ */
+const processRentDueReminders = async () => {
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const bookings = await prisma_1.default.booking.findMany({
+        where: {
+            status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN', 'CONFIRMED'] },
+        },
+        include: {
+            property: { select: { id: true, title: true, pricePeriod: true, landlordId: true } },
+            tenant: { select: { id: true, firstName: true, lastName: true } },
+        },
+    });
+    let reminded = 0;
+    for (const booking of bookings) {
+        const dueDate = booking.nextRentDueDate
+            ? new Date(booking.nextRentDueDate)
+            : (0, billingPeriod_1.computeInitialNextRentDueDate)(booking.startDate, booking.endDate, booking.property?.pricePeriod);
+        // Backfill nextRentDueDate if missing
+        if (!booking.nextRentDueDate) {
+            await prisma_1.default.booking.update({
+                where: { id: booking.id },
+                data: { nextRentDueDate: dueDate },
+            });
+        }
+        if (dueDate > sevenDaysFromNow)
+            continue;
+        if (booking.lastRentReminderSentAt && new Date(booking.lastRentReminderSentAt) > twentyFourHoursAgo) {
+            continue;
+        }
+        const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const isOverdue = daysUntilDue < 0;
+        const periodLabel = booking.property?.pricePeriod || 'Monthly';
+        const dueLabel = dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        const tenantName = `${booking.tenant?.firstName || ''} ${booking.tenant?.lastName || ''}`.trim() || 'Tenant';
+        const tenantMsg = isOverdue
+            ? `Your ${periodLabel} rent for "${booking.property?.title}" was due on ${dueLabel} (${Math.abs(daysUntilDue)} day(s) overdue).`
+            : daysUntilDue === 0
+                ? `Your ${periodLabel} rent for "${booking.property?.title}" is due today (${dueLabel}).`
+                : `Reminder: Your ${periodLabel} rent for "${booking.property?.title}" is due in ${daysUntilDue} day(s) on ${dueLabel}.`;
+        const landlordMsg = isOverdue
+            ? `${tenantName}'s ${periodLabel} rent for "${booking.property?.title}" is ${Math.abs(daysUntilDue)} day(s) overdue (due ${dueLabel}).`
+            : `${tenantName}'s ${periodLabel} rent for "${booking.property?.title}" is due on ${dueLabel}.`;
+        const title = isOverdue ? 'Rent Payment Overdue' : 'Upcoming Rent Due Reminder';
+        await prisma_1.default.$transaction([
+            prisma_1.default.notification.create({
+                data: {
+                    userId: booking.tenantId,
+                    type: 'RENT_DUE',
+                    title,
+                    message: tenantMsg,
+                    link: `/dashboard/tenant/bookings/${booking.id}`,
+                },
+            }),
+            prisma_1.default.notification.create({
+                data: {
+                    userId: booking.property.landlordId,
+                    type: 'RENT_DUE',
+                    title,
+                    message: landlordMsg,
+                    link: `/dashboard/landlord/bookings/${booking.id}`,
+                },
+            }),
+            prisma_1.default.booking.update({
+                where: { id: booking.id },
+                data: { lastRentReminderSentAt: now },
+            }),
+        ]);
+        try {
+            const io = (0, socket_1.getIO)();
+            io.to(booking.tenantId).emit('notification', { title, message: tenantMsg, type: 'RENT_DUE' });
+            io.to(booking.property.landlordId).emit('notification', { title, message: landlordMsg, type: 'RENT_DUE' });
+        }
+        catch {
+            // non-blocking socket emission
+        }
+        reminded++;
+    }
+    return { checked: bookings.length, reminded };
+};
+exports.processRentDueReminders = processRentDueReminders;
+const checkRentDueReminders = async (req, res) => {
+    try {
+        const cronSecretHeader = req.headers['x-cron-secret'];
+        const validCronSecret = process.env.CRON_SECRET && cronSecretHeader === process.env.CRON_SECRET;
+        const isAdmin = req.user && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role);
+        if (!validCronSecret && !isAdmin) {
+            res.status(403).json({ message: 'Forbidden: Cron secret or Admin authorization required' });
+            return;
+        }
+        const result = await (0, exports.processRentDueReminders)();
+        res.status(200).json({ message: 'Rent due reminders processed', ...result });
+    }
+    catch (error) {
+        console.error('Error processing rent due reminders:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.checkRentDueReminders = checkRentDueReminders;
 //# sourceMappingURL=booking.controller.js.map

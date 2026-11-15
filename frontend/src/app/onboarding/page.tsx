@@ -54,7 +54,7 @@ function OnboardingContent() {
     if (user) {
       // If user profile is already fully complete and locked, route to proper dashboard
       if (user.isProfileLocked && user.dateOfBirth && user.guardianPhone) {
-        const dest = user.role === 'LANDLORD' ? '/dashboard/landlord' : '/dashboard/tenant';
+        const dest = user.role === 'LANDLORD' ? '/dashboard/landlord' : (user.role === 'CARETAKER' || user.role === 'STAFF' ? '/dashboard/caretaker' : '/dashboard/tenant');
         router.replace(dest);
         return;
       }
@@ -80,7 +80,7 @@ function OnboardingContent() {
     },
     onSuccess: () => {
       toast.success('Profile completed and verified!');
-      const dest = user?.role === 'LANDLORD' ? '/dashboard/landlord' : '/dashboard/tenant';
+      const dest = user?.role === 'LANDLORD' ? '/dashboard/landlord' : (user?.role === 'CARETAKER' || user?.role === 'STAFF' ? '/dashboard/caretaker' : '/dashboard/tenant');
       window.location.href = dest;
     },
     onError: (err: any) => {
@@ -115,7 +115,7 @@ function OnboardingContent() {
       campus: formData.isStudent ? formData.campus : null,
       studentId: formData.isStudent ? formData.studentId.trim() : null,
       programmeOfStudy: formData.isStudent ? formData.programmeOfStudy.trim() : null,
-      yearOfStudy: formData.isStudent ? parseInt(formData.yearOfStudy, 10) || 1 : null,
+      yearOfStudy: formData.isStudent ? String(formData.yearOfStudy || '1') : null,
       studentType: formData.isStudent ? 'REGULAR' : null,
       guardianName: formData.guardianName.trim(),
       guardianPhone: formData.guardianPhone.trim(),

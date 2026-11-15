@@ -171,7 +171,7 @@ export default function AdminTicketsPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      await api.put(`/tickets/${id}/status`, { status });
+      await api.put(`/admin/tickets/${id}/status`, { status });
     },
     onSuccess: () => {
       toast.success('Ticket status updated');

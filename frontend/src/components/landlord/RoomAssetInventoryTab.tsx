@@ -182,25 +182,10 @@ export default function RoomAssetInventoryTab({ properties, bookings = [] }: Roo
         }
       } catch (err) {}
 
-      // If neither server nor local storage has assets, generate initial seed and save to server
+      // If neither server nor local storage has assets, start with an empty inventory list
       if (!stored && isMounted) {
-        const initialSeed: RoomAssetItem[] = [];
-        roomUnitsList.forEach((unitName) => {
-          DEFAULT_ASSET_TEMPLATES.forEach((tmpl, idx) => {
-            initialSeed.push({
-              ...tmpl,
-              id: `seed_${unitName}_${idx}_${Date.now()}`,
-              propertyId: selectedProperty.id,
-              roomUnit: unitName,
-              lastAuditedDate: new Date().toISOString().split('T')[0],
-              serialTag: `${tmpl.serialTag}-${unitName.replace(/[^a-zA-Z0-9]/g, '')}`
-            });
-          });
-        });
-        setAssets(initialSeed);
-        localStorage.setItem(storageKey, JSON.stringify(initialSeed));
+        setAssets([]);
         setIsLoaded(true);
-        api.post(`/inspections/property/${selectedProperty.id}/inventory`, { items: initialSeed }).catch(() => {});
       }
     };
 

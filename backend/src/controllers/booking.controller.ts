@@ -676,7 +676,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
 
     const isOwnerTenant = booking.tenantId === userId;
     const isOwnerLandlord = booking.property?.landlordId === userId;
-    const isAdmin = userRole === 'ADMIN';
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(userRole);
     const isAssignedStaff = await prisma.propertyStaff.findFirst({
       where: { propertyId: booking.propertyId, userId }
     });

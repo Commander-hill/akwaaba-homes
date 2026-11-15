@@ -94,13 +94,13 @@ export default function AddTitleDeedModal({
     try {
       setUploading(true);
       const formData = new FormData();
-      formData.append('document', selectedFile);
+      formData.append('file', selectedFile);
 
       const res = await api.post('/upload/document', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setUploadedUrl(res.data.url);
+      setUploadedUrl(res.data.documentUrl || res.data.url);
       setFile(selectedFile);
       toast.success('Deed document uploaded successfully!');
     } catch (err: any) {
@@ -125,7 +125,7 @@ export default function AddTitleDeedModal({
       setSubmitting(true);
       await api.post(`/admin/landlord-deeds/${selectedLandlordId}/attach`, {
         documentUrl: uploadedUrl,
-        status: initialStatus
+        status: initialStatus, propertyId: selectedPropertyId || undefined, docType, deedNumber, registryOffice
       });
 
       toast.success('Title deed record created successfully!');

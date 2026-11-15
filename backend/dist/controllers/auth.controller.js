@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyStepUpAuth = exports.verifyAdminUnlock = exports.completeMandatory2FASetup = exports.regenerateRecoveryCodes = exports.verify2FASMS = exports.send2FASMS = exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.changePassword = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitStudentVerification = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.getSession = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = exports.verifyPromoCode = exports.CAMPUS_PROMO_CODES = exports.checkEmailAvailability = void 0;
+exports.verifyStepUpAuth = exports.verifyAdminUnlock = exports.completeMandatory2FASetup = exports.regenerateRecoveryCodes = exports.verify2FASMS = exports.send2FASMS = exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.changePassword = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitStudentVerification = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.getSession = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.resendVerificationEmail = exports.verifyEmail = exports.register = exports.verifyPromoCode = exports.CAMPUS_PROMO_CODES = exports.checkEmailAvailability = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
@@ -300,72 +300,7 @@ const register = async (req, res) => {
                 emailVerificationToken: verificationToken
             },
         });
-        // REAL EMAIL SENDING VIA GMAIL SMTP
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-        const verifyLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
-        const transporter = (0, notification_service_1.getTransporter)();
-        if (transporter) {
-            const bodyHtml = `
-        <div style="margin-bottom:20px;">
-          <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
-            Welcome to AkwaabaHomes
-          </h2>
-          <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0 0 10px;">
-            Hi ${user.firstName}, thank you for creating an account. Please confirm your email address to complete your registration and get started.
-          </p>
-        </div>
-
-        ${(0, emailTemplate_1.emailCardHtml)(`
-          ${(0, emailTemplate_1.emailMetaTableHtml)([
-                { label: 'Registered Email', value: user.email },
-                { label: 'Account Type', value: user.role === 'LANDLORD' ? 'Landlord & Host' : 'Student & Resident Tenant' }
-            ])}
-        `, 'Account Overview')}
-
-        ${(0, emailTemplate_1.emailButtonHtml)({
-                label: 'Confirm Email Address',
-                url: verifyLink,
-                variant: 'primary'
-            })}
-
-        <p style="color:#71717A;font-size:12px;line-height:1.5;margin:20px 0 4px;text-align:center;">
-          If the button does not open, copy and paste this link into your browser:
-        </p>
-        <p style="color:#16A34A;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
-          ${verifyLink}
-        </p>
-      `;
-            const mailOptions = {
-                from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
-                to: user.email,
-                subject: 'Confirm your AkwaabaHomes email address',
-                html: (0, emailTemplate_1.renderInstitutionalEmail)({
-                    title: 'Confirm Your AkwaabaHomes Account',
-                    preheader: `Hi ${user.firstName}, please confirm your email address on AkwaabaHomes`,
-                    categoryTag: 'VERIFICATION',
-                    bodyHtml
-                }),
-            };
-            // Send email asynchronously to prevent blocking the registration request
-            transporter.sendMail(mailOptions)
-                .then(() => {
-                console.log(`✉️  Verification email successfully sent to ${user.email}`);
-            })
-                .catch((emailError) => {
-                console.error('Failed to send verification email via SMTP:', emailError);
-                console.log('\n=============================================');
-                console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
-                console.log(`🔗 Verification Link: ${verifyLink}`);
-                console.log('=============================================\n');
-            });
-        }
-        else {
-            // Fallback for development if real credentials aren't set yet
-            console.log('\n=============================================');
-            console.log(`⚠️ SMTP NOT CONFIGURED. MOCK EMAIL SENT TO: ${user.email}`);
-            console.log(`🔗 Verification Link: ${verifyLink}`);
-            console.log('=============================================\n');
-        }
+        dispatchVerificationEmail(user, verificationToken);
         // DO NOT automatically log the user in. They must verify email first.
         res.status(201).json({
             message: 'User created successfully. Please verify your email.',
@@ -407,6 +342,101 @@ const verifyEmail = async (req, res) => {
     }
 };
 exports.verifyEmail = verifyEmail;
+function dispatchVerificationEmail(user, verificationToken) {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const verifyLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
+    const transporter = (0, notification_service_1.getTransporter)();
+    if (transporter) {
+        const bodyHtml = `
+      <div style="margin-bottom:20px;">
+        <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+          Welcome to AkwaabaHomes
+        </h2>
+        <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0 0 10px;">
+          Hi ${user.firstName}, thank you for creating an account. Please confirm your email address to complete your registration and get started.
+        </p>
+      </div>
+
+      ${(0, emailTemplate_1.emailCardHtml)(`
+        ${(0, emailTemplate_1.emailMetaTableHtml)([
+            { label: 'Registered Email', value: user.email },
+            { label: 'Account Type', value: user.role === 'LANDLORD' ? 'Landlord & Host' : 'Student & Resident Tenant' }
+        ])}
+      `, 'Account Overview')}
+
+      ${(0, emailTemplate_1.emailButtonHtml)({
+            label: 'Confirm Email Address',
+            url: verifyLink,
+            variant: 'primary'
+        })}
+
+      <p style="color:#71717A;font-size:12px;line-height:1.5;margin:20px 0 4px;text-align:center;">
+        If the button does not open, copy and paste this link into your browser:
+      </p>
+      <p style="color:#16A34A;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
+        ${verifyLink}
+      </p>
+    `;
+        const mailOptions = {
+            from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
+            to: user.email,
+            subject: 'Confirm your AkwaabaHomes email address',
+            html: (0, emailTemplate_1.renderInstitutionalEmail)({
+                title: 'Confirm Your AkwaabaHomes Account',
+                preheader: `Hi ${user.firstName}, please confirm your email address on AkwaabaHomes`,
+                categoryTag: 'VERIFICATION',
+                bodyHtml
+            }),
+        };
+        transporter.sendMail(mailOptions)
+            .then(() => {
+            console.log(`✉️  Verification email successfully sent to ${user.email}`);
+        })
+            .catch((emailError) => {
+            console.error('Failed to send verification email via SMTP:', emailError);
+            console.log('\n=============================================');
+            console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
+            console.log(`🔗 Verification Link: ${verifyLink}`);
+            console.log('=============================================\n');
+        });
+    }
+    else {
+        console.log('\n=============================================');
+        console.log(`⚠️ SMTP NOT CONFIGURED. MOCK EMAIL SENT TO: ${user.email}`);
+        console.log(`🔗 Verification Link: ${verifyLink}`);
+        console.log('=============================================\n');
+    }
+}
+const resendVerificationEmail = async (req, res) => {
+    try {
+        const email = String(req.body?.email || '').trim().toLowerCase();
+        if (!email) {
+            res.status(400).json({ message: 'Email address is required' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { email } });
+        if (!user) {
+            res.status(200).json({ message: 'If an unverified account exists for this email, a new verification link has been sent.' });
+            return;
+        }
+        if (user.isEmailVerified) {
+            res.status(200).json({ message: 'This email address is already verified. You can sign in directly.', alreadyVerified: true });
+            return;
+        }
+        const verificationToken = crypto_2.default.randomBytes(32).toString('hex');
+        await prisma_1.default.user.update({
+            where: { id: user.id },
+            data: { emailVerificationToken: verificationToken },
+        });
+        dispatchVerificationEmail(user, verificationToken);
+        res.status(200).json({ message: 'A new verification link has been sent to your email address.' });
+    }
+    catch (error) {
+        console.error('Resend verification email error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.resendVerificationEmail = resendVerificationEmail;
 const login = async (req, res) => {
     try {
         const { email, identifier, password, portal } = req.body;
@@ -1136,7 +1166,6 @@ const submitGhanaCard = async (req, res) => {
                 ghanaCardBackUrl,
                 ghanaCardStatus: 'PENDING',
                 ghanaCardRejectionReason: null,
-                kycManualReviewReason: (req.body.simulateNiaDowntime === true ? "NIA_SERVICE_UNAVAILABLE" : null),
             }
         });
         // Bust user cache so next /auth/me returns fresh Ghana Card data
@@ -1203,7 +1232,7 @@ const submitLandlordVerification = async (req, res) => {
             res.status(401).json({ message: 'Unauthorized' });
             return;
         }
-        if (req.user.role !== 'LANDLORD' && req.user.role !== 'ADMIN') {
+        if (req.user.role !== 'LANDLORD' && !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
             res.status(403).json({ message: 'Only landlords can submit landlord verification' });
             return;
         }
@@ -1339,7 +1368,7 @@ const updateProfile = async (req, res) => {
             return;
         }
         // Strict Immutability Check: If profile is locked and user is not ADMIN, block edits
-        if (existingUser.isProfileLocked && req.user.role !== 'ADMIN') {
+        if (existingUser.isProfileLocked && !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
             res.status(403).json({
                 message: 'Your profile is locked and read-only. Only an administrator can grant access to modify your credentials.'
             });
@@ -1997,7 +2026,11 @@ const verifyAdminUnlock = async (req, res) => {
             res.status(404).json({ message: 'Administrator account not found.' });
             return;
         }
-        const isMatch = await bcrypt_1.default.compare(password, user.password);
+        if (!user.passwordHash) {
+            res.status(400).json({ message: 'No local password is set on this administrator account. Please sign out and sign back in.' });
+            return;
+        }
+        const isMatch = await bcrypt_1.default.compare(password, user.passwordHash);
         if (!isMatch) {
             try {
                 await (0, auditLogger_1.logAudit)(user.id, 'ADMIN_WORKSTATION_UNLOCK_FAILED', 'User', user.id, null, { reason: 'Invalid password attempt', ip: req.ip }, req.ip);
@@ -2042,7 +2075,11 @@ const verifyStepUpAuth = async (req, res) => {
             res.status(404).json({ message: 'Administrator account not found.' });
             return;
         }
-        const isPasswordMatch = await bcrypt_1.default.compare(password, user.password);
+        if (!user.passwordHash) {
+            res.status(400).json({ message: 'No local password is set on this administrator account.' });
+            return;
+        }
+        const isPasswordMatch = await bcrypt_1.default.compare(password, user.passwordHash);
         if (!isPasswordMatch) {
             try {
                 await (0, auditLogger_1.logAudit)(user.id, 'ADMIN_STEP_UP_FAILED', 'User', user.id, null, { actionType, reason: 'Invalid password entered during step-up authorization', ip: req.ip }, req.ip);

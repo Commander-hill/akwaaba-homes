@@ -358,7 +358,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // Check ownership if not admin
-    if (req.user?.role !== 'ADMIN' && existingSub.property.landlordId !== landlordId) {
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(req.user?.role || '') && existingSub.property.landlordId !== landlordId) {
       throw new ConflictException('Forbidden: You do not own this property');
     }
 
@@ -497,7 +497,7 @@ export const checkExpirations = async (req: AuthRequest, res: Response): Promise
   try {
     const cronSecretHeader = req.headers['x-cron-secret'];
     const validCronSecret = process.env.CRON_SECRET && cronSecretHeader === process.env.CRON_SECRET;
-    const isAdmin = req.user?.role === 'ADMIN';
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(req.user?.role || '');
 
     if (!isAdmin && !validCronSecret) {
       res.status(403).json({ message: 'Forbidden: Admin access or valid CRON secret required' });

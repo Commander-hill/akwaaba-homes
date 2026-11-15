@@ -302,13 +302,22 @@ export default function AdminNoticesPage() {
       return timeB - timeA;
     });
 
+    const formatRelTime = (dateStr?: string) => {
+      if (!dateStr) return 'Recently';
+      const diffMs = Date.now() - new Date(dateStr).getTime();
+      const mins = Math.max(0, Math.floor(diffMs / 60000));
+      if (mins < 60) return mins <= 1 ? 'Just now' : `${mins}m ago`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `${hours}h ago`;
+      return `${Math.floor(hours / 24)}d ago`;
+    };
     const acts = [];
     if (sorted[0]) {
       acts.push({
         id: `act-${sorted[0].id}`,
         title: sorted[0].isActive ? 'New notice published' : 'Draft notice updated',
         subtitle: decodeHtmlEntities(sorted[0].title),
-        timeAgo: '2h ago',
+        timeAgo: formatRelTime(sorted[0].createdAt),
       });
     }
     if (sorted[1]) {
@@ -317,7 +326,7 @@ export default function AdminNoticesPage() {
         id: `act-${sorted[1].id}`,
         title: `${cat.badgeText} document added`,
         subtitle: decodeHtmlEntities(sorted[1].title),
-        timeAgo: '1d ago',
+        timeAgo: formatRelTime(sorted[1].createdAt),
       });
     }
     if (sorted[2]) {
@@ -325,7 +334,7 @@ export default function AdminNoticesPage() {
         id: `act-${sorted[2].id}`,
         title: `${getCategoryInfo(sorted[2]).badgeText} sent`,
         subtitle: decodeHtmlEntities(sorted[2].title),
-        timeAgo: '2d ago',
+        timeAgo: formatRelTime(sorted[2].createdAt),
       });
     }
     return acts;
@@ -939,9 +948,6 @@ export default function AdminNoticesPage() {
               <div className="relative shrink-0 pr-1 pt-1">
                 <div className="w-16 h-12 rounded-xl bg-gradient-to-br from-sky-200 to-blue-400 p-2 shadow-lg flex items-center justify-center transform -rotate-6">
                   <Mail className="w-7 h-7 text-white" />
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center ring-2 ring-white">
-                    1
-                  </span>
                 </div>
               </div>
             </div>

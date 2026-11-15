@@ -118,16 +118,10 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
         .filter((b: any) => !selectedProperty?.id || b.propertyId === selectedProperty.id)
         .forEach((b: any) => {
           const name = `${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}`.trim() || 'Resident Student';
-          const phone = b.tenant?.phoneNumber || '+233 24 000 0000';
+          const phone = b.tenant?.phoneNumber || '';
           const room = b.roomUnit?.unitNumber || b.room?.title || 'Room Unit';
           list.push({ name, phone, room });
         });
-    }
-    if (list.length === 0) {
-      list.push({ name: 'Kofi Mensah', phone: '+233 24 123 4567', room: 'RM 104' });
-      list.push({ name: 'Abena Osei', phone: '+233 50 987 6543', room: 'RM 202' });
-      list.push({ name: 'Emmanuel Addo', phone: '+233 20 555 1212', room: 'RM 301' });
-      list.push({ name: 'Selorm Dotse', phone: '+233 55 432 1098', room: 'RM 102' });
     }
     return list;
   }, [bookings, selectedProperty?.id]);
@@ -191,13 +185,7 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
       } catch (e) {}
 
       if (!stored && isMounted) {
-        const initialSeed: DisciplinaryIncident[] = DEFAULT_SEEDED_INCIDENTS.map((item, idx) => ({
-          ...item,
-          id: `disc_${Date.now()}_${idx}`,
-          propertyId: selectedProperty.id
-        }));
-        setIncidents(initialSeed);
-        localStorage.setItem(storageKey, JSON.stringify(initialSeed));
+        setIncidents([]);
       }
     };
 

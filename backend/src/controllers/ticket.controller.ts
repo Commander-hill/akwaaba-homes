@@ -211,7 +211,7 @@ export const updateTicketStatus = async (req: Request, res: Response): Promise<v
       }
     });
 
-    const isAuthorized = req.user.role === 'ADMIN' || 
+    const isAuthorized = ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role) || 
       ticket.property.landlordId === req.user.id || 
       Boolean(isStaff);
 
@@ -388,7 +388,7 @@ export const checkAndEscalateTickets = async (req: Request, res: Response): Prom
 
 export const getAdminEscalatedTickets = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user || req.user.role !== 'ADMIN') {
+    if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
       res.status(403).json({ message: 'Admin access required' });
       return;
     }
@@ -426,7 +426,7 @@ export const getTicketById = async (req: Request, res: Response): Promise<void> 
       where: { id },
       include: {
         property: {
-          select: { title: true, location: true, address: true, landlord: { select: { firstName: true, lastName: true, phoneNumber: true } } }
+          select: { title: true, location: true, landlord: { select: { firstName: true, lastName: true, phoneNumber: true } } }
         },
         tenant: {
           select: { firstName: true, lastName: true, email: true, phoneNumber: true }
@@ -481,7 +481,7 @@ export const addTicketNote = async (req: Request, res: Response): Promise<void> 
     });
 
     const isAuthorized =
-      req.user.role === 'ADMIN' ||
+      ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role) ||
       ticket.tenantId === req.user.id ||
       ticket.property.landlordId === req.user.id ||
       Boolean(isStaff);
@@ -516,7 +516,6 @@ export const addTicketNote = async (req: Request, res: Response): Promise<void> 
           select: {
             title: true,
             location: true,
-            address: true,
             landlord: { select: { firstName: true, lastName: true, phoneNumber: true } }
           }
         },

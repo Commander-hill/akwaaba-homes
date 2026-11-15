@@ -64,8 +64,8 @@ interface BookingItem {
     name: string;
     avatar: string;
     verified: boolean;
-    rating: string;
-    reviews: number;
+    rating?: string | null;
+    reviews?: number;
   };
   amount: string;
   createdAt: string;
@@ -88,7 +88,7 @@ export default function LandlordBookingsPage() {
 
   const statusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: 'APPROVED' | 'CANCELLED' }) => {
-      await api.patch(`/bookings/${id}/status`, { status });
+      await api.put(`/bookings/${id}/status`, { status });
     },
     onSuccess: (_data, vars) => {
       toast.success(vars.status === 'APPROVED' ? 'Booking approved!' : 'Booking cancelled.');
@@ -145,8 +145,8 @@ export default function LandlordBookingsPage() {
           name: `${t.firstName || ''} ${t.lastName || ''}`.trim() || 'Resident',
           avatar: t.avatarUrl ? getImageUrl(t.avatarUrl) : '/images/avatars/avatar-1.jpg',
           verified: t.ghanaCardStatus === 'VERIFIED',
-          rating: t.reputationScore ? Number(t.reputationScore).toFixed(1) : '5.0',
-          reviews: 1,
+          rating: t.reputationScore ? Number(t.reputationScore).toFixed(1) : null,
+          reviews: typeof t.reviewsCount === 'number' ? t.reviewsCount : undefined,
         },
         amount: `GH₵ ${priceVal.toLocaleString()}`,
         createdAt: b.createdAt || b.startDate,
@@ -233,9 +233,6 @@ export default function LandlordBookingsPage() {
                 Total Bookings
               </span>
             </div>
-            <span className="text-xs font-bold text-[#14A248] flex items-center gap-0.5 mt-0.5">
-              ↑ +1
-            </span>
           </div>
           <RollingWaves color="#A7F3D0" darkColor="#4ADE80" />
         </div>
@@ -254,9 +251,6 @@ export default function LandlordBookingsPage() {
                 Pending
               </span>
             </div>
-            <span className="text-xs font-bold text-[#14A248] flex items-center gap-0.5 mt-0.5">
-              ↑ +0
-            </span>
           </div>
           <RollingWaves color="#BFDBFE" darkColor="#60A5FA" />
         </div>
@@ -495,15 +489,19 @@ export default function LandlordBookingsPage() {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 text-xs mt-0.5">
-                    <Star className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" />
-                    <span className="font-bold text-zinc-800 dark:text-zinc-200">
-                      {booking.tenant.rating}
-                    </span>
-                    <span className="text-zinc-400 font-normal">
-                      ({booking.tenant.reviews} reviews)
-                    </span>
-                  </div>
+                  {booking.tenant.rating && (
+                    <div className="flex items-center gap-1 text-xs mt-0.5">
+                      <Star className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" />
+                      <span className="font-bold text-zinc-800 dark:text-zinc-200">
+                        {booking.tenant.rating}
+                      </span>
+                      {typeof booking.tenant.reviews === 'number' && (
+                        <span className="text-zinc-400 font-normal">
+                          ({booking.tenant.reviews} reviews)
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

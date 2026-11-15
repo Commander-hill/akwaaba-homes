@@ -25,7 +25,7 @@ const reportBreach = async (req, res) => {
         const isStaff = await prisma_1.default.propertyStaff.findFirst({
             where: { propertyId, userId: reporterId }
         });
-        if (property.landlordId !== reporterId && req.user.role !== 'ADMIN' && !isStaff) {
+        if (property.landlordId !== reporterId && !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role) && !isStaff) {
             res.status(403).json({ message: 'Forbidden: You do not have permission to report a breach on this property' });
             return;
         }
@@ -36,7 +36,7 @@ const reportBreach = async (req, res) => {
                 status: { in: ['CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED'] }
             }
         });
-        if (!tenantBooking && req.user.role !== 'ADMIN') {
+        if (!tenantBooking && !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
             res.status(400).json({ message: 'Cannot report breach: This tenant does not have an active or confirmed tenancy record for this property.' });
             return;
         }
@@ -149,7 +149,7 @@ const getBreachReports = async (req, res) => {
                 orderBy: { createdAt: 'desc' }
             });
         }
-        else if (role === 'ADMIN') {
+        else if (['ADMIN', 'SUPER_ADMIN'].includes(role)) {
             reports = await prisma_1.default.breachReport.findMany({
                 include: { tenant: true, reporter: true, property: true },
                 orderBy: { createdAt: 'desc' }

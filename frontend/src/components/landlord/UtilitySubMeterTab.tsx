@@ -142,8 +142,8 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
           floor: unit.floor,
           blockName: group.blockName || 'Main Block',
           meterNumber: `ECG-${unit.unitNumber}`,
-          prevReading: 1200,
-          currReading: 1285,
+          prevReading: 0,
+          currReading: 0,
           occupants: Array.from(occupantsMap.values())
         });
       });
@@ -205,7 +205,7 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
 
   const handleReadingChange = (unitId: string, field: 'prev' | 'curr' | 'meterNo', value: any) => {
     setMeterReadings(prev => {
-      const current = prev[unitId] || { prev: 1200, curr: 1285, meterNo: `MTR-${unitId.slice(0, 4)}` };
+      const current = prev[unitId] || { prev: 0, curr: 0, meterNo: `MTR-${unitId.slice(0, 4)}` };
       return {
         ...prev,
         [unitId]: {

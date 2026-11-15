@@ -175,12 +175,12 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
     }
     if (href === '/admin/tickets') {
       return actionQueue.filter(
-        (a: any) => a.category === 'MAINTENANCE_ESCALATION' || a.id?.includes('ticket')
+        (a: any) => a.category === 'MAINTENANCE_ESCALATION' || a.category === 'ESCALATED_MAINTENANCE' || a.id?.includes('ticket')
       ).length;
     }
     if (href === '/admin/disputes') {
       return actionQueue.filter(
-        (a: any) => a.category === 'BREACH_REPORT' || a.category === 'DISPUTE' || a.id?.includes('breach') || a.id?.includes('dispute')
+        (a: any) => a.category === 'BREACH_REPORT' || a.category === 'DISPUTE_BREACH' || a.category === 'DISPUTE' || a.id?.includes('breach') || a.id?.includes('dispute')
       ).length;
     }
     return 0;

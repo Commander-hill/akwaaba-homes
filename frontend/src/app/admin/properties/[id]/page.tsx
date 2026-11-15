@@ -302,7 +302,7 @@ export default function AdminPropertyDetailPage({
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-xs text-zinc-900 dark:text-white">
-                        {room.name || 'Room Configuration'}
+                        {room.name || room.roomType || room.blockName || 'Room Configuration'}
                       </span>
                       <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
                         GH₵ {Number(room.price || property.price).toLocaleString()}

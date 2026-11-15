@@ -49,7 +49,7 @@ type SortOption = 'newest' | 'oldest' | 'name' | 'properties';
 type ViewMode = 'list' | 'grid';
 
 function formatSubmissionDate(dateStr?: string | null): string {
-  if (!dateStr) return 'Sep 20, 2026';
+  if (!dateStr) return '—';
   const d = new Date(dateStr);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
@@ -228,7 +228,7 @@ export default function AdminTitleDeedsPage() {
 
   // Radial Compliance Percentage Calculation
   const complianceRate = useMemo(() => {
-    if (!stats.total) return 80;
+    if (!stats.total) return 0;
     const rate = Math.round((stats.verified / stats.total) * 100);
     return Math.max(0, Math.min(100, rate));
   }, [stats]);
@@ -609,7 +609,7 @@ export default function AdminTitleDeedsPage() {
 
                           {/* Ghana Card ID */}
                           <td className="px-4 py-3.5 whitespace-nowrap font-mono text-zinc-700 dark:text-zinc-300">
-                            {landlord.ghanaCardNumber || '0240000000'}
+                            {landlord.ghanaCardNumber || 'Not provided'}
                           </td>
 
                           {/* Deed Document Link */}
@@ -878,9 +878,6 @@ export default function AdminTitleDeedsPage() {
             <div>
               <div className="text-xs font-bold text-zinc-900 dark:text-white">
                 Compliance Rate
-              </div>
-              <div className="text-[10px] font-bold text-[#16A34A] mt-0.5">
-                +5% from last month
               </div>
             </div>
 

@@ -220,7 +220,7 @@ export default function AdminVerificationDetailPage({
   const verifyLandlordDeedMutation = useMutation({
     mutationFn: async ({ status, notes }: { status: string; notes?: string }) => {
       // Use landlord deed audit endpoint
-      const res = await api.put(`/admin/verify-landlord/${userId}`, { status, notes });
+      const res = await api.put(`/admin/verify-landlord/${userId}`, { status, reason: notes, notes });
       return res.data;
     },
     onSuccess: (data) => {

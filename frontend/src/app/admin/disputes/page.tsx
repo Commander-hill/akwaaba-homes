@@ -455,7 +455,6 @@ export default function AdminDisputesPage() {
               <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 truncate">Total Disputes</p>
               <div className="flex items-baseline gap-2 mt-0.5">
                 <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">{counts.all}</span>
-                <span className="text-[11px] font-bold text-[#16A34A] dark:text-emerald-400">&uarr; +12%</span>
               </div>
             </div>
           </div>
@@ -472,7 +471,6 @@ export default function AdminDisputesPage() {
               <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 truncate">Pending</p>
               <div className="flex items-baseline gap-2 mt-0.5">
                 <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">{counts.pending}</span>
-                <span className="text-[11px] font-bold text-[#2563EB] dark:text-blue-400">&uarr; +6%</span>
               </div>
             </div>
           </div>
@@ -489,7 +487,6 @@ export default function AdminDisputesPage() {
               <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 truncate">In Review</p>
               <div className="flex items-baseline gap-2 mt-0.5">
                 <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">{counts.inReview}</span>
-                <span className="text-[11px] font-bold text-[#EA580C] dark:text-orange-400">&uarr; +3%</span>
               </div>
             </div>
           </div>
@@ -506,7 +503,6 @@ export default function AdminDisputesPage() {
               <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 truncate">Resolved</p>
               <div className="flex items-baseline gap-2 mt-0.5">
                 <span className="text-2xl font-extrabold text-zinc-900 dark:text-white">{counts.resolved}</span>
-                <span className="text-[11px] font-bold text-[#7C3AED] dark:text-purple-400">&uarr; +20%</span>
               </div>
             </div>
           </div>

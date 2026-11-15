@@ -176,7 +176,7 @@ export default function RegisterPage() {
     } else if (user.role === 'CARETAKER' || user.role === 'STAFF') {
       window.location.href = '/dashboard/caretaker';
     } else {
-      if (user.isStudent && !user.studentId) {
+      if (user.campus && !user.studentId) {
         window.location.href = '/onboarding';
       } else {
         window.location.href = '/dashboard/tenant';

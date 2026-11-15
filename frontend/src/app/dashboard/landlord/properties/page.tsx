@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/axios';
 import { CardGridSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import {
   Home,
@@ -63,54 +65,6 @@ interface PropertyItem {
   image: string;
 }
 
-const propertiesData: PropertyItem[] = [
-  {
-    id: 'kimo-apt',
-    title: 'KIMO APARTMENT',
-    location: 'Burma Camp, Accra',
-    price: 'GH₵ 2,000',
-    period: '/ month',
-    rating: 4.8,
-    reviews: 24,
-    rooms: '1 Room',
-    baths: '1 Bath',
-    area: '50 m²',
-    status: 'Active',
-    photosCount: 5,
-    image: '/images/resident/prop-kimo.jpg',
-  },
-  {
-    id: 'ssnit-apt',
-    title: 'SSNIT RESIDENTIAL APARTMENTS',
-    location: 'Koforidua',
-    price: 'GH₵ 4,500',
-    period: '/ month',
-    rating: 4.7,
-    reviews: 18,
-    rooms: '2 Rooms',
-    baths: '2 Baths',
-    area: '80 m²',
-    status: 'Active',
-    photosCount: 5,
-    image: '/images/resident/prop-premium-studio.jpg',
-  },
-  {
-    id: 'glacier-studio',
-    title: 'GLACIER STUDIO',
-    location: 'Achimota, Accra',
-    price: 'GH₵ 20,000',
-    period: '/ month',
-    rating: 4.9,
-    reviews: 32,
-    rooms: '1 Room',
-    baths: '1 Bath',
-    area: '40 m²',
-    status: 'Active',
-    photosCount: 5,
-    image: '/images/resident/residence-glacier-main.jpg',
-  },
-];
-
 export default function LandlordPropertiesPage() {
   const showSkeleton = useInitialSkeleton();
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'Active' | 'Pending' | 'Under Review'>('ALL');
@@ -118,12 +72,74 @@ export default function LandlordPropertiesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
+  const { data: rawProperties = [], isLoading } = useQuery({
+    queryKey: ['properties', 'landlord-mine'],
+    queryFn: async () => {
+      const res = await api.get('/properties/landlord/mine');
+      return res.data?.data || res.data?.properties || (Array.isArray(res.data) ? res.data : []);
+    },
+  });
+
+  const liveProperties: PropertyItem[] = useMemo(() => {
+    const list = Array.isArray(rawProperties) ? rawProperties : [];
+    return list.map((p: any) => {
+      const rawStatus = String(p.status || 'APPROVED').toUpperCase();
+      const status: PropertyItem['status'] =
+        rawStatus === 'REJECTED' || rawStatus === 'UNDER_REVIEW'
+          ? 'Under Review'
+          : rawStatus === 'PENDING' || rawStatus === 'PENDING_APPROVAL'
+            ? 'Pending'
+            : 'Active';
+      const imgs = Array.isArray(p.images) ? p.images : [];
+      const firstImg = imgs[0];
+      const imageUrl =
+        (typeof firstImg === 'string' ? firstImg : firstImg?.url) ||
+        p.imageUrl ||
+        '/images/resident/prop-kimo.jpg';
+      const roomsList = Array.isArray(p.rooms) ? p.rooms : [];
+      const roomsCount = roomsList.length || Number(p.bedrooms || p.totalRooms || 1);
+      const bathsCount = Number(p.bathrooms || 1);
+      const priceVal = Number(p.price || roomsList[0]?.price || 0);
+      const reviewsCount = Array.isArray(p.reviews) ? p.reviews.length : Number(p.reviewsCount || 0);
+      const avgRating =
+        reviewsCount > 0 && Array.isArray(p.reviews)
+          ? Number(
+              (
+                p.reviews.reduce((sum: number, r: any) => sum + Number(r.rating || 0), 0) /
+                reviewsCount
+              ).toFixed(1)
+            )
+          : Number(p.rating || 0);
+
+      return {
+        id: p.id,
+        title: (p.title || p.name || 'Untitled Property').toUpperCase(),
+        location: p.location || p.address || p.city || 'Accra, Ghana',
+        price: `GH₵ ${priceVal.toLocaleString('en-GH')}`,
+        period: p.billingCycle === 'ACADEMIC_YEAR' || p.category === 'STUDENT_HOSTEL' ? '/ year' : '/ month',
+        rating: avgRating,
+        reviews: reviewsCount,
+        rooms: `${roomsCount} ${roomsCount === 1 ? 'Room' : 'Rooms'}`,
+        baths: `${bathsCount} ${bathsCount === 1 ? 'Bath' : 'Baths'}`,
+        area: p.sizeSqm ? `${p.sizeSqm} m²` : p.type ? String(p.type).replace(/_/g, ' ') : 'Standard',
+        status,
+        photosCount: imgs.length || 1,
+        image: imageUrl,
+      };
+    });
+  }, [rawProperties]);
+
+  const totalCount = liveProperties.length;
+  const activeCount = liveProperties.filter((p) => p.status === 'Active').length;
+  const pendingCount = liveProperties.filter((p) => p.status === 'Pending').length;
+  const underReviewCount = liveProperties.filter((p) => p.status === 'Under Review').length;
+
   const toggleFavorite = (id: string) => {
     setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const filteredProperties = useMemo(() => {
-    return propertiesData.filter((prop) => {
+    return liveProperties.filter((prop) => {
       const matchesFilter = activeFilter === 'ALL' || prop.status === activeFilter;
       const matchesSearch =
         !searchQuery.trim() ||
@@ -131,8 +147,8 @@ export default function LandlordPropertiesPage() {
         prop.location.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesFilter && matchesSearch;
     });
-  }, [activeFilter, searchQuery]);
-  if (showSkeleton) return <CardGridSkeleton />;
+  }, [liveProperties, activeFilter, searchQuery]);
+  if (showSkeleton || isLoading) return <CardGridSkeleton />;
 
   return (
     <div className="space-y-6 pb-12">
@@ -177,20 +193,17 @@ export default function LandlordPropertiesPage() {
             </div>
             <div className="flex-1 ml-4 min-w-0">
               <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
-                3
+                {totalCount}
               </span>
               <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
                 Total Properties
               </span>
             </div>
-            <span className="text-xs font-bold text-[#14A248] flex items-center gap-0.5 mt-0.5">
-              ↑ +1
-            </span>
           </div>
           <RollingWaves color="#A7F3D0" darkColor="#4ADE80" />
         </div>
 
-        {/* Card 2: Total Bookings */}
+        {/* Card 2: Active Properties */}
         <div className="relative rounded-2xl p-5 overflow-hidden bg-[#EAF3FD] border border-[#D6E8FD] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between min-h-[115px]">
           <div className="flex items-start justify-between">
             <div className="w-12 h-12 rounded-2xl bg-[#D6E8FD] text-[#2563EB] flex items-center justify-center shrink-0">
@@ -198,20 +211,17 @@ export default function LandlordPropertiesPage() {
             </div>
             <div className="flex-1 ml-4 min-w-0">
               <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
-                3
+                {activeCount}
               </span>
               <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
-                Total Bookings
+                Active Listings
               </span>
             </div>
-            <span className="text-xs font-bold text-[#2563EB] flex items-center gap-0.5 mt-0.5">
-              ↑ +1
-            </span>
           </div>
           <RollingWaves color="#BFDBFE" darkColor="#60A5FA" />
         </div>
 
-        {/* Card 3: Pending Payments */}
+        {/* Card 3: Pending Approval */}
         <div className="relative rounded-2xl p-5 overflow-hidden bg-[#FEF7EB] border border-[#FDECCD] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between min-h-[115px]">
           <div className="flex items-start justify-between">
             <div className="w-12 h-12 rounded-2xl bg-[#FDECCD] text-[#D97706] flex items-center justify-center shrink-0">
@@ -219,17 +229,17 @@ export default function LandlordPropertiesPage() {
             </div>
             <div className="flex-1 ml-4 min-w-0">
               <span className="block text-2xl sm:text-3xl font-extrabold text-zinc-900 leading-none">
-                GH₵ 0.00
+                {pendingCount}
               </span>
               <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
-                Pending Payments
+                Pending Approval
               </span>
             </div>
           </div>
           <RollingWaves color="#FDE68A" darkColor="#FBBF24" />
         </div>
 
-        {/* Card 4: Occupancy Rate */}
+        {/* Card 4: Under Review */}
         <div className="relative rounded-2xl p-5 overflow-hidden bg-[#F3EEFD] border border-[#E6DBFC] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between min-h-[115px]">
           <div className="flex items-start justify-between">
             <div className="w-12 h-12 rounded-2xl bg-[#E6DBFC] text-[#7C3AED] flex items-center justify-center shrink-0">
@@ -237,15 +247,12 @@ export default function LandlordPropertiesPage() {
             </div>
             <div className="flex-1 ml-4 min-w-0">
               <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
-                92%
+                {underReviewCount}
               </span>
               <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
-                Occupancy Rate
+                Under Review
               </span>
             </div>
-            <span className="text-xs font-bold text-[#7C3AED] flex items-center gap-0.5 mt-0.5">
-              ↑ +5%
-            </span>
           </div>
           <RollingWaves color="#DDD6FE" darkColor="#A78BFA" />
         </div>
@@ -272,7 +279,7 @@ export default function LandlordPropertiesPage() {
                 activeFilter === 'ALL' ? 'bg-white text-[#14A248]' : 'bg-zinc-100 text-zinc-600'
               }`}
             >
-              3
+              {totalCount}
             </span>
           </button>
 
@@ -288,7 +295,7 @@ export default function LandlordPropertiesPage() {
           >
             <span className="w-2 h-2 rounded-full bg-[#14A248]" />
             <span>Active</span>
-            <span className="text-zinc-400 text-[11px] font-semibold">3</span>
+            <span className="text-zinc-400 text-[11px] font-semibold">{activeCount}</span>
           </button>
 
           {/* Pending Tab */}
@@ -303,7 +310,7 @@ export default function LandlordPropertiesPage() {
           >
             <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
             <span>Pending</span>
-            <span className="text-zinc-400 text-[11px] font-semibold">0</span>
+            <span className="text-zinc-400 text-[11px] font-semibold">{pendingCount}</span>
           </button>
 
           {/* Under Review Tab */}
@@ -318,7 +325,7 @@ export default function LandlordPropertiesPage() {
           >
             <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
             <span>Under Review</span>
-            <span className="text-zinc-400 text-[11px] font-semibold">0</span>
+            <span className="text-zinc-400 text-[11px] font-semibold">{underReviewCount}</span>
           </button>
         </div>
 
@@ -345,120 +352,148 @@ export default function LandlordPropertiesPage() {
         </div>
       </div>
 
-      {/* 3 Property Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {filteredProperties.map((prop) => (
-          <div
-            key={prop.id}
-            className="bg-white dark:bg-[#141816] rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col group"
-          >
-            {/* Property Image Container */}
-            <div className="relative h-52 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img decoding="async"
-                src={prop.image}
-                alt={prop.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-
-              {/* Active Badge on TOP-LEFT */}
-              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#14A248] text-white text-xs font-bold flex items-center gap-1.5 shadow-md">
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>{prop.status}</span>
-              </div>
-
-              {/* Wishlist Heart on TOP-RIGHT */}
-              <button
-                type="button"
-                onClick={() => toggleFavorite(prop.id)}
-                aria-label="Save to favorites"
-                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-zinc-800 flex items-center justify-center backdrop-blur-xs shadow-xs transition-colors cursor-pointer"
-              >
-                <Heart
-                  className={`w-4 h-4 stroke-[2.2] transition-colors ${
-                    favorites[prop.id] ? 'fill-red-500 text-red-500' : 'text-zinc-800'
-                  }`}
+      {/* Property Cards Grid or Empty State */}
+      {liveProperties.length === 0 ? (
+        <div className="bg-white dark:bg-[#141816] rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-12 text-center space-y-3 shadow-2xs">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#14A248] flex items-center justify-center mx-auto">
+            <Home className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-extrabold text-zinc-900 dark:text-white">
+            No Properties Listed Yet
+          </h3>
+          <p className="text-xs text-zinc-500 max-w-md mx-auto">
+            Publish your first hostel or residential property to start receiving verified tenant bookings.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/dashboard/landlord/new"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#14A248] hover:bg-[#11843b] text-white text-xs font-bold shadow-xs transition-all"
+            >
+              <Home className="w-4 h-4" />
+              <span>Add Your First Property</span>
+            </Link>
+          </div>
+        </div>
+      ) : filteredProperties.length === 0 ? (
+        <div className="bg-white dark:bg-[#141816] rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-10 text-center space-y-2 shadow-2xs">
+          <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+            No properties match your filter
+          </p>
+          <p className="text-xs text-zinc-500">
+            Try clearing your search query or switching filter tabs.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {filteredProperties.map((prop) => (
+            <div
+              key={prop.id}
+              className="bg-white dark:bg-[#141816] rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col group"
+            >
+              {/* Property Image Container */}
+              <div className="relative h-52 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  decoding="async"
+                  src={prop.image}
+                  alt={prop.title}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-              </button>
 
-              {/* Photos Count on BOTTOM-LEFT of Image */}
-              <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-xs">
-                <Camera className="w-3.5 h-3.5" />
-                <span>{prop.photosCount} Photos</span>
-              </div>
-            </div>
-
-            {/* Card Content */}
-            <div className="p-5 flex flex-col flex-1 justify-between gap-4">
-              <div className="space-y-1.5">
-                <h3 className="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
-                  {prop.title}
-                </h3>
-                <div className="flex items-center gap-1 text-xs text-zinc-500 font-medium truncate">
-                  <MapPin className="w-3.5 h-3.5 text-[#14A248] shrink-0" />
-                  <span className="truncate">{prop.location}</span>
+                {/* Status Badge on TOP-LEFT */}
+                <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#14A248] text-white text-xs font-bold flex items-center gap-1.5 shadow-md">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>{prop.status}</span>
                 </div>
-              </div>
 
-              {/* Price & Rating */}
-              <div className="flex items-center justify-between pt-0.5">
-                <div className="text-base font-extrabold text-[#14A248]">
-                  {prop.price}{' '}
-                  <span className="text-xs font-normal text-zinc-500 dark:text-zinc-400">
-                    {prop.period}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                  <Star className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" />
-                  <span>{prop.rating}</span>
-                  <span className="text-zinc-400 font-normal">({prop.reviews} reviews)</span>
-                </div>
-              </div>
-
-              {/* Amenities */}
-              <div className="flex items-center justify-between py-2.5 border-t border-b border-zinc-100 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-300 font-medium">
-                <span className="flex items-center gap-1.5">
-                  <Bed className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>{prop.rooms}</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Bath className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>{prop.baths}</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Maximize2 className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>{prop.area}</span>
-                </span>
-              </div>
-
-              {/* Action Buttons Row */}
-              <div className="grid grid-cols-3 gap-2 pt-1">
-                <Link
-                  href={`/dashboard/landlord/properties`}
-                  className="py-2 px-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
-                >
-                  <Eye className="w-3.5 h-3.5 text-[#14A248]" />
-                  <span>View Details</span>
-                </Link>
-                <Link
-                  href={`/dashboard/landlord/properties`}
-                  className="py-2 px-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
-                >
-                  <Edit2 className="w-3.5 h-3.5 text-[#2563EB]" />
-                  <span>Edit</span>
-                </Link>
+                {/* Wishlist Heart on TOP-RIGHT */}
                 <button
                   type="button"
-                  className="py-2 px-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs cursor-pointer"
+                  onClick={() => toggleFavorite(prop.id)}
+                  aria-label="Save to favorites"
+                  className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-zinc-800 flex items-center justify-center backdrop-blur-xs shadow-xs transition-colors cursor-pointer"
                 >
-                  <MoreHorizontal className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>More</span>
+                  <Heart
+                    className={`w-4 h-4 stroke-[2.2] transition-colors ${
+                      favorites[prop.id] ? 'fill-red-500 text-red-500' : 'text-zinc-800'
+                    }`}
+                  />
                 </button>
+
+                {/* Photos Count on BOTTOM-LEFT of Image */}
+                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-xs">
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>{prop.photosCount} Photos</span>
+                </div>
+              </div>
+
+              {/* Card Content */}
+              <div className="p-5 flex flex-col flex-1 justify-between gap-4">
+                <div className="space-y-1.5">
+                  <h3 className="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
+                    {prop.title}
+                  </h3>
+                  <div className="flex items-center gap-1 text-xs text-zinc-500 font-medium truncate">
+                    <MapPin className="w-3.5 h-3.5 text-[#14A248] shrink-0" />
+                    <span className="truncate">{prop.location}</span>
+                  </div>
+                </div>
+
+                {/* Price & Rating */}
+                <div className="flex items-center justify-between pt-0.5">
+                  <div className="text-base font-extrabold text-[#14A248]">
+                    {prop.price}{' '}
+                    <span className="text-xs font-normal text-zinc-500 dark:text-zinc-400">
+                      {prop.period}
+                    </span>
+                  </div>
+                  {prop.reviews > 0 && (
+                    <div className="flex items-center gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                      <Star className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" />
+                      <span>{prop.rating}</span>
+                      <span className="text-zinc-400 font-normal">({prop.reviews} reviews)</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Amenities */}
+                <div className="flex items-center justify-between py-2.5 border-t border-b border-zinc-100 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-300 font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <Bed className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>{prop.rooms}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Bath className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>{prop.baths}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Maximize2 className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>{prop.area}</span>
+                  </span>
+                </div>
+
+                {/* Action Buttons Row */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Link
+                    href={`/properties/${prop.id}`}
+                    className="py-2 px-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-[#14A248]" />
+                    <span>View Details</span>
+                  </Link>
+                  <Link
+                    href={`/dashboard/landlord/properties/${prop.id}/edit`}
+                    className="py-2 px-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-[#2563EB]" />
+                    <span>Edit</span>
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Bottom Section: Grow Your Business Banner & Pagination */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pt-2">

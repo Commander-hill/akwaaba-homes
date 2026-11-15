@@ -4,6 +4,8 @@ const express_1 = require("express");
 const booking_controller_1 = require("../controllers/booking.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
+// Cron / Admin trigger for automated rent-due reminders
+router.post('/check-rent-due', booking_controller_1.checkRentDueReminders);
 // Static collection routes first (auto-routes Landlords vs Tenants so /bookings/me never 403s)
 router.get('/my-active', auth_middleware_1.authenticate, (req, res) => {
     if (req.user?.role === 'LANDLORD') {

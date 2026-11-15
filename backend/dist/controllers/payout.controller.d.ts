@@ -7,4 +7,8 @@ export declare const handleTransferWebhook: (req: Request, res: Response) => Pro
  * Verify Mobile Money / Bank Account Holder Name via Paystack Resolution API
  */
 export declare const verifyMoMoAccountName: (req: Request, res: Response) => Promise<void>;
+/**
+ * Fetch Ghanaian Commercial Banks with Paystack GhIPSS codes
+ */
+export declare const getGhanaBanks: (_req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=payout.controller.d.ts.map

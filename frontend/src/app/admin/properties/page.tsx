@@ -151,7 +151,7 @@ export default function AdminPropertiesPage() {
       `"${p.landlord?.email || 'N/A'}"`,
       `"${p.landlord?.phoneNumber || 'N/A'}"`,
       Number(p.price || 0).toFixed(2),
-      Number(p.deposit || 0).toFixed(2),
+      Number(p.cautionDeposit ?? p.deposit ?? 0).toFixed(2),
       p.bedrooms || 1,
       `"${p.approvalStatus || 'PENDING'}"`,
       p.isPhysicallyVerified ? 'VERIFIED' : 'UNVERIFIED',
@@ -215,7 +215,7 @@ export default function AdminPropertiesPage() {
   // Calculate high-level stats
   const stats = useMemo(() => {
     if (!Array.isArray(properties) || properties.length === 0) {
-      return { total: 248, approved: 224, pending: 18, rejected: 6 };
+      return { total: 0, approved: 0, pending: 0, rejected: 0 };
     }
     const total = properties.length;
     const approved = properties.filter((p: any) => p.approvalStatus === 'APPROVED').length;
@@ -405,9 +405,6 @@ export default function AdminPropertiesPage() {
               <span className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
                 {stats.total}
               </span>
-              <span className="text-xs font-bold text-[#04793d] dark:text-emerald-400 flex items-center">
-                ↑ 12%
-              </span>
             </div>
           </div>
         </div>
@@ -422,9 +419,6 @@ export default function AdminPropertiesPage() {
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
                 {stats.approved}
-              </span>
-              <span className="text-xs font-bold text-[#04793d] dark:text-emerald-400 flex items-center">
-                ↑ 8%
               </span>
             </div>
           </div>
@@ -441,9 +435,6 @@ export default function AdminPropertiesPage() {
               <span className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
                 {stats.pending}
               </span>
-              <span className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center">
-                ↓ 3%
-              </span>
             </div>
           </div>
         </div>
@@ -458,9 +449,6 @@ export default function AdminPropertiesPage() {
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
                 {stats.rejected}
-              </span>
-              <span className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center">
-                ↑ 1%
               </span>
             </div>
           </div>

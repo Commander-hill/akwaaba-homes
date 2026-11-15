@@ -85,14 +85,15 @@ export default function TenantDashboardPage() {
     return 'Good evening,';
   }, []);
 
-  // Primary Stay details or fallback to reference mockup defaults
-  const activePropertyTitle = primaryBooking?.property?.title || 'Glacier Studio';
-  const activePropertyLocation = primaryBooking?.property?.address || 'Achimota, Accra';
+  // Primary Stay details (no hardcoded Glacier Studio fallback when primaryBooking is null)
+  const activePropertyTitle = primaryBooking?.property?.title || '';
+  const activePropertyLocation =
+    primaryBooking?.property?.location || primaryBooking?.property?.address || '';
   const activeRoomUnit = primaryBooking?.room?.roomNumber
     ? `Room ${primaryBooking.room.roomNumber}`
     : primaryBooking?.roomUnit?.unitNumber
     ? `Unit ${primaryBooking.roomUnit.unitNumber}`
-    : 'Room 1A';
+    : primaryBooking?.room?.name || '';
 
   const stayDates = useMemo(() => {
     if (primaryBooking?.startDate && primaryBooking?.endDate) {
@@ -108,12 +109,12 @@ export default function TenantDashboardPage() {
       });
       return `${start} – ${end}`;
     }
-    return 'Active Stay';
+    return primaryBooking ? 'Active Stay' : '';
   }, [primaryBooking]);
 
-  const totalDueAmount = primaryBooking?.amount
-    ? Number(primaryBooking.amount)
-    : 2500;
+  const totalDueAmount = primaryBooking
+    ? Number(primaryBooking.room?.price || primaryBooking.property?.price || primaryBooking.amount || 0)
+    : 0;
 
 
 
@@ -393,118 +394,48 @@ export default function TenantDashboardPage() {
                   </Link>
                 </div>
 
-                {/* 4 Clickable List Items matching reference */}
+                {/* Dynamic Bookings List or Empty State */}
                 <div className="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
-                  {/* Item 1: Study Room Booking */}
-                  <Link
-                    href="/dashboard/tenant/bookings"
-                    className="py-3 px-2 -mx-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 flex items-center justify-between gap-3 transition"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-10 rounded-lg overflow-hidden relative shrink-0 border border-zinc-100 dark:border-zinc-800">
-                        <Image
-                          src="/images/resident/study-thumb.jpg"
-                          alt="Study room"
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 256px"
-/>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                            Approved
-                          </span>
+                  {bookings.length > 0 ? (
+                    bookings.slice(0, 4).map((b: any) => (
+                      <Link
+                        key={b.id}
+                        href={`/dashboard/tenant/bookings/${b.id}`}
+                        className="py-3 px-2 -mx-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 flex items-center justify-between gap-3 transition"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                            <Home className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                                {b.status || 'Active'}
+                              </span>
+                            </div>
+                            <p className="font-bold text-zinc-950 dark:text-white truncate mt-0.5">
+                              {b.property?.title || 'Residency Booking'}
+                            </p>
+                            <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
+                              {b.property?.location || b.property?.address || 'Accra, Ghana'} &bull; GH₵{' '}
+                              {Number(b.room?.price || b.property?.price || b.amount || 0).toLocaleString('en-GH')}
+                            </p>
+                          </div>
                         </div>
-                        <p className="font-bold text-zinc-950 dark:text-white truncate mt-0.5">
-                          Study Room Booking
-                        </p>
-                        <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
-                          Tue, 9 Sep 2026 &bull; 10:00 AM – 12:00 PM
-                        </p>
-                      </div>
+                        <ChevronRight className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center">
+                      <Calendar className="w-6 h-6 text-zinc-300 mx-auto mb-1.5" />
+                      <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                        No upcoming bookings or events
+                      </p>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">
+                        Your active bookings, rent payments, and move-in dates will appear here.
+                      </p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
-                  </Link>
-
-                  {/* Item 2: Rent Payment */}
-                  <Link
-                    href="/dashboard/invoice"
-                    className="py-3 px-2 -mx-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 flex items-center justify-between gap-3 transition"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-center shrink-0">
-                        <FileText className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                            Paid
-                          </span>
-                        </div>
-                        <p className="font-bold text-zinc-950 dark:text-white truncate mt-0.5">
-                          Rent Payment
-                        </p>
-                        <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
-                          September 2026 &bull; GH₵ 2,500
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
-                  </Link>
-
-                  {/* Item 3: Maintenance Request */}
-                  <Link
-                    href="/dashboard/tenant/tickets"
-                    className="py-3 px-2 -mx-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 flex items-center justify-between gap-3 transition"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300 flex items-center justify-center shrink-0">
-                        <Wrench className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                            &bull; In Progress
-                          </span>
-                        </div>
-                        <p className="font-bold text-zinc-950 dark:text-white truncate mt-0.5">
-                          Maintenance Request
-                        </p>
-                        <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
-                          Issue with AC &bull; Submitted 3 Sep 2026
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
-                  </Link>
-
-                  {/* Item 4: Resident Forum */}
-                  <Link
-                    href="/dashboard/messages"
-                    onClick={() => toast.success('Opening Resident Community Forum channel')}
-                    className="py-3 px-2 -mx-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 flex items-center justify-between gap-3 transition"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 flex items-center justify-center shrink-0">
-                        <Calendar className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                            Event
-                          </span>
-                        </div>
-                        <p className="font-bold text-zinc-950 dark:text-white truncate mt-0.5">
-                          Resident Forum
-                        </p>
-                        <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
-                          Sat, 12 Sep 2026 &bull; 5:00 PM – 7:00 PM
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
-                  </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -572,11 +503,13 @@ export default function TenantDashboardPage() {
                   <div className="space-y-1">
                     <p className="text-[11px] font-medium text-zinc-600">Rent</p>
                     <p className="text-sm font-black text-zinc-950 dark:text-white">
-                      GH₵ 2,300
+                      GH₵ {totalDueAmount.toLocaleString('en-GH')}
                     </p>
-                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400">Due 6 Sep 2026</p>
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400">
+                      {primaryBooking ? stayDates : 'No active stay'}
+                    </p>
                     <span className="inline-block bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">
-                      &bull; Paid
+                      {primaryBooking?.status || 'None'}
                     </span>
                   </div>
 
@@ -584,11 +517,11 @@ export default function TenantDashboardPage() {
                   <div className="space-y-1">
                     <p className="text-[11px] font-medium text-zinc-600">Utilities</p>
                     <p className="text-sm font-black text-zinc-950 dark:text-white">
-                      GH₵ 200
+                      GH₵ 0
                     </p>
-                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400">Due 15 Sep 2026</p>
-                    <span className="inline-block bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">
-                      Pending
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400">Sub-meter / splits</p>
+                    <span className="inline-block bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">
+                      Up to date
                     </span>
                   </div>
                 </div>
@@ -626,89 +559,54 @@ export default function TenantDashboardPage() {
             </div>
 
             <div className="space-y-2 pt-1">
-              {/* Notification 1 */}
-              <Link
-                href="/dashboard/invoice"
-                className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition"
-              >
-                <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
-                      Payment Confirmed
-                    </p>
-                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 shrink-0">2h ago</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
-                    Your rent for September has been received.
-                  </p>
-                </div>
-              </Link>
-
-              {/* Notification 2 */}
-              <Link
-                href="/dashboard/tenant/tickets"
-                className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition"
-              >
-                <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 flex items-center justify-center shrink-0 mt-0.5">
-                  <Wrench className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
-                      Maintenance Update
-                    </p>
-                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 shrink-0">5h ago</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
-                    Your maintenance request has been assigned.
-                  </p>
-                </div>
-              </Link>
-
-              {/* Notification 3 */}
-              <Link
-                href="/dashboard/notifications"
-                className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition"
-              >
-                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-                  <Info className="w-4 h-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
-                      New Announcement
-                    </p>
-                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 shrink-0">1d ago</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
-                    Weekend gate access will be restricted.
-                  </p>
-                </div>
-              </Link>
-
-              {/* Notification 4 */}
-              <Link
-                href="/dashboard/messages"
-                className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition"
-              >
-                <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 flex items-center justify-center shrink-0 mt-0.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
-                      Upcoming Event
-                    </p>
-                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 shrink-0">2d ago</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
-                    Resident forum &bull; 12 Sept 2026
-                  </p>
-                </div>
-              </Link>
+              {(() => {
+                const rawNotifs = Array.isArray(notificationsData)
+                  ? notificationsData
+                  : Array.isArray(notificationsData?.notifications)
+                  ? notificationsData.notifications
+                  : Array.isArray(notificationsData?.data)
+                  ? notificationsData.data
+                  : [];
+                if (rawNotifs.length === 0) {
+                  return (
+                    <div className="py-6 text-center">
+                      <Bell className="w-5 h-5 text-zinc-300 mx-auto mb-1" />
+                      <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                        No notifications yet
+                      </p>
+                    </div>
+                  );
+                }
+                return rawNotifs.slice(0, 4).map((notif: any, idx: number) => (
+                  <Link
+                    key={notif.id || idx}
+                    href={notif.link || '/dashboard/notifications'}
+                    className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                      <Bell className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
+                          {notif.title || 'Notification'}
+                        </p>
+                        <span className="text-[10px] text-zinc-600 dark:text-zinc-400 shrink-0">
+                          {notif.createdAt
+                            ? new Date(notif.createdAt).toLocaleDateString('en-GB', {
+                                day: 'numeric',
+                                month: 'short',
+                              })
+                            : ''}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-600 leading-snug mt-0.5 line-clamp-2">
+                        {notif.message || notif.body || ''}
+                      </p>
+                    </div>
+                  </Link>
+                ));
+              })()}
             </div>
           </div>
 
@@ -736,99 +634,61 @@ export default function TenantDashboardPage() {
             </div>
 
             <div className="space-y-3 pt-1">
-              {/* Property 1: Premium Studio */}
-              <Link
-                href={propertiesData?.[0]?.id ? `/properties/${propertiesData[0].id}` : '/properties/premium-studio'}
-                className="group flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition border border-transparent hover:border-zinc-200/60"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-20 h-16 rounded-xl overflow-hidden relative shrink-0 border border-zinc-100 dark:border-zinc-800">
-                    <Image
-                      src="/images/resident/prop-premium-studio.jpg"
-                      alt="Premium Studio"
-                      fill
-                      className="object-cover group-hover:scale-105 transition duration-300"
-                      sizes="(max-width: 768px) 100vw, 256px"
-/>
-                  </div>
-                  <div className="min-w-0 space-y-0.5">
-                    <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block">
-                      Available
-                    </span>
-                    <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
-                      Premium Studio
-                    </p>
-                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400 flex items-center gap-1 truncate">
-                      <MapPin className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
-                      <span>Legon Campus, Accra</span>
-                    </p>
-                    <div className="flex items-center gap-2 text-[10px] text-zinc-600 pt-0.5">
-                      <span className="flex items-center gap-1">
-                        <Bed className="w-3 h-3" /> 1 Room
-                      </span>
-                      <span>&bull;</span>
-                      <span className="flex items-center gap-1">
-                        <Wifi className="w-3 h-3" /> Wi-Fi
-                      </span>
-                      <span>&bull;</span>
-                      <span className="flex items-center gap-1">
-                        <Wind className="w-3 h-3" /> AC
-                      </span>
-                    </div>
-                    <p className="text-xs font-black text-zinc-950 dark:text-white pt-0.5">
-                      GH₵ 2,500 <span className="text-[10px] font-normal text-zinc-600 dark:text-zinc-400">/ month</span>
-                    </p>
-                  </div>
+              {Array.isArray(propertiesData) && propertiesData.length > 0 ? (
+                propertiesData.slice(0, 2).map((prop: any) => {
+                  const firstImg = Array.isArray(prop.images) ? prop.images[0] : null;
+                  const imgSrc =
+                    (typeof firstImg === 'string' ? firstImg : firstImg?.url) ||
+                    prop.imageUrl ||
+                    '/images/resident/prop-premium-studio.jpg';
+                  const priceVal = Number(prop.price || prop.rooms?.[0]?.price || 0);
+                  return (
+                    <Link
+                      key={prop.id}
+                      href={`/properties/${prop.id}`}
+                      className="group flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition border border-transparent hover:border-zinc-200/60"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-20 h-16 rounded-xl overflow-hidden relative shrink-0 border border-zinc-100 dark:border-zinc-800">
+                          <Image
+                            src={imgSrc}
+                            alt={prop.title || 'Property'}
+                            fill
+                            className="object-cover group-hover:scale-105 transition duration-300"
+                            sizes="(max-width: 768px) 100vw, 256px"
+                          />
+                        </div>
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block">
+                            Available
+                          </span>
+                          <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
+                            {prop.title || 'Verified Residence'}
+                          </p>
+                          <p className="text-[10px] text-zinc-600 dark:text-zinc-400 flex items-center gap-1 truncate">
+                            <MapPin className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
+                            <span>{prop.location || prop.address || 'Accra, Ghana'}</span>
+                          </p>
+                          <p className="text-xs font-black text-zinc-950 dark:text-white pt-0.5">
+                            GH₵ {priceVal.toLocaleString('en-GH')}{' '}
+                            <span className="text-[10px] font-normal text-zinc-600 dark:text-zinc-400">
+                              / {prop.billingCycle === 'ACADEMIC_YEAR' ? 'year' : 'month'}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-emerald-700 shrink-0 group-hover:translate-x-0.5 transition" />
+                    </Link>
+                  );
+                })
+              ) : (
+                <div className="py-6 text-center">
+                  <Home className="w-5 h-5 text-zinc-300 mx-auto mb-1" />
+                  <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                    No properties available yet
+                  </p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-emerald-700 shrink-0 group-hover:translate-x-0.5 transition" />
-              </Link>
-
-              {/* Property 2: KIMO APARTMENT */}
-              <Link
-                href={propertiesData?.[1]?.id ? `/properties/${propertiesData[1].id}` : '/properties/kimo-apartment'}
-                className="group flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition border border-transparent hover:border-zinc-200/60"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-20 h-16 rounded-xl overflow-hidden relative shrink-0 border border-zinc-100 dark:border-zinc-800">
-                    <Image
-                      src="/images/resident/prop-kimo.jpg"
-                      alt="KIMO APARTMENT"
-                      fill
-                      className="object-cover group-hover:scale-105 transition duration-300"
-                      sizes="(max-width: 768px) 100vw, 256px"
-/>
-                  </div>
-                  <div className="min-w-0 space-y-0.5">
-                    <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block">
-                      Available
-                    </span>
-                    <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
-                      KIMO APARTMENT
-                    </p>
-                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400 flex items-center gap-1 truncate">
-                      <MapPin className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
-                      <span>Burma Camp, Accra</span>
-                    </p>
-                    <div className="flex items-center gap-2 text-[10px] text-zinc-600 pt-0.5">
-                      <span className="flex items-center gap-1">
-                        <Bed className="w-3 h-3" /> 1 Room
-                      </span>
-                      <span>&bull;</span>
-                      <span className="flex items-center gap-1">
-                        <Wifi className="w-3 h-3" /> Wi-Fi
-                      </span>
-                      <span>&bull;</span>
-                      <span className="flex items-center gap-1">
-                        <Wind className="w-3 h-3" /> AC
-                      </span>
-                    </div>
-                    <p className="text-xs font-black text-zinc-950 dark:text-white pt-0.5">
-                      GH₵ 2,000 <span className="text-[10px] font-normal text-zinc-600 dark:text-zinc-400">/ month</span>
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-emerald-700 shrink-0 group-hover:translate-x-0.5 transition" />
-              </Link>
+              )}
             </div>
           </div>
         </div>

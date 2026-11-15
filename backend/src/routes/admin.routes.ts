@@ -157,8 +157,8 @@ router.put('/administrators/:id/status', requireSuperAdmin, toggleAdminStatus);
 router.get('/config', getConfig);
 router.put('/config', requireSuperAdmin, updateConfig);
 router.get('/maintenance/history', getMaintenanceHistory);
-router.post('/check-expirations', requireSuperAdmin, checkExpirations);
-router.post('/notifications/broadcast', requireSuperAdmin, broadcastNotification);
-router.get('/notifications/broadcasts/history', requireSuperAdmin, getBroadcastHistory);
+router.post('/check-expirations', checkExpirations);
+router.post('/notifications/broadcast', broadcastNotification);
+router.get('/notifications/broadcasts/history', getBroadcastHistory);
 
 export default router;

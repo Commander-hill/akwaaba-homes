@@ -174,7 +174,7 @@ export default function AdminVerificationsQueuePage() {
           statusDisplay: statusDisp,
           submittedAt: u.updatedAt || u.createdAt,
           formattedDate,
-          ghanaCardNumber: u.ghanaCardNumber || 'GHA-724910284-9',
+          ghanaCardNumber: u.ghanaCardNumber || 'Not submitted',
           rejectionReason: u.ghanaCardRejectionReason || (statusDisp === 'Rejected' ? 'ID photo is unclear. Please resubmit with a clearer image.' : null),
           docUrl: u.ghanaCardFrontUrl,
           docBackUrl: u.ghanaCardBackUrl,
@@ -343,7 +343,7 @@ export default function AdminVerificationsQueuePage() {
       if (type === 'LANDLORD_DEED') {
         return api.put(`/admin/verify-landlord/${userId}`, {
           status: status === 'VERIFIED' ? 'VERIFIED' : (status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
-          rejectionReason: reason
+          reason, rejectionReason: reason
         });
       } else {
         return api.put(`/admin/verify-user/${userId}`, {
@@ -506,10 +506,7 @@ export default function AdminVerificationsQueuePage() {
             <div>
               <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Total Verifications</div>
               <div className="text-2xl font-black text-zinc-950 dark:text-white mt-0.5">
-                {counts.total || 48}
-              </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 mt-0.5">
-                <span>↑ 12%</span>
+                {counts.total}
               </div>
             </div>
           </div>
@@ -530,10 +527,7 @@ export default function AdminVerificationsQueuePage() {
             <div>
               <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Approved</div>
               <div className="text-2xl font-black text-zinc-950 dark:text-white mt-0.5">
-                {counts.approved || 42}
-              </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 mt-0.5">
-                <span>↑ 8%</span>
+                {counts.approved}
               </div>
             </div>
           </div>
@@ -554,10 +548,7 @@ export default function AdminVerificationsQueuePage() {
             <div>
               <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Pending Review</div>
               <div className="text-2xl font-black text-zinc-950 dark:text-white mt-0.5">
-                {counts.pending || 4}
-              </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-amber-600 mt-0.5">
-                <span>↓ 20%</span>
+                {counts.pending}
               </div>
             </div>
           </div>
@@ -578,10 +569,7 @@ export default function AdminVerificationsQueuePage() {
             <div>
               <div className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Rejected</div>
               <div className="text-2xl font-black text-zinc-950 dark:text-white mt-0.5">
-                {counts.rejected || 2}
-              </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-rose-600 mt-0.5">
-                <span>↓ 33%</span>
+                {counts.rejected}
               </div>
             </div>
           </div>

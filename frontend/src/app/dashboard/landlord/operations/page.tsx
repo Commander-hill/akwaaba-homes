@@ -385,8 +385,9 @@ function LandlordDashboardContent() {
       return data;
     },
     onSuccess: (data) => {
-      if (data.authorizationUrl) {
-        window.location.href = data.authorizationUrl;
+      const redirectUrl = data.authorization_url || data.authorizationUrl;
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
       } else {
         toast.success(data.message || 'Subscription processed');
       }

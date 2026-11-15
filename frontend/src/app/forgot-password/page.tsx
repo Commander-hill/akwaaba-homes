@@ -9,7 +9,6 @@ import {
   Loader2,
   CheckCircle2,
   ArrowLeft,
-  ChevronDown,
   Moon,
   Sun,
   ShieldCheck,
@@ -21,11 +20,11 @@ import {
 
 const NAV_LINKS = [
   { name: 'Home', href: '/' },
-  { name: 'Explore', href: '/properties', hasDropdown: true },
-  { name: 'Neighborhoods', href: '/search', hasDropdown: true },
-  { name: 'Services', href: '/services', hasDropdown: true },
-  { name: 'About', href: '/about', hasDropdown: true },
-  { name: 'Support', href: '/support', hasDropdown: true },
+  { name: 'Explore', href: '/properties' },
+  { name: 'Neighborhoods', href: '/search' },
+  { name: 'Services', href: '/services' },
+  { name: 'About', href: '/about' },
+  { name: 'Support', href: '/support' },
 ];
 
 export default function ForgotPasswordPage() {
@@ -130,7 +129,6 @@ export default function ForgotPasswordPage() {
                 className="inline-flex items-center gap-0.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-[#15803D] dark:hover:text-emerald-400 transition"
               >
                 <span>{link.name}</span>
-                {link.hasDropdown && <ChevronDown className="w-3 h-3 opacity-60" />}
               </Link>
             ))}
           </nav>

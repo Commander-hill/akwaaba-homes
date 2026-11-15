@@ -309,7 +309,7 @@ export default function AdminLandlordsPage() {
           await api.put(
             `/admin/verify-landlord/${landlord.id}`,
             { status: 'VERIFIED' },
-            { headers: { 'X-Admin-Step-Up': stepUpToken } }
+            { headers: { 'x-step-up-token': stepUpToken, 'X-Admin-Step-Up': stepUpToken } }
           );
           toast.success(`${fullName} is now Verified.`);
           queryClient.invalidateQueries({ queryKey: ['admin-landlords'] });

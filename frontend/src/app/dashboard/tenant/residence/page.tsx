@@ -329,26 +329,11 @@ function ResidencePageContent() {
               <CheckCircle2 className="w-4 h-4 text-[#16A34A] fill-[#16A34A] text-white" />
               <span>Active Tenancy</span>
             </div>
-          ) : isDemo ? (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-xs font-bold shadow-2xs">
-              <ShieldCheck className="w-4 h-4 text-amber-600" />
-              <span>Showcase Preview</span>
-            </div>
           ) : (
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 text-xs font-bold shadow-2xs">
               <Building2 className="w-4 h-4 text-zinc-400" />
               <span>No Active Stay</span>
             </div>
-          )}
-
-          {!hasLiveBooking && (
-            <button
-              onClick={() => setDemoActive(!demoActive)}
-              className="text-[11px] font-medium text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 underline underline-offset-2"
-              title="Toggle preview data"
-            >
-              {demoActive ? 'Show Empty State' : 'Show Demo View'}
-            </button>
           )}
         </div>
       </div>
@@ -358,7 +343,7 @@ function ResidencePageContent() {
           <Loader2 className="w-7 h-7 animate-spin text-[#16A34A] mx-auto" />
           <p className="text-xs text-zinc-400">Loading your residence details...</p>
         </div>
-      ) : !hasLiveBooking && !demoActive ? (
+      ) : !hasLiveBooking ? (
         /* Empty State */
         <div className="p-12 sm:p-16 text-center space-y-4 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
           <div className="w-16 h-16 rounded-2xl bg-[#EAF6EE] dark:bg-emerald-950/40 text-[#16A34A] flex items-center justify-center mx-auto">
@@ -381,12 +366,6 @@ function ResidencePageContent() {
               <span>Browse Accommodations</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
-            <button
-              onClick={() => setDemoActive(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
-            >
-              <span>Preview Demo Residence</span>
-            </button>
           </div>
         </div>
       ) : (

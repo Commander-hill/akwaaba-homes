@@ -97,33 +97,6 @@ interface SupportRequestDisplay {
   propertyLabel: string;
 }
 
-const DEFAULT_SUPPORT_REQUESTS: SupportRequestDisplay[] = [
-  {
-    id: 'req-0842',
-    referenceCode: '#AH-2026-0842',
-    title: 'AC remote control unresponsive',
-    updatedLabel: 'Updated 2 days ago',
-    status: 'RESOLVED',
-    iconType: 'WRENCH',
-    description:
-      'Replaced the infrared sensor module and paired a new wall-mounted remote controller for the split AC unit in Glacier Studio.',
-    categoryLabel: 'Home & maintenance',
-    propertyLabel: 'Glacier Studio • Achimota, Accra',
-  },
-  {
-    id: 'req-0837',
-    referenceCode: '#AH-2026-0837',
-    title: 'Booking payment clarification',
-    updatedLabel: 'Updated 3 days ago',
-    status: 'AWAITING_RESPONSE',
-    iconType: 'CARD',
-    description:
-      'Requested confirmation of Paystack settlement receipt and invoice allocation for the upcoming semester installment.',
-    categoryLabel: 'Booking & payments',
-    propertyLabel: 'Glacier Studio • Achimota, Accra',
-  },
-];
-
 const RIGHT_FAQS = [
   {
     id: 'faq-agreement',
@@ -217,19 +190,19 @@ function SupportHelpCentreContent() {
   }, [bookingsData]);
 
   const combinedRequests = useMemo(() => {
-    const liveMapped: SupportRequestDisplay[] = (ticketsData?.tickets || []).slice(0, 2).map((t, idx) => ({
+    const liveMapped: SupportRequestDisplay[] = (ticketsData?.tickets || []).slice(0, 3).map((t, idx) => ({
       id: t.id,
-      referenceCode: `#AH-2026-08${49 - idx}`,
+      referenceCode: `#AH-${t.id.slice(0, 6).toUpperCase() || `08${49 - idx}`}`,
       title: t.title,
       updatedLabel: 'Updated recently',
       status: t.status === 'RESOLVED' || t.status === 'CLOSED' ? 'RESOLVED' : 'AWAITING_RESPONSE',
       iconType: t.category === 'PLUMBING' || t.category === 'ELECTRICAL' || t.category === 'APPLIANCE' ? 'WRENCH' : 'CARD',
       description: t.description || 'Support ticket logged via AkwaabaHomes Help Centre.',
       categoryLabel: t.category || 'Home & maintenance',
-      propertyLabel: t.property?.title || 'Glacier Studio • Achimota, Accra',
+      propertyLabel: t.property?.title || 'Assigned Property',
     }));
 
-    const merged = [...sessionRequests, ...DEFAULT_SUPPORT_REQUESTS];
+    const merged = [...sessionRequests];
     for (const item of liveMapped) {
       if (!merged.some((m) => m.title.toLowerCase() === item.title.toLowerCase())) {
         merged.push(item);
@@ -242,16 +215,17 @@ function SupportHelpCentreContent() {
     if (user?.firstName || user?.lastName) {
       return `${user.firstName || ''} ${user.lastName || ''}`.trim();
     }
-    return user?.fullName || 'Stephen Darko';
+    return user?.fullName || 'Guest User';
   }, [user]);
 
   const userInitials = useMemo(() => {
+    if (!user) return 'GU';
     const parts = userDisplayName.trim().split(/\s+/);
     if (parts.length >= 2) {
       return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
     }
     return userDisplayName.slice(0, 2).toUpperCase();
-  }, [userDisplayName]);
+  }, [user, userDisplayName]);
 
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
@@ -287,12 +261,13 @@ function SupportHelpCentreContent() {
     try {
       setIsUploadingFile(true);
       const formData = new FormData();
-      formData.append('document', file);
+      formData.append('file', file);
       const { data } = await api.post('/upload/document', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      if (data?.url) {
-        setAttachmentUrl(data.url);
+      const uploadedDocUrl = data?.documentUrl || data?.url;
+      if (uploadedDocUrl) {
+        setAttachmentUrl(uploadedDocUrl);
       }
       notify.success(`Attached "${file.name}" successfully.`);
     } catch {
@@ -321,8 +296,8 @@ function SupportHelpCentreContent() {
       const { data } = await api.post('/contact', {
         name: userDisplayName,
         fullName: userDisplayName,
-        email: user?.email || 'stephen.darko@ug.edu.gh',
-        phone: user?.phoneNumber || user?.phone || '+233 24 581 9042',
+        email: user?.email || 'support@akwaabahomes.com',
+        phone: user?.phoneNumber || user?.phone || '',
         inquiryType: category === 'HOME_MAINTENANCE' ? 'PROPERTY_MANAGEMENT' : 'GENERAL',
         subject: `[${category || 'SUPPORT'} • ${priority}] ${subject.trim()}`,
         message: `${description.trim()}${attachmentName ? `\n\nAttachment: ${attachmentName}` : ''}`,
@@ -330,9 +305,10 @@ function SupportHelpCentreContent() {
       return data;
     },
     onSuccess: () => {
+      const bookingMatch = eligibleBookings.find((b) => b.id === selectedBookingId);
       const newReq: SupportRequestDisplay = {
         id: `local-${Date.now()}`,
-        referenceCode: `#AH-2026-${Math.floor(1000 + Math.random() * 8999)}`,
+        referenceCode: `#AH-${Math.floor(1000 + Math.random() * 8999)}`,
         title: subject.trim(),
         updatedLabel: 'Just now',
         status: 'AWAITING_RESPONSE',
@@ -346,7 +322,7 @@ function SupportHelpCentreContent() {
             : category === 'DIGITAL_AGREEMENTS'
             ? 'Digital agreements'
             : 'Account & verification',
-        propertyLabel: 'Glacier Studio • Achimota, Accra',
+        propertyLabel: bookingMatch?.property?.title || 'General Support Inquiry',
       };
 
       setSessionRequests((prev) => [newReq, ...prev]);
@@ -360,16 +336,17 @@ function SupportHelpCentreContent() {
       notify.success('Your support request has been submitted to the AkwaabaHomes Concierge team.');
     },
     onError: () => {
+      const bookingMatch = eligibleBookings.find((b) => b.id === selectedBookingId);
       const fallbackReq: SupportRequestDisplay = {
         id: `local-${Date.now()}`,
-        referenceCode: `#AH-2026-0849`,
+        referenceCode: `#AH-${Math.floor(1000 + Math.random() * 8999)}`,
         title: subject.trim() || 'Support inquiry',
         updatedLabel: 'Just now',
         status: 'AWAITING_RESPONSE',
         iconType: category === 'HOME_MAINTENANCE' ? 'WRENCH' : 'CARD',
         description: description.trim(),
         categoryLabel: 'Support Request',
-        propertyLabel: 'Glacier Studio • Achimota, Accra',
+        propertyLabel: bookingMatch?.property?.title || 'General Support Inquiry',
       };
       setSessionRequests((prev) => [fallbackReq, ...prev]);
       setReviewModalOpen(false);
@@ -377,7 +354,7 @@ function SupportHelpCentreContent() {
       setSubject('');
       setDescription('');
       setAttachmentName('');
-      notify.success('Support request logged (#AH-2026-0849). Our team will respond shortly.');
+      notify.success('Support request logged. Our team will respond shortly.');
     },
   });
 
@@ -498,14 +475,11 @@ function SupportHelpCentreContent() {
             </button>
 
             <Link
-              href={user ? '/dashboard/notifications' : '/notifications'}
+              href={user ? '/dashboard/notifications' : '/login'}
               className="relative w-9 h-9 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-center text-[#334238] transition-colors"
-              aria-label="Notifications (3 unread)"
+              aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
-              <span aria-hidden="true" className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#B91C1C] text-white text-[9.5px] font-bold flex items-center justify-center shadow-sm">
-                3
-              </span>
             </Link>
 
             <Link
@@ -863,7 +837,6 @@ function SupportHelpCentreContent() {
                       className="w-full appearance-none rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 pr-9 text-[13px] text-[#18241D] focus:outline-none focus:border-[#0E6B38]"
                     >
                       <option value="">Select booking (optional)</option>
-                      <option value="glacier-studio">Glacier Studio • Achimota, Accra</option>
                       {eligibleBookings.map((b) => (
                         <option key={b.id} value={b.id}>
                           {b.property.title} • {b.property.Location?.name || 'Accra'}
@@ -1008,7 +981,11 @@ function SupportHelpCentreContent() {
               </div>
 
               <div className="divide-y divide-zinc-100">
-                {combinedRequests.map((req) => (
+                {combinedRequests.length === 0 ? (
+                  <p className="py-4 text-[12.5px] text-[#6C7870]">
+                    No recent support requests found. Use the form on the left to submit an issue.
+                  </p>
+                ) : combinedRequests.map((req) => (
                   <button
                     key={req.id}
                     type="button"

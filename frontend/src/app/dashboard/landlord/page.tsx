@@ -113,7 +113,7 @@ export default function LandlordDashboardPage() {
     queryFn: async () => {
       const res = await api.get('/properties/landlord/mine');
       const d = res.data;
-      return Array.isArray(d) ? d : Array.isArray(d?.properties) ? d.properties : [];
+      return Array.isArray(d) ? d : Array.isArray(d?.data) ? d.data : Array.isArray(d?.properties) ? d.properties : [];
     },
   });
 

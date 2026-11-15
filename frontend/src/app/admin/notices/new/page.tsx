@@ -110,7 +110,7 @@ function AdminNoticeComposerContent() {
         buttonText: buttonText.trim() || null,
         buttonLink: buttonLink.trim() || null,
         iconType: iconType || 'INFO',
-        isActive
+        isActive, targetAudience: targetRole, targetRegion
       };
 
       if (editId) {

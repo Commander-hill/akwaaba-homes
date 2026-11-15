@@ -42,8 +42,8 @@ export default function OnboardingProgressWidget({ user: initialUser, hasPropert
   const { data: propertiesData } = useQuery({
     queryKey: ['landlord', 'properties'],
     queryFn: async () => {
-      const res = await api.get('/properties/my-properties');
-      return res.data;
+      const res = await api.get('/properties/landlord/mine');
+      return res.data?.data || res.data?.properties || res.data || [];
     },
     enabled: (authData?.user?.role || initialUser?.role) === 'LANDLORD',
     staleTime: 0,
@@ -55,13 +55,13 @@ export default function OnboardingProgressWidget({ user: initialUser, hasPropert
   const isTenant = user.role === 'TENANT';
 
   // Check property existence in real-time
-  const propertyCount = propertiesData?.properties?.length ?? (propertiesData?.length || 0);
+  const propertyCount = Array.isArray(propertiesData) ? propertiesData.length : (propertiesData?.properties?.length ?? (propertiesData?.data?.length || 0));
   const effectiveHasProperty = initialHasProperty || Boolean(user.hasProperty) || propertyCount > 0;
 
   // Profile completeness check
   const requiredProfileFields = isTenant
     ? ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality', 'guardianName', 'guardianPhone', 'campus', 'studentId']
-    : ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality', 'guardianName', 'guardianPhone'];
+    : ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality'];
 
   const isProfileComplete = requiredProfileFields.every(
     field => user[field as keyof UserSession] && String(user[field as keyof UserSession]).trim() !== ''

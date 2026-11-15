@@ -67,6 +67,7 @@ export default function AdminTenantDetailPage({
       toast.success(data?.message || 'Tenant account status updated');
       refetch();
       queryClient.invalidateQueries({ queryKey: ['admin-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-tenants-directory'] });
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to update account status');
@@ -82,6 +83,7 @@ export default function AdminTenantDetailPage({
       toast.success(data?.message || 'Profile lock status updated');
       refetch();
       queryClient.invalidateQueries({ queryKey: ['admin-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-tenants-directory'] });
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to update profile lock status');

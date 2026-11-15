@@ -183,7 +183,7 @@ function BillSplitterContent() {
     onSuccess: () => {
       toast.success('Bill split created! Roommates can now view and settle.');
       queryClient.invalidateQueries({ queryKey: ['billSplits', 'tenant'] });
-      router.push('/dashboard/tenant?tab=payments');
+      router.push('/dashboard/tenant/bills');
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to create bill split');
@@ -255,10 +255,10 @@ function BillSplitterContent() {
       {/* Header */}
       <div>
         <button
-          onClick={() => router.push('/dashboard/tenant?tab=payments')}
+          onClick={() => router.push('/dashboard/tenant/bills')}
           className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-3 transition-colors cursor-pointer"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Rent &amp; Payments
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Utility Bills
         </button>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -334,6 +334,11 @@ function BillSplitterContent() {
               </label>
               {loadingProperties ? (
                 <div className="h-11 bg-zinc-100 dark:bg-zinc-800 rounded-xl animate-pulse" />
+              ) : propertyList.length === 0 ? (
+                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 space-y-2">
+                  <p className="font-bold">No active residence booking found.</p>
+                  <p>You need an active residence booking before splitting shared utility bills.</p>
+                </div>
               ) : (
                 <select
                   value={propertyId}
