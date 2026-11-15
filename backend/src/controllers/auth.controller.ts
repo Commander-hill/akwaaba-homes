@@ -2276,7 +2276,12 @@ export const verifyAdminUnlock = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    if (!user.passwordHash) {
+      res.status(400).json({ message: 'No local password is set on this administrator account. Please sign out and sign back in.' });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
       try {
         await logAudit(
@@ -2339,7 +2344,12 @@ export const verifyStepUpAuth = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!user.passwordHash) {
+      res.status(400).json({ message: 'No local password is set on this administrator account.' });
+      return;
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordMatch) {
       try {
         await logAudit(
