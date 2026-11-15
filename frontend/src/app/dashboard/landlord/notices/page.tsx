@@ -5,23 +5,16 @@ import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
+  AlertCircle,
+  BellRing,
+  Building,
+  Filter,
+  Loader2,
   Megaphone,
   Plus,
-  Trash2,
-  Users,
-  AlertTriangle,
-  Calendar,
-  Building,
-  Loader2,
-  Info,
-  BellRing,
+  RefreshCw,
   Search,
-  Filter,
-  CheckCircle2,
-  Zap,
-  Wrench,
-  ShieldAlert,
-  ArrowRight
+  Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -63,7 +56,7 @@ export default function LandlordNoticesPage() {
     },
   });
 
-  const { data, isLoading } = useQuery<{ notices: NoticeItem[] }>({
+  const { data, isLoading, isError, isFetching, refetch } = useQuery<{ notices: NoticeItem[] }>({
     queryKey: ['compoundNotices', 'landlord'],
     queryFn: async () => {
       const res = await api.get('/compound-notices/landlord');
@@ -116,6 +109,7 @@ export default function LandlordNoticesPage() {
   }, [notices, selectedPropertyId, searchTerm]);
 
   const properties = propertiesData || [];
+  const hasActiveFilters = searchTerm.trim() !== '' || selectedPropertyId !== 'ALL';
   const showSkeleton = useInitialSkeleton(isLoading);
   if (showSkeleton) return <TablePageSkeleton rows={4} columns={4} />;
 
@@ -194,6 +188,25 @@ export default function LandlordNoticesPage() {
             Loading published resident notices...
           </p>
         </div>
+      ) : isError ? (
+        <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-rose-200 dark:border-rose-900/50 space-y-3">
+          <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
+          <h4 className="text-base font-bold text-zinc-950 dark:text-white">
+            Failed to Load Resident Notices
+          </h4>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+            Could not fetch your published announcements. Please try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={clsx('w-3.5 h-3.5', isFetching && 'animate-spin')} />
+            {isFetching ? 'Retrying...' : 'Retry'}
+          </button>
+        </div>
       ) : filteredNotices.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-dashed border-zinc-200 dark:border-zinc-800 space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center mx-auto">
@@ -201,31 +214,52 @@ export default function LandlordNoticesPage() {
           </div>
           <div className="space-y-1">
             <h4 className="text-base font-bold text-zinc-950 dark:text-white">
-              No Resident Notices Published Yet
+              {notices.length > 0 && hasActiveFilters
+                ? 'No Matching Notices'
+                : 'No Resident Notices Published Yet'}
             </h4>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
-              Keep your tenants informed of maintenance schedules, gatehouse rules, or water/power updates by broadcasting your first announcement.
+              {notices.length > 0 && hasActiveFilters
+                ? 'No announcements matched your current search or property filter.'
+                : 'Keep your tenants informed of maintenance schedules, gatehouse rules, or water/power updates by broadcasting your first announcement.'}
             </p>
           </div>
-          <div className="pt-2">
-            <Link
-              href="/dashboard/landlord/notices/new"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Broadcast a Notice</span>
-            </Link>
+          <div className="pt-2 flex items-center justify-center gap-2">
+            {notices.length > 0 && hasActiveFilters ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedPropertyId('ALL');
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2.5 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:border-[#16A34A] hover:text-[#16A34A] text-xs font-bold rounded-xl transition cursor-pointer"
+              >
+                Reset filters
+              </button>
+            ) : (
+              <Link
+                href="/dashboard/landlord/notices/new"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Broadcast a Notice</span>
+              </Link>
+            )}
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredNotices.map((notice) => (
+          {filteredNotices.map((notice) => {
+            const isExpired = Boolean(notice.expiresAt && new Date(notice.expiresAt) < new Date());
+            const isDeletingThis = deleteMutation.isPending && deleteMutation.variables === notice.id;
+
+            return (
             <div
               key={notice.id}
               className="p-5 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200/80 dark:border-zinc-800/80 shadow-2xs space-y-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className={clsx(
                       'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider',
@@ -241,15 +275,21 @@ export default function LandlordNoticesPage() {
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
                     {notice.category}
                   </span>
+                  {(!notice.isActive || isExpired) && (
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-zinc-200/70 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                      {isExpired ? 'Expired' : 'Inactive'}
+                    </span>
+                  )}
                 </div>
 
                 <button
                   type="button"
+                  disabled={deleteMutation.isPending}
                   onClick={() => handleDelete(notice.id, notice.title)}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   title="Retract Notice"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  {isDeletingThis ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 </button>
               </div>
 
@@ -278,7 +318,8 @@ export default function LandlordNoticesPage() {
                 </span>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
