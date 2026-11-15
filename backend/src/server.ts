@@ -503,6 +503,7 @@ process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
 process.on('SIGINT', () => shutdownGracefully('SIGINT'));
 
 import { cleanupExpiredBookings } from './utils/bookingCleanup';
+import { processRentDueReminders } from './controllers/booking.controller';
 import { reconcilePendingPayments } from './utils/paymentReconciliation';
 
 if (process.env.NODE_ENV !== 'test') {
@@ -534,6 +535,12 @@ if (process.env.NODE_ENV !== 'test') {
       cleanupExpiredBookings().catch(console.error);
     }, 2 * 60 * 1000);
     bookingCleanupTimer.unref();
+
+    // Periodic rent-due reminder sweep every 6 hours
+    const rentReminderTimer = setInterval(() => {
+      processRentDueReminders().catch(console.error);
+    }, 6 * 60 * 60 * 1000);
+    rentReminderTimer.unref();
   });
 }
 

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getSystemConfig } from '../utils/config.service';
+import { computeInitialNextRentDueDate } from '../utils/billingPeriod';
 import { generateGRATaxReportPDF } from '../utils/pdf.service';
 import { logAudit } from '../utils/auditLogger';
 
@@ -541,7 +542,12 @@ export const fulfillBookingPayment = async (
       where: { id: booking.id },
       data: {
         status: 'COMPLETED',
-        paymentReference: reference
+        paymentReference: reference,
+        nextRentDueDate: computeInitialNextRentDueDate(
+          booking.startDate,
+          booking.endDate,
+          booking.property?.pricePeriod
+        )
       }
     }),
     prisma.transaction.create({

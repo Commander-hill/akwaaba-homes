@@ -10,11 +10,15 @@ import {
   getMyActiveBooking,
   cancelPendingBooking,
   downloadAgreementPDF,
-  deleteBooking
+  deleteBooking,
+  checkRentDueReminders
 } from '../controllers/booking.controller';
 import { authenticate, authorizeRole } from '../middleware/auth.middleware';
 
 const router = Router();
+
+// Cron / Admin trigger for automated rent-due reminders
+router.post('/check-rent-due', checkRentDueReminders);
 
 // Static collection routes first (auto-routes Landlords vs Tenants so /bookings/me never 403s)
 router.get('/my-active', authenticate, (req, res) => {

@@ -251,6 +251,8 @@ model Booking {
   status     String    @default("PENDING")
   paymentReference String?   // Active Paystack/Hubtel reference for reconciliation
   holdExpiresAt    DateTime? // Concurrency hold expiry
+  nextRentDueDate        DateTime? // Computed from startDate + property.pricePeriod
+  lastRentReminderSentAt DateTime? // Deduplicates automated rent-due reminders
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 

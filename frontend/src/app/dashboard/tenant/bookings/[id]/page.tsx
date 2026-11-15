@@ -307,6 +307,21 @@ export default function TenantBookingDetailsPage() {
               )}
               {booking.roomUnit && <span>• Unit: {booking.roomUnit.name}</span>}
               {isHostelProperty(prop.type) && booking.bed && <span>• Bed: {booking.bed.label}</span>}
+              {booking.rentDueSummary && (
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                    booking.rentDueSummary.isOverdue
+                      ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                      : booking.rentDueSummary.isDueSoon
+                        ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                        : 'bg-emerald-50 text-[#0F5132] dark:bg-emerald-950/40 dark:text-emerald-300'
+                  }`}
+                >
+                  {booking.rentDueSummary.isOverdue
+                    ? `Rent overdue by ${Math.abs(booking.rentDueSummary.daysUntilDue)} day(s)`
+                    : `Next ${booking.rentDueSummary.billingPeriod} rent due: ${new Date(booking.rentDueSummary.nextDueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                </span>
+              )}
             </div>
           </div>
         </div>
