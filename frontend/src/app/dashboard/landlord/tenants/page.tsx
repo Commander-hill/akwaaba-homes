@@ -205,6 +205,22 @@ export default function LandlordTenantsPage() {
                         <div className="text-[10px] text-zinc-400 mt-0.5">
                           to {new Date(booking.endDate).toLocaleDateString()}
                         </div>
+                        {booking.rentDueSummary && (
+                          <span
+                            className={clsx(
+                              'inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold',
+                              booking.rentDueSummary.isOverdue
+                                ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                                : booking.rentDueSummary.isDueSoon
+                                  ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                                  : 'bg-emerald-50 text-[#0F5132] dark:bg-emerald-950/40 dark:text-emerald-300'
+                            )}
+                          >
+                            {booking.rentDueSummary.isOverdue
+                              ? `Overdue (${Math.abs(booking.rentDueSummary.daysUntilDue)}d)`
+                              : `Due ${new Date(booking.rentDueSummary.nextDueDate).toLocaleDateString()}`}
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1">

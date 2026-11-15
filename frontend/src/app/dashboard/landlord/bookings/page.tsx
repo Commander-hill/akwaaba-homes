@@ -2,6 +2,11 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/axios';
+import toast from 'react-hot-toast';
+import { getImageUrl } from '@/lib/utils';
+import { formatBookingUnitLabel } from '@/components/landlord-ui/propertyConfig';
 import { BookingListSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import {
   CalendarCheck,
@@ -134,9 +139,85 @@ const initialBookings: BookingItem[] = [
 
 export default function LandlordBookingsPage() {
   const showSkeleton = useInitialSkeleton();
-  const [bookings, setBookings] = useState<BookingItem[]>(initialBookings);
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'ALL' | 'Pending' | 'Confirmed' | 'Cancelled'>('ALL');
   const [period, setPeriod] = useState('This Month');
+
+  const { data: rawBookings = [], isLoading } = useQuery({
+    queryKey: ['landlord', 'bookings', 'list'],
+    queryFn: async () => {
+      const { data } = await api.get('/bookings/landlord');
+      return Array.isArray(data?.bookings) ? data.bookings : Array.isArray(data) ? data : [];
+    },
+    staleTime: 30_000,
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: 'APPROVED' | 'CANCELLED' }) => {
+      await api.patch(`/bookings/${id}/status`, { status });
+    },
+    onSuccess: (_data, vars) => {
+      toast.success(vars.status === 'APPROVED' ? 'Booking approved!' : 'Booking cancelled.');
+      queryClient.invalidateQueries({ queryKey: ['landlord', 'bookings', 'list'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Could not update booking status.');
+    },
+  });
+
+  const bookings: BookingItem[] = useMemo(() => {
+    return rawBookings.map((b: any) => {
+      const rawStatus = String(b.status || '').toUpperCase();
+      const mappedStatus: BookingItem['status'] =
+        rawStatus === 'CANCELLED' || rawStatus === 'REJECTED'
+          ? 'Cancelled'
+          : rawStatus === 'PENDING'
+            ? 'Pending'
+            : 'Confirmed';
+
+      const prop = b.property || {};
+      const room = b.room || {};
+      const t = b.tenant || {};
+      const priceVal = Number(room.price ?? prop.price ?? 0);
+      const images = Array.isArray(prop.images) ? prop.images : [];
+      const firstImage = images.length > 0 ? getImageUrl(images[0]) : '/images/home/glacier-living.jpg';
+      const dueSummary = b.rentDueSummary;
+
+      let noteText = mappedStatus === 'Pending' ? 'Awaiting confirmation' : 'Payment received';
+      let noteTone: 'mint' | 'amber' = mappedStatus === 'Pending' ? 'amber' : 'mint';
+      if (dueSummary) {
+        if (dueSummary.isOverdue) {
+          noteText = `Rent overdue (${Math.abs(dueSummary.daysUntilDue)}d)`;
+          noteTone = 'amber';
+        } else {
+          noteText = `Next ${dueSummary.billingPeriod} rent: ${new Date(dueSummary.nextDueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+          noteTone = dueSummary.isDueSoon ? 'amber' : 'mint';
+        }
+      }
+
+      return {
+        id: b.id,
+        propertyTitle: prop.title || 'Property Listing',
+        location: prop.location || 'Ghana',
+        rooms: formatBookingUnitLabel(prop.type, room.roomType, room.blockName),
+        guests: prop.targetAudience || '1 Resident',
+        guestIcon: 'single',
+        dateRange: `${new Date(b.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} - ${new Date(b.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+        noteText,
+        noteTone,
+        status: mappedStatus,
+        image: firstImage,
+        tenant: {
+          name: `${t.firstName || ''} ${t.lastName || ''}`.trim() || 'Resident',
+          avatar: t.avatarUrl ? getImageUrl(t.avatarUrl) : '/images/avatars/avatar-1.jpg',
+          verified: t.ghanaCardStatus === 'VERIFIED',
+          rating: t.reputationScore ? Number(t.reputationScore).toFixed(1) : '5.0',
+          reviews: 1,
+        },
+        amount: `GH₵ ${priceVal.toLocaleString()}`,
+      };
+    });
+  }, [rawBookings]);
 
   const counts = useMemo(() => {
     return {
@@ -151,28 +232,14 @@ export default function LandlordBookingsPage() {
     if (activeTab === 'ALL') return bookings;
     return bookings.filter((b) => b.status === activeTab);
   }, [bookings, activeTab]);
-  if (showSkeleton) return <BookingListSkeleton />;
+  if (showSkeleton || isLoading) return <BookingListSkeleton />;
 
   const handleConfirm = (id: string) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === id
-          ? {
-              ...b,
-              status: 'Confirmed',
-              noteText: 'Payment received',
-              noteAmount: undefined,
-              noteTone: 'mint',
-            }
-          : b
-      )
-    );
+    statusMutation.mutate({ id, status: 'APPROVED' });
   };
 
   const handleCancel = (id: string) => {
-    setBookings((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: 'Cancelled' } : b))
-    );
+    statusMutation.mutate({ id, status: 'CANCELLED' });
   };
 
   return (
@@ -525,7 +592,7 @@ export default function LandlordBookingsPage() {
                 </div>
               ) : (
                 <Link
-                  href={`/dashboard/landlord/bookings`}
+                  href={`/dashboard/landlord/bookings/${booking.id}`}
                   className="px-6 py-2.5 rounded-full bg-[#D5F5DF] hover:bg-[#c2efd0] text-[#0E6B2F] text-xs font-bold flex items-center justify-center gap-1.5 transition-colors w-full sm:w-auto"
                 >
                   <span>View Details</span>
