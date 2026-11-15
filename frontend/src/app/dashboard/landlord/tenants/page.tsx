@@ -1,7 +1,9 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import api from '@/lib/axios';
+import { formatBookingUnitLabel } from '@/components/landlord-ui/propertyConfig';
 import { Loader2, Search, Mail, Phone, User, GraduationCap, MapPin, Building, Star, Filter, CheckCircle2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import clsx from 'clsx';
@@ -44,7 +46,7 @@ export default function LandlordTenantsPage() {
     return result;
   }, [bookings, searchTerm, statusFilter]);
 
-  const activeCount = bookings.filter((b: any) => b.status === 'APPROVED' || b.status === 'ACTIVE').length;
+  const activeCount = bookings.filter((b: any) => ['APPROVED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'].includes(b.status)).length;
   const pendingCount = bookings.filter((b: any) => b.status === 'PENDING').length;
   const pastCount = bookings.filter((b: any) => b.status === 'COMPLETED' || b.status === 'CANCELLED').length;
 
@@ -115,7 +117,7 @@ export default function LandlordTenantsPage() {
           </div>
 
           <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto w-full sm:w-auto">
-            {['ALL', 'PENDING', 'APPROVED', 'ACTIVE', 'COMPLETED', 'CANCELLED'].map((status) => (
+            {['ALL', 'PENDING', 'APPROVED', 'CONFIRMED', 'CHECKED_IN', 'ACTIVE', 'COMPLETED', 'CANCELLED'].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
@@ -158,7 +160,7 @@ export default function LandlordTenantsPage() {
               <tbody className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
                 {filteredBookings.map((booking: any) => {
                   const t = booking.tenant;
-                  const isApproved = ['APPROVED', 'ACTIVE', 'COMPLETED'].includes(booking.status);
+                  const isApproved = ['APPROVED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN', 'COMPLETED'].includes(booking.status);
                   
                   return (
                     <tr key={booking.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30 transition-colors">
@@ -191,12 +193,15 @@ export default function LandlordTenantsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-bold text-zinc-900 dark:text-white text-xs">
+                        <Link href={`/dashboard/landlord/bookings/${booking.id}`} className="font-bold text-zinc-900 dark:text-white hover:text-[#16A34A] text-xs transition-colors">
                           {booking.property?.title || 'Unknown Property'}
+                        </Link>
+                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                          {formatBookingUnitLabel(booking.property?.type, booking.room?.roomType, booking.room?.blockName)}
                         </div>
-                        <div className="text-[10px] font-mono text-zinc-400 mt-0.5">
-                          Ref: #{String(booking.id || '').substring(0,8)}
-                        </div>
+                        <Link href={`/dashboard/landlord/bookings/${booking.id}`} className="inline-block text-[10px] font-mono text-zinc-400 hover:text-[#16A34A] mt-0.5">
+                          Ref: #{String(booking.id || '').substring(0,8)} &rarr;
+                        </Link>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-zinc-900 dark:text-white font-medium">
@@ -243,9 +248,9 @@ export default function LandlordTenantsPage() {
                       <td className="px-6 py-4 text-right">
                         <span className={clsx(
                           "inline-flex items-center px-2.5 py-0.5 rounded-full font-bold text-[10px] border tracking-wide",
-                          booking.status === 'APPROVED' ? "bg-emerald-50 text-[#0F5132] border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60" :
+                          booking.status === 'APPROVED' || booking.status === 'CONFIRMED' ? "bg-emerald-50 text-[#0F5132] border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60" :
                           booking.status === 'PENDING' ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60" :
-                          booking.status === 'ACTIVE' ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60" :
+                          booking.status === 'ACTIVE' || booking.status === 'CHECKED_IN' ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60" :
                           booking.status === 'COMPLETED' ? "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700" :
                           "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/60"
                         )}>
