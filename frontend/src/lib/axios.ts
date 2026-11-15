@@ -124,6 +124,25 @@ api.interceptors.response.use(
           window.location.href = '/maintenance';
         }
       }
+      return Promise.reject(error);
+    }
+
+    // ── Resilient Request Auto-Retry for Transient Network / Gateway Glitches ──
+    const method = (originalRequest?.method || 'get').toLowerCase();
+    const isIdempotent = ['get', 'head', 'options'].includes(method);
+    const status = error.response?.status;
+    const isTransientError = !error.response || [502, 503, 504].includes(status);
+
+    if (isIdempotent && isTransientError && originalRequest) {
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+      const MAX_RETRIES = 2;
+
+      if (originalRequest._retryCount <= MAX_RETRIES) {
+        // Exponential backoff with jitter (attempt 1: ~500-800ms, attempt 2: ~1000-1400ms)
+        const delay = Math.pow(2, originalRequest._retryCount - 1) * 500 + Math.random() * 300;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return api(originalRequest);
+      }
     }
 
     return Promise.reject(error);

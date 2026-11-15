@@ -55,6 +55,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const morgan_1 = __importDefault(require("morgan"));
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const property_routes_1 = __importDefault(require("./routes/property.routes"));
 const booking_routes_1 = __importDefault(require("./routes/booking.routes"));
@@ -264,26 +265,42 @@ app.use(xss_middleware_1.xssSanitizer);
 // ─── Static Files ────────────────────────────────────────────────────────────
 app.use(express_1.default.static(path_1.default.join(__dirname, '../public')));
 app.use('/uploads', express_1.default.static(path_1.default.resolve(process.cwd(), 'public/uploads')));
-// ─── Health Check (unthrottled) ──────────────────────────────────────────────
+// ─── Health Check & Resilience Heartbeat (unthrottled) ──────────────────────
 app.get('/api/health', (req, res) => {
+    const mem = process.memoryUsage();
+    const uploadsDir = path_1.default.resolve(process.cwd(), 'public/uploads');
+    const storageReady = fs_1.default.existsSync(uploadsDir);
     res.status(200).json({
         status: 'ok',
         environment: process.env.NODE_ENV || 'development',
         timestamp: new Date().toISOString(),
         commit: process.env.RENDER_GIT_COMMIT || 'local-dev',
         uptime: Math.round(process.uptime()),
-        memoryRssMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
+        activeUsersOnline: (0, socket_1.getOnlineUsersCount)(),
+        storage: {
+            localUploadsReady: storageReady,
+            provider: process.env.CLOUDINARY_URL ? 'cloudinary' : 'local-filesystem'
+        },
+        memory: {
+            rssMb: Math.round(mem.rss / (1024 * 1024)),
+            heapUsedMb: Math.round(mem.heapUsed / (1024 * 1024)),
+            heapTotalMb: Math.round(mem.heapTotal / (1024 * 1024)),
+        },
     });
 });
 app.get('/api/health/ready', async (req, res) => {
+    const start = Date.now();
     try {
         await Promise.race([
             prisma_1.default.$queryRaw `SELECT 1`,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('DB readiness timeout')), 2000)),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('DB readiness timeout')), 2500)),
         ]);
+        const latencyMs = Date.now() - start;
         res.status(200).json({
             status: 'ready',
             database: 'connected',
+            dbLatencyMs: latencyMs,
+            activeUsersOnline: (0, socket_1.getOnlineUsersCount)(),
             timestamp: new Date().toISOString(),
             uptime: Math.round(process.uptime()),
         });

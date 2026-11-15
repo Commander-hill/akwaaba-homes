@@ -15,5 +15,9 @@ export declare const getIO: () => Server<import("socket.io").DefaultEventsMap, i
 export declare const emitToUser: (userId: string, event: string, payload: any) => void;
 export declare const emitToAll: (event: string, payload: any) => void;
 export declare const emitToAdmins: (event: string, payload: any) => void;
+export declare const emitToLandlords: (event: string, payload: any) => void;
+export declare const isUserOnline: (userId: string) => boolean;
+export declare const getOnlineUserIds: () => string[];
+export declare const getOnlineUsersCount: () => number;
 export {};
 //# sourceMappingURL=socket.d.ts.map

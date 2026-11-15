@@ -43,6 +43,31 @@ const streamUpload = (buffer: Buffer, folder: string, resourceType: 'image' | 'v
   });
 };
 
+// Resilient Multi-Tier Upload: Cloudinary -> Local Filesystem Fallback
+const safeStreamUpload = async (
+  buffer: Buffer,
+  folder: string,
+  resourceType: 'image' | 'video' | 'auto' = 'auto',
+  preferredExtension: string = 'webp'
+): Promise<string> => {
+  if (process.env.CLOUDINARY_URL) {
+    try {
+      return await streamUpload(buffer, folder, resourceType);
+    } catch (cloudErr) {
+      console.warn(`[SafeUpload] Cloudinary upload failed for folder "${folder}", seamlessly switching to local filesystem storage:`, cloudErr);
+    }
+  }
+
+  // Graceful local disk fallback
+  const uploadDir = path.resolve(process.cwd(), `public/uploads/${folder}`);
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  const filename = `${folder.replace(/[^a-zA-Z0-9_-]/g, '_')}-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${preferredExtension}`;
+  fs.writeFileSync(path.join(uploadDir, filename), buffer);
+  return `/uploads/${folder}/${filename}`;
+};
+
 // Inspect binary header bytes to prevent polyglot / extension spoofing attacks
 export const isValidFileType = (buffer: Buffer, type: 'image' | 'video' | 'audio' | 'document' | 'any'): boolean => {
   if (!buffer || buffer.length < 4) return false;
@@ -99,19 +124,7 @@ export const uploadAvatar = async (req: Request, res: Response): Promise<void> =
       .webp({ quality: 80 })
       .toBuffer();
 
-    let fileUrl: string;
-    try {
-      fileUrl = await streamUpload(processedBuffer, 'avatars', 'image');
-    } catch (cloudErr) {
-      console.warn('Cloudinary upload failed or unconfigured, saving locally to public/uploads/avatars:', cloudErr);
-      const uploadDir = path.resolve(process.cwd(), 'public/uploads/avatars');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-      const filename = `avatar-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.webp`;
-      fs.writeFileSync(path.join(uploadDir, filename), processedBuffer);
-      fileUrl = `/uploads/avatars/${filename}`;
-    }
+    const fileUrl = await safeStreamUpload(processedBuffer, 'avatars', 'image', 'webp');
 
     res.status(200).json({ url: fileUrl, avatarUrl: fileUrl });
   } catch (error) {
@@ -132,7 +145,8 @@ export const uploadVideo = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const fileUrl = await streamUpload(req.file.buffer, 'videos', 'video');
+    const ext = req.file.mimetype === 'video/webm' ? 'webm' : 'mp4';
+    const fileUrl = await safeStreamUpload(req.file.buffer, 'videos', 'video', ext);
     res.status(200).json({ url: fileUrl });
   } catch (error) {
     console.error('Error uploading video:', error);
@@ -160,15 +174,13 @@ export const uploadDocument = async (req: Request, res: Response): Promise<void>
 
     let fileUrl: string;
     if (isPdf) {
-      // PDF documents bypass image processing and stream directly
-      fileUrl = await streamUpload(req.file.buffer, 'documents', 'auto');
+      fileUrl = await safeStreamUpload(req.file.buffer, 'documents', 'auto', 'pdf');
     } else {
-      // Image documents (Ghana Card, passport, certificates) get resized and optimized to WebP
       const processedBuffer = await sharp(req.file.buffer)
         .resize(1200, 1200, { fit: 'inside' })
         .webp({ quality: 85 })
         .toBuffer();
-      fileUrl = await streamUpload(processedBuffer, 'documents', 'image');
+      fileUrl = await safeStreamUpload(processedBuffer, 'documents', 'image', 'webp');
     }
 
     res.status(200).json({ url: fileUrl });
@@ -226,7 +238,7 @@ export const uploadPropertyImages = async (req: Request, res: Response): Promise
       // Free original multer buffer from memory immediately
       (file as any).buffer = null;
 
-      const url = await streamUpload(processedBuffer, 'properties', 'image');
+      const url = await safeStreamUpload(processedBuffer, 'properties', 'image', 'webp');
       urls.push(url);
     }
 
@@ -253,6 +265,21 @@ export const serveSecureDocument = async (req: Request, res: Response): Promise<
     }
 
     const rawUrl = String(url);
+
+    // Support streaming from local uploads fallback safely
+    if (rawUrl.startsWith('/uploads/')) {
+      const sanitized = rawUrl.replace(/\.\./g, '');
+      const localFilePath = path.resolve(process.cwd(), 'public', sanitized.replace(/^\//, ''));
+      if (!fs.existsSync(localFilePath)) {
+        res.status(404).json({ error: 'Document file not found' });
+        return;
+      }
+      res.setHeader('Content-Type', sanitized.endsWith('.pdf') ? 'application/pdf' : 'image/webp');
+      res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+      fs.createReadStream(localFilePath).pipe(res);
+      return;
+    }
+
     // Security check: Only allow streaming from verified Cloudinary assets
     if (!rawUrl.startsWith('https://res.cloudinary.com/')) {
       res.status(400).json({ error: 'Invalid document source' });
@@ -331,7 +358,8 @@ export const uploadMedia = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const fileUrl = await streamUpload(req.file.buffer, folder, resourceType);
+    const ext = mime.startsWith('audio/') ? 'mp3' : mime === 'application/pdf' ? 'pdf' : 'webp';
+    const fileUrl = await safeStreamUpload(req.file.buffer, folder, resourceType, ext);
     res.status(200).json({ url: fileUrl, fileName: req.file.originalname, mimeType: mime });
   } catch (error: any) {
     console.error('Error uploading chat media:', error);

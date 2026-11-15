@@ -59,6 +59,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import path from 'path';
+import fs from 'fs';
 
 import authRoutes from './routes/auth.routes';
 import propertyRoutes from './routes/property.routes';
@@ -103,7 +104,7 @@ import { notifyContactInquiry } from './utils/notification.service';
 import prisma from './utils/prisma';
 
 import { createServer } from 'http';
-import { initializeSocket } from './socket';
+import { initializeSocket, getOnlineUsersCount } from './socket';
 
 const app = express();
 const httpServer = createServer(app);
@@ -295,27 +296,45 @@ app.use(xssSanitizer);
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'public/uploads')));
 
-// ─── Health Check (unthrottled) ──────────────────────────────────────────────
+// ─── Health Check & Resilience Heartbeat (unthrottled) ──────────────────────
 app.get('/api/health', (req: Request, res: Response) => {
+  const mem = process.memoryUsage();
+  const uploadsDir = path.resolve(process.cwd(), 'public/uploads');
+  const storageReady = fs.existsSync(uploadsDir);
+
   res.status(200).json({
     status: 'ok',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
     commit: process.env.RENDER_GIT_COMMIT || 'local-dev',
     uptime: Math.round(process.uptime()),
-    memoryRssMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
+    activeUsersOnline: getOnlineUsersCount(),
+    storage: {
+      localUploadsReady: storageReady,
+      provider: process.env.CLOUDINARY_URL ? 'cloudinary' : 'local-filesystem'
+    },
+    memory: {
+      rssMb: Math.round(mem.rss / (1024 * 1024)),
+      heapUsedMb: Math.round(mem.heapUsed / (1024 * 1024)),
+      heapTotalMb: Math.round(mem.heapTotal / (1024 * 1024)),
+    },
   });
 });
 
 app.get('/api/health/ready', async (req: Request, res: Response) => {
+  const start = Date.now();
   try {
     await Promise.race([
       prisma.$queryRaw`SELECT 1`,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('DB readiness timeout')), 2000)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB readiness timeout')), 2500)),
     ]);
+    const latencyMs = Date.now() - start;
+
     res.status(200).json({
       status: 'ready',
       database: 'connected',
+      dbLatencyMs: latencyMs,
+      activeUsersOnline: getOnlineUsersCount(),
       timestamp: new Date().toISOString(),
       uptime: Math.round(process.uptime()),
     });

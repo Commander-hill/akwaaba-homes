@@ -3,13 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.emitToAdmins = exports.emitToAll = exports.emitToUser = exports.getIO = exports.initializeSocket = void 0;
+exports.getOnlineUsersCount = exports.getOnlineUserIds = exports.isUserOnline = exports.emitToLandlords = exports.emitToAdmins = exports.emitToAll = exports.emitToUser = exports.getIO = exports.initializeSocket = void 0;
 const socket_io_1 = require("socket.io");
 const prisma_1 = __importDefault(require("./utils/prisma"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const cookie_1 = require("cookie");
 const cors_1 = require("./utils/cors");
 let io;
+// In-memory presence map tracking connected users: userId -> { socketIds: Set<string>, role: string, lastActive: Date }
+const onlineUsers = new Map();
 const initializeSocket = (server) => {
     io = new socket_io_1.Server(server, {
         cors: {
@@ -53,14 +55,41 @@ const initializeSocket = (server) => {
     });
     io.on('connection', (socket) => {
         if (socket.user?.id) {
-            console.log(`🔌 User connected: ${socket.user.id} (${socket.user.role})`);
-            socket.join(socket.user.id);
-            if (socket.user.role === 'ADMIN' || socket.user.role === 'SUPER_ADMIN') {
+            const userId = socket.user.id;
+            const userRole = socket.user.role;
+            console.log(`🔌 User connected: ${userId} (${userRole})`);
+            socket.join(userId);
+            if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
                 socket.join('admin_room');
             }
-            if (socket.user.role === 'LANDLORD') {
+            if (userRole === 'LANDLORD') {
                 socket.join('landlord_room');
             }
+            // Track online presence
+            const existing = onlineUsers.get(userId);
+            if (existing) {
+                existing.socketIds.add(socket.id);
+                existing.lastActive = new Date();
+            }
+            else {
+                onlineUsers.set(userId, {
+                    socketIds: new Set([socket.id]),
+                    role: userRole,
+                    lastActive: new Date(),
+                });
+                // Broadcast presence change to relevant listeners
+                io.emit('user_presence_change', {
+                    userId,
+                    role: userRole,
+                    status: 'ONLINE',
+                    timestamp: new Date().toISOString(),
+                });
+            }
+            // Inform admin room of active user counter
+            io.to('admin_room').emit('active_users_count', {
+                totalOnline: onlineUsers.size,
+                timestamp: new Date().toISOString(),
+            });
         }
         else {
             console.log(`🔌 Guest/Public Socket connected: ${socket.id}`);
@@ -176,10 +205,75 @@ const initializeSocket = (server) => {
                 socket.to(data.conversationId).emit('stop_typing', { senderId: socket.user.id });
             }
         });
+        // Query online status for specific users
+        socket.on('get_online_status', (userIds, callback) => {
+            if (!Array.isArray(userIds))
+                return;
+            const result = {};
+            for (const uid of userIds) {
+                result[uid] = onlineUsers.has(uid);
+            }
+            if (typeof callback === 'function') {
+                callback(result);
+            }
+            else {
+                socket.emit('online_status_response', result);
+            }
+        });
+        // Mark message as read with live receipt
+        socket.on('mark_message_read', async (data) => {
+            try {
+                const userId = socket.user?.id;
+                if (!userId || !data.conversationId)
+                    return;
+                if (data.messageId) {
+                    await prisma_1.default.message.updateMany({
+                        where: { id: data.messageId, conversationId: data.conversationId, isRead: false },
+                        data: { isRead: true }
+                    });
+                }
+                else {
+                    // Mark all messages from other sender in this conversation as read
+                    await prisma_1.default.message.updateMany({
+                        where: { conversationId: data.conversationId, senderId: { not: userId }, isRead: false },
+                        data: { isRead: true }
+                    });
+                }
+                io.to(data.conversationId).emit('message_read', {
+                    messageId: data.messageId || null,
+                    conversationId: data.conversationId,
+                    readBy: userId,
+                    readAt: new Date().toISOString()
+                });
+            }
+            catch (err) {
+                console.error('Error marking message read via socket:', err);
+            }
+        });
         socket.on('disconnect', () => {
             if (expiryTimer)
                 clearTimeout(expiryTimer);
-            console.log(`🔌 User disconnected: ${socket.user?.id}`);
+            if (socket.user?.id) {
+                const userId = socket.user.id;
+                const userEntry = onlineUsers.get(userId);
+                if (userEntry) {
+                    userEntry.socketIds.delete(socket.id);
+                    if (userEntry.socketIds.size === 0) {
+                        onlineUsers.delete(userId);
+                        const lastSeen = new Date().toISOString();
+                        io.emit('user_presence_change', {
+                            userId,
+                            status: 'OFFLINE',
+                            lastSeen,
+                        });
+                        io.to('admin_room').emit('active_users_count', {
+                            totalOnline: onlineUsers.size,
+                            timestamp: lastSeen,
+                        });
+                    }
+                }
+            }
+            console.log(`🔌 User disconnected: ${socket.user?.id || socket.id}`);
         });
     });
     return io;
@@ -229,4 +323,23 @@ const emitToAdmins = (event, payload) => {
     }
 };
 exports.emitToAdmins = emitToAdmins;
+// Safe helper to emit an event strictly to the landlord room
+const emitToLandlords = (event, payload) => {
+    try {
+        if (io) {
+            io.to('landlord_room').emit(event, payload);
+        }
+    }
+    catch (err) {
+        console.error(`Failed to emit socket event ${event} to landlord_room:`, err);
+    }
+};
+exports.emitToLandlords = emitToLandlords;
+// Presence inspection helpers
+const isUserOnline = (userId) => onlineUsers.has(userId);
+exports.isUserOnline = isUserOnline;
+const getOnlineUserIds = () => Array.from(onlineUsers.keys());
+exports.getOnlineUserIds = getOnlineUserIds;
+const getOnlineUsersCount = () => onlineUsers.size;
+exports.getOnlineUsersCount = getOnlineUsersCount;
 //# sourceMappingURL=socket.js.map

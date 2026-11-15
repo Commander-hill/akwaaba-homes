@@ -5,6 +5,7 @@ import { SocketProvider } from './SocketProvider';
 import { LanguageProvider } from './LanguageContext';
 import { DialogProvider } from './DialogProvider';
 import { SessionTimeoutProvider } from './SessionTimeoutProvider';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
 // Suppress React 19 false-positive warning for next-themes' inline script
 if (typeof console !== 'undefined') {
@@ -28,6 +29,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           <DialogProvider>
             <SessionTimeoutProvider>
               {children}
+              <OfflineIndicator />
             </SessionTimeoutProvider>
           </DialogProvider>
         </LanguageProvider>

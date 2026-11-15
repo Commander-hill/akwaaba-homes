@@ -20,6 +20,9 @@ declare module 'socket.io' {
 
 let io: Server;
 
+// In-memory presence map tracking connected users: userId -> { socketIds: Set<string>, role: string, lastActive: Date }
+const onlineUsers = new Map<string, { socketIds: Set<string>; role: string; lastActive: Date }>();
+
 export const initializeSocket = (server: HttpServer) => {
   io = new Server(server, {
     cors: {
@@ -67,15 +70,44 @@ export const initializeSocket = (server: HttpServer) => {
 
   io.on('connection', (socket: Socket) => {
     if (socket.user?.id) {
-      console.log(`🔌 User connected: ${socket.user.id} (${socket.user.role})`);
-      socket.join(socket.user.id);
+      const userId = socket.user.id;
+      const userRole = socket.user.role;
+      console.log(`🔌 User connected: ${userId} (${userRole})`);
+      socket.join(userId);
       
-      if (socket.user.role === 'ADMIN' || socket.user.role === 'SUPER_ADMIN') {
+      if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
         socket.join('admin_room');
       }
-      if (socket.user.role === 'LANDLORD') {
+      if (userRole === 'LANDLORD') {
         socket.join('landlord_room');
       }
+
+      // Track online presence
+      const existing = onlineUsers.get(userId);
+      if (existing) {
+        existing.socketIds.add(socket.id);
+        existing.lastActive = new Date();
+      } else {
+        onlineUsers.set(userId, {
+          socketIds: new Set([socket.id]),
+          role: userRole,
+          lastActive: new Date(),
+        });
+
+        // Broadcast presence change to relevant listeners
+        io.emit('user_presence_change', {
+          userId,
+          role: userRole,
+          status: 'ONLINE',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Inform admin room of active user counter
+      io.to('admin_room').emit('active_users_count', {
+        totalOnline: onlineUsers.size,
+        timestamp: new Date().toISOString(),
+      });
     } else {
       console.log(`🔌 Guest/Public Socket connected: ${socket.id}`);
     }
@@ -207,9 +239,73 @@ export const initializeSocket = (server: HttpServer) => {
       }
     });
 
+    // Query online status for specific users
+    socket.on('get_online_status', (userIds: string[], callback?: (res: Record<string, boolean>) => void) => {
+      if (!Array.isArray(userIds)) return;
+      const result: Record<string, boolean> = {};
+      for (const uid of userIds) {
+        result[uid] = onlineUsers.has(uid);
+      }
+      if (typeof callback === 'function') {
+        callback(result);
+      } else {
+        socket.emit('online_status_response', result);
+      }
+    });
+
+    // Mark message as read with live receipt
+    socket.on('mark_message_read', async (data: { messageId?: string; conversationId: string }) => {
+      try {
+        const userId = socket.user?.id;
+        if (!userId || !data.conversationId) return;
+
+        if (data.messageId) {
+          await prisma.message.updateMany({
+            where: { id: data.messageId, conversationId: data.conversationId, isRead: false },
+            data: { isRead: true }
+          });
+        } else {
+          // Mark all messages from other sender in this conversation as read
+          await prisma.message.updateMany({
+            where: { conversationId: data.conversationId, senderId: { not: userId }, isRead: false },
+            data: { isRead: true }
+          });
+        }
+
+        io.to(data.conversationId).emit('message_read', {
+          messageId: data.messageId || null,
+          conversationId: data.conversationId,
+          readBy: userId,
+          readAt: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error('Error marking message read via socket:', err);
+      }
+    });
+
     socket.on('disconnect', () => {
       if (expiryTimer) clearTimeout(expiryTimer);
-      console.log(`🔌 User disconnected: ${socket.user?.id}`);
+      if (socket.user?.id) {
+        const userId = socket.user.id;
+        const userEntry = onlineUsers.get(userId);
+        if (userEntry) {
+          userEntry.socketIds.delete(socket.id);
+          if (userEntry.socketIds.size === 0) {
+            onlineUsers.delete(userId);
+            const lastSeen = new Date().toISOString();
+            io.emit('user_presence_change', {
+              userId,
+              status: 'OFFLINE',
+              lastSeen,
+            });
+            io.to('admin_room').emit('active_users_count', {
+              totalOnline: onlineUsers.size,
+              timestamp: lastSeen,
+            });
+          }
+        }
+      }
+      console.log(`🔌 User disconnected: ${socket.user?.id || socket.id}`);
     });
   });
 
@@ -256,4 +352,20 @@ export const emitToAdmins = (event: string, payload: any) => {
     console.error(`Failed to emit socket event ${event} to admin_room:`, err);
   }
 };
+
+// Safe helper to emit an event strictly to the landlord room
+export const emitToLandlords = (event: string, payload: any) => {
+  try {
+    if (io) {
+      io.to('landlord_room').emit(event, payload);
+    }
+  } catch (err) {
+    console.error(`Failed to emit socket event ${event} to landlord_room:`, err);
+  }
+};
+
+// Presence inspection helpers
+export const isUserOnline = (userId: string): boolean => onlineUsers.has(userId);
+export const getOnlineUserIds = (): string[] => Array.from(onlineUsers.keys());
+export const getOnlineUsersCount = (): number => onlineUsers.size;
 

@@ -41,6 +41,25 @@ const streamUpload = (buffer, folder, resourceType = 'auto') => {
         streamifier_1.default.createReadStream(buffer).pipe(stream);
     });
 };
+// Resilient Multi-Tier Upload: Cloudinary -> Local Filesystem Fallback
+const safeStreamUpload = async (buffer, folder, resourceType = 'auto', preferredExtension = 'webp') => {
+    if (process.env.CLOUDINARY_URL) {
+        try {
+            return await streamUpload(buffer, folder, resourceType);
+        }
+        catch (cloudErr) {
+            console.warn(`[SafeUpload] Cloudinary upload failed for folder "${folder}", seamlessly switching to local filesystem storage:`, cloudErr);
+        }
+    }
+    // Graceful local disk fallback
+    const uploadDir = path_1.default.resolve(process.cwd(), `public/uploads/${folder}`);
+    if (!fs_1.default.existsSync(uploadDir)) {
+        fs_1.default.mkdirSync(uploadDir, { recursive: true });
+    }
+    const filename = `${folder.replace(/[^a-zA-Z0-9_-]/g, '_')}-${Date.now()}-${crypto_1.default.randomBytes(6).toString('hex')}.${preferredExtension}`;
+    fs_1.default.writeFileSync(path_1.default.join(uploadDir, filename), buffer);
+    return `/uploads/${folder}/${filename}`;
+};
 // Inspect binary header bytes to prevent polyglot / extension spoofing attacks
 const isValidFileType = (buffer, type) => {
     if (!buffer || buffer.length < 4)
@@ -93,20 +112,7 @@ const uploadAvatar = async (req, res) => {
             .resize(800, 800, { fit: 'cover', position: 'center' })
             .webp({ quality: 80 })
             .toBuffer();
-        let fileUrl;
-        try {
-            fileUrl = await streamUpload(processedBuffer, 'avatars', 'image');
-        }
-        catch (cloudErr) {
-            console.warn('Cloudinary upload failed or unconfigured, saving locally to public/uploads/avatars:', cloudErr);
-            const uploadDir = path_1.default.resolve(process.cwd(), 'public/uploads/avatars');
-            if (!fs_1.default.existsSync(uploadDir)) {
-                fs_1.default.mkdirSync(uploadDir, { recursive: true });
-            }
-            const filename = `avatar-${Date.now()}-${crypto_1.default.randomBytes(6).toString('hex')}.webp`;
-            fs_1.default.writeFileSync(path_1.default.join(uploadDir, filename), processedBuffer);
-            fileUrl = `/uploads/avatars/${filename}`;
-        }
+        const fileUrl = await safeStreamUpload(processedBuffer, 'avatars', 'image', 'webp');
         res.status(200).json({ url: fileUrl, avatarUrl: fileUrl });
     }
     catch (error) {
@@ -125,7 +131,8 @@ const uploadVideo = async (req, res) => {
             res.status(400).json({ error: 'Invalid video format. Supported formats: MP4, WebM.' });
             return;
         }
-        const fileUrl = await streamUpload(req.file.buffer, 'videos', 'video');
+        const ext = req.file.mimetype === 'video/webm' ? 'webm' : 'mp4';
+        const fileUrl = await safeStreamUpload(req.file.buffer, 'videos', 'video', ext);
         res.status(200).json({ url: fileUrl });
     }
     catch (error) {
@@ -151,16 +158,14 @@ const uploadDocument = async (req, res) => {
             req.file.buffer[3] === 0x46;
         let fileUrl;
         if (isPdf) {
-            // PDF documents bypass image processing and stream directly
-            fileUrl = await streamUpload(req.file.buffer, 'documents', 'auto');
+            fileUrl = await safeStreamUpload(req.file.buffer, 'documents', 'auto', 'pdf');
         }
         else {
-            // Image documents (Ghana Card, passport, certificates) get resized and optimized to WebP
             const processedBuffer = await (0, sharp_1.default)(req.file.buffer)
                 .resize(1200, 1200, { fit: 'inside' })
                 .webp({ quality: 85 })
                 .toBuffer();
-            fileUrl = await streamUpload(processedBuffer, 'documents', 'image');
+            fileUrl = await safeStreamUpload(processedBuffer, 'documents', 'image', 'webp');
         }
         res.status(200).json({ url: fileUrl });
     }
@@ -211,7 +216,7 @@ const uploadPropertyImages = async (req, res) => {
                 .toBuffer();
             // Free original multer buffer from memory immediately
             file.buffer = null;
-            const url = await streamUpload(processedBuffer, 'properties', 'image');
+            const url = await safeStreamUpload(processedBuffer, 'properties', 'image', 'webp');
             urls.push(url);
         }
         res.status(200).json({ urls });
@@ -231,6 +236,19 @@ const serveSecureDocument = async (req, res) => {
             return;
         }
         const rawUrl = String(url);
+        // Support streaming from local uploads fallback safely
+        if (rawUrl.startsWith('/uploads/')) {
+            const sanitized = rawUrl.replace(/\.\./g, '');
+            const localFilePath = path_1.default.resolve(process.cwd(), 'public', sanitized.replace(/^\//, ''));
+            if (!fs_1.default.existsSync(localFilePath)) {
+                res.status(404).json({ error: 'Document file not found' });
+                return;
+            }
+            res.setHeader('Content-Type', sanitized.endsWith('.pdf') ? 'application/pdf' : 'image/webp');
+            res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+            fs_1.default.createReadStream(localFilePath).pipe(res);
+            return;
+        }
         // Security check: Only allow streaming from verified Cloudinary assets
         if (!rawUrl.startsWith('https://res.cloudinary.com/')) {
             res.status(400).json({ error: 'Invalid document source' });
@@ -306,7 +324,8 @@ const uploadMedia = async (req, res) => {
             res.status(400).json({ error: 'Unsupported file format. Only images, audio files, and PDFs are permitted.' });
             return;
         }
-        const fileUrl = await streamUpload(req.file.buffer, folder, resourceType);
+        const ext = mime.startsWith('audio/') ? 'mp3' : mime === 'application/pdf' ? 'pdf' : 'webp';
+        const fileUrl = await safeStreamUpload(req.file.buffer, folder, resourceType, ext);
         res.status(200).json({ url: fileUrl, fileName: req.file.originalname, mimeType: mime });
     }
     catch (error) {

@@ -6,6 +6,70 @@ import toast from 'react-hot-toast';
 import { getRegisteredQueryClient } from '@/lib/queryRegistry';
 import { invalidatePublicResource, setPublicResourceData } from '@/lib/publicFetch';
 
+/**
+ * Synthesizes a soft, pleasant notification chime using the Web Audio API.
+ * Pure mathematical sine synthesis requiring zero network assets.
+ */
+function playNotificationChime(type?: string) {
+  try {
+    if (typeof window === 'undefined') return;
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    const ctx = new AudioContextClass();
+    const now = ctx.currentTime;
+
+    const isSuccess = type === 'PAYMENT_RECEIVED' || type?.includes('SUCCESS') || type?.includes('APPROVED');
+    const isAlert = type?.includes('ERROR') || type?.includes('ALERT') || type?.includes('SECURITY') || type?.includes('BREACH');
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    if (isSuccess) {
+      // Ascending major chord (C5 -> E5 -> G5)
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.16);
+    } else if (isAlert) {
+      // Soft alert double-tone
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(349.23, now + 0.12);
+    } else {
+      // Gentle chime (A4 -> C#5)
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(554.37, now + 0.1);
+    }
+
+    gain.gain.setValueAtTime(0.06, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.35);
+  } catch {
+    // Web Audio blocked by browser autoplay policy until first interaction
+  }
+}
+
+/**
+ * Triggers native OS/browser notification when application tab is in background.
+ */
+function showBrowserNotification(title: string, body: string) {
+  try {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (Notification.permission === 'granted' && document.hidden) {
+      new Notification(title, {
+        body,
+        icon: '/logo.png',
+        badge: '/logo.png',
+      });
+    }
+  } catch {}
+}
+
 export default function SocketRuntime({
   onSocketChange,
   onConnectionChange,
@@ -72,6 +136,9 @@ export default function SocketRuntime({
             <span className="text-[11px] font-normal opacity-90 leading-relaxed">{data.message}</span>
           </div>
         );
+
+        playNotificationChime(data.type);
+        showBrowserNotification(data.title, data.message);
 
         const toastFn = isSuccess ? toast.success : isError ? toast.error : toast;
         toastFn(messageContent, { duration: 6000, position: 'top-right' });
@@ -204,9 +271,44 @@ export default function SocketRuntime({
         );
       });
 
-      socketInstance.on('receive_message', () => {
+      socketInstance.on('receive_message', (msg?: any) => {
+        playNotificationChime('MESSAGE');
+        if (msg?.content && document.hidden) {
+          showBrowserNotification('New Message on AkwaabaHomes', msg.content);
+        }
         getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['conversations'] });
         getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['messages'] });
+      });
+
+      socketInstance.on('message_read', () => {
+        getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['messages'] });
+      });
+
+      socketInstance.on('user_presence_change', () => {
+        getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['online-users'] });
+      });
+
+      socketInstance.on('active_users_count', (data: any) => {
+        if (data?.totalOnline !== undefined) {
+          getRegisteredQueryClient()?.setQueryData(['active-users-count'], data.totalOnline);
+          getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['admin-stats'] });
+        }
+      });
+
+      socketInstance.on('broadcast_dispatched', (data: any) => {
+        playNotificationChime('ALERT');
+        getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['admin-broadcast-history'] });
+        getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['notifications'] });
+        if (data?.title) {
+          toast(
+            <div className="flex flex-col gap-0.5 text-left">
+              <span className="font-bold text-xs text-amber-600 dark:text-amber-400">📢 Announcement</span>
+              <span className="font-semibold text-xs leading-snug">{data.title}</span>
+              {data.message && <span className="text-[11px] opacity-85 leading-relaxed">{data.message}</span>}
+            </div>,
+            { duration: 8000, position: 'top-right' }
+          );
+        }
       });
 
       socketInstance.on('config_updated', (data: any) => {
