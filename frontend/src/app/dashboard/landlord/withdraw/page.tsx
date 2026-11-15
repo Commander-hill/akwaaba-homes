@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  AlertTriangle,
   Banknote,
   Phone,
   ChevronDown,
@@ -21,7 +20,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Building2,
-  Info,
   Check,
   ChevronRight,
   ShieldCheck,
@@ -84,7 +82,6 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; 
 };
 
 export default function LandlordWithdrawalPage() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   
   const [recipientType, setRecipientType] = useState<'MOMO' | 'BANK'>('MOMO');
@@ -94,7 +91,7 @@ export default function LandlordWithdrawalPage() {
   const [amount, setAmount] = useState('');
   const [isVerifyingPayee, setIsVerifyingPayee] = useState(false);
   const [payeeVerified, setPayeeVerified] = useState(false);
-  const [historyFilter, setHistoryFilter] = useState<'ALL' | 'SUCCESS' | 'PENDING' | 'FAILED'>('ALL');
+  const [historyFilter, setHistoryFilter] = useState<'ALL' | 'SUCCESS' | 'PENDING' | 'PROCESSING' | 'FAILED'>('ALL');
 
   // Step-Up Security State
   const [isStepUpOpen, setIsStepUpOpen] = useState(false);
@@ -112,7 +109,7 @@ export default function LandlordWithdrawalPage() {
   });
 
   // 2. Fetch payout history + balance
-  const { data: payoutData, isLoading, refetch, isRefetching } = useQuery({
+  const { data: payoutData, isLoading, isError: isPayoutError, refetch, isRefetching } = useQuery({
     queryKey: ['payouts', 'history'],
     queryFn: async () => {
       const res = await api.get('/payouts/history');
@@ -292,6 +289,24 @@ export default function LandlordWithdrawalPage() {
           </Link>
         </div>
       </div>
+
+      {isPayoutError && (
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-center justify-between gap-3 text-xs text-rose-800 dark:text-rose-200">
+          <div className="flex items-center gap-2">
+            <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span>Failed to load your payout balance and history.</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition cursor-pointer disabled:opacity-50 shrink-0"
+          >
+            <RefreshCw className={clsx('w-3.5 h-3.5', isRefetching && 'animate-spin')} />
+            {isRefetching ? 'Retrying...' : 'Retry'}
+          </button>
+        </div>
+      )}
 
       {/* ── Balance Overview Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -685,8 +700,9 @@ export default function LandlordWithdrawalPage() {
                     />
                     <button
                       type="button"
+                      disabled={availableBalance < 10}
                       onClick={() => setAmount(availableBalance.toFixed(2))}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono font-bold text-[#16A34A] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/60 px-2 py-1 rounded-lg hover:bg-emerald-100 transition cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono font-bold text-[#16A34A] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/60 px-2 py-1 rounded-lg hover:bg-emerald-100 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       MAX
                     </button>
@@ -703,8 +719,9 @@ export default function LandlordWithdrawalPage() {
                       <button
                         key={preset.label}
                         type="button"
+                        disabled={availableBalance * preset.pct < 10}
                         onClick={() => applyPercentPreset(preset.pct)}
-                        className="flex-1 py-1 text-[11px] font-bold rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition cursor-pointer"
+                        className="flex-1 py-1 text-[11px] font-bold rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         {preset.label}
                       </button>
@@ -813,7 +830,7 @@ export default function LandlordWithdrawalPage() {
 
               {/* Status Filter Chips */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
-                {(['ALL', 'SUCCESS', 'PENDING', 'FAILED'] as const).map((st) => (
+                {(['ALL', 'SUCCESS', 'PENDING', 'PROCESSING', 'FAILED'] as const).map((st) => (
                   <button
                     key={st}
                     type="button"
@@ -881,7 +898,7 @@ export default function LandlordWithdrawalPage() {
 
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <span className="text-xs font-black font-mono text-zinc-950 dark:text-white">
-                          GH₵ {p.amount.toFixed(2)}
+                          GH₵ {Number(p.amount || 0).toFixed(2)}
                         </span>
                         <span
                           className={clsx(
