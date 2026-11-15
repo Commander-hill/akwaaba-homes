@@ -178,6 +178,12 @@ export default function NewExpensePage() {
     }
   }, [propertyList, selectedPropertyId]);
 
+  useEffect(() => {
+    return () => {
+      if (receiptPreview) URL.revokeObjectURL(receiptPreview);
+    };
+  }, [receiptPreview]);
+
   const activeProperty = propertyList.find((p: any) => p.id === selectedPropertyId);
   const currentCategory = EXPENSE_CATEGORIES.find((c) => c.id === selectedCategory) || EXPENSE_CATEGORIES[0];
   const parsedAmount = parseFloat(amount) || 0;
@@ -214,6 +220,10 @@ export default function NewExpensePage() {
       }
       if (isNaN(parsedAmount) || parsedAmount <= 0) {
         triggerError('Please enter a valid positive amount in Ghana Cedis (GH₵).');
+        return false;
+      }
+      if (!date) {
+        triggerError('Please select the date the expense was incurred.');
         return false;
       }
     }
