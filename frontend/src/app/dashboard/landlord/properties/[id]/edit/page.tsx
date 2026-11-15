@@ -104,6 +104,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
   const propertyId = unwrappedParams.id;
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -190,6 +191,11 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
           initialAmenities = property.amenities;
         }
       }
+
+      const sub = property.subscription;
+      setHasActiveSubscription(
+        Boolean(sub?.isActive && (!sub?.endDate || new Date(sub.endDate) > new Date()))
+      );
 
       setFormData({
         title: property.title || '',
@@ -681,15 +687,21 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
               <div>
                 <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Property Type</label>
                 <select
+                  disabled={hasActiveSubscription}
                   value={formData.type}
                   onChange={e => handlePropertyTypeChange(e.target.value)}
-                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#16A34A] cursor-pointer"
+                  className={`w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#16A34A] ${hasActiveSubscription ? 'opacity-65 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <option value="Apartment">Residential Apartment</option>
                   <option value="Studio">Executive Studio / Self-Contained</option>
                   <option value="House">Detached House / Townhouse</option>
                   <option value="Hostel">Student Hostel / Hall Residence</option>
                 </select>
+                {hasActiveSubscription && (
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 font-medium">
+                    Locked while active annual subscription is in effect.
+                  </p>
+                )}
               </div>
 
               <div>

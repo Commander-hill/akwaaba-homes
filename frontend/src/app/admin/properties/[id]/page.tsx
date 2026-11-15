@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import { isHostelProperty, resolvePropertyCategory } from '@/components/landlord-ui/propertyConfig';
 import {
   Building,
   CheckCircle,
@@ -221,11 +222,15 @@ export default function AdminPropertyDetailPage({
 
               <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
-                  Bedrooms
+                  {isHostelProperty(property.type) ? 'Room Configs' : resolvePropertyCategory(property.type) === 'Studio' ? 'Unit Type' : 'Bedrooms'}
                 </span>
                 <span className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
                   <Bed className="w-3.5 h-3.5 text-zinc-400" />
-                  {property.bedrooms || 1} Rooms
+                  {isHostelProperty(property.type)
+                    ? `${rooms.length || property.bedrooms || 1} Room Types`
+                    : resolvePropertyCategory(property.type) === 'Studio'
+                      ? 'Self-Contained Studio'
+                      : `${property.bedrooms || 1} Bedroom${(property.bedrooms || 1) === 1 ? '' : 's'}`}
                 </span>
               </div>
 

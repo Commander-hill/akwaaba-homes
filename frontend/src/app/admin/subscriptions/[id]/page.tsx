@@ -23,6 +23,7 @@ import {
 import toast from 'react-hot-toast';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
+import { resolvePropertyCategory } from '@/components/landlord-ui/propertyConfig';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 
 export default function AdminSubscriptionDetailPage({
@@ -114,7 +115,7 @@ export default function AdminSubscriptionDetailPage({
     <div className="space-y-6">
       <AdminPageHeader
         title={`Subscription: ${property?.title || 'Listing'}`}
-        subtitle={`Annual Listing License • Plan: ${subscription.plan || 'Standard'}`}
+        subtitle={`Annual Listing License • ${resolvePropertyCategory(property?.type)} Tier • Plan: ${subscription.plan || 'Standard'}${subscription.quotedAmountGhs ? ` (GH₵ ${Number(subscription.quotedAmountGhs).toFixed(2)})` : ''}`}
         badge={<AdminStatusBadge status={subscription.isActive ? 'ACTIVE' : 'EXPIRED'} />}
         breadcrumbs={[
           { label: 'Admin', href: '/admin/dashboard' },
