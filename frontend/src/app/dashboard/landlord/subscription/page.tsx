@@ -13,21 +13,12 @@ import clsx from 'clsx';
 
 export default function LandlordSubscriptionPage() {
 
-  const { data: session } = useQuery({
-    queryKey: ['session'],
-    queryFn: async () => {
-      const res = await api.get('/auth/me');
-      return res.data.user;
-    },
-  });
-
   const { data: overviewData, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['subscriptions', 'overview'],
     queryFn: async () => {
       const res = await api.get('/subscriptions/overview');
       return res.data;
     },
-    enabled: !!session
   });
 
   const properties = overviewData?.properties || [];
