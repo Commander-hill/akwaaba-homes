@@ -399,40 +399,6 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
           );
         })}
       </nav>
-
-      {/* Bottom Institutional Security / Compliance Desk Card matching Resident Portal pattern */}
-      <div className="p-4 mt-auto shrink-0">
-        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-center flex flex-col items-center space-y-2">
-          <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5 stroke-[2]" />
-          </div>
-          <h4 className="text-xs font-bold text-zinc-900 dark:text-white">
-            Admin Security Desk
-          </h4>
-          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed px-1">
-            Act 843 &amp; 256-bit TLS Protected
-          </p>
-          <Link
-            href="/admin/audit"
-            onClick={onNavigate}
-            className="w-full py-2.5 px-3 mt-1 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
-          >
-            <span>Audit Log Protocol</span>
-            <span aria-hidden="true">&rarr;</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Bottom Geometric Kente Textile Trim matching Resident Portal */}
-      <div className="relative w-full h-7 shrink-0 overflow-hidden opacity-90 select-none pointer-events-none">
-        <Image
-          src="/images/agreements/kente-sidebar-pattern.png"
-          alt="Ghanaian Kente Texture"
-          fill
-          sizes="256px"
-          className="object-cover object-bottom"
-        />
-      </div>
     </div>
   );
 
