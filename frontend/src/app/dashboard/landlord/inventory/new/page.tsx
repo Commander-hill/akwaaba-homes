@@ -130,22 +130,18 @@ export default function NewInventoryAssetPage() {
   const [name, setName] = useState<string>('');
   const [category, setCategory] = useState<AssetCategory>('ELECTRICAL');
   const [brandModel, setBrandModel] = useState<string>('');
-  const [serialTag, setSerialTag] = useState<string>(`AST-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [serialTag, setSerialTag] = useState<string>('');
   const [condition, setCondition] = useState<AssetCondition>('PRISTINE');
   const [replacementCostGHS, setReplacementCostGHS] = useState<string>('650');
   const [notes, setNotes] = useState<string>('');
   const [formError, setFormError] = useState<string>('');
 
   // Fetch properties owned by landlord
-  const { data: propertiesData, isLoading: isLoadingProps } = useQuery({
+  const { data: propertiesData, isLoading: isLoadingProps, isError: isPropsError, refetch: refetchProps, isFetching: isFetchingProps } = useQuery({
     queryKey: ['properties', 'landlord', 'mine'],
     queryFn: async () => {
-      try {
-        const res = await api.get('/properties/landlord/mine');
-        return res.data?.data || [];
-      } catch {
-        return [];
-      }
+      const res = await api.get('/properties/landlord/mine');
+      return res.data?.data || [];
     },
   });
 
@@ -164,6 +160,10 @@ export default function NewInventoryAssetPage() {
       setSelectedPropertyId(propertyList[0].id);
     }
   }, [propertyList, selectedPropertyId]);
+
+  useEffect(() => {
+    setSerialTag((prev) => prev || `AST-${Math.floor(1000 + Math.random() * 9000)}`);
+  }, []);
 
   const activeProperty = propertyList.find((p: any) => p.id === selectedPropertyId);
 
@@ -278,14 +278,14 @@ export default function NewInventoryAssetPage() {
 
       const updated = [newItem, ...existingItems];
 
-      localStorage.setItem(`akwaaba_room_assets_${selectedPropertyId}`, JSON.stringify(updated));
       await api.post(`/inspections/property/${selectedPropertyId}/inventory`, { items: updated });
+      localStorage.setItem(`akwaaba_room_assets_${selectedPropertyId}`, JSON.stringify(updated));
       return newItem;
     },
     onSuccess: () => {
       toast.success('Room fixture registered in property vault!');
       queryClient.invalidateQueries({ queryKey: ['propertyInventory', selectedPropertyId] });
-      router.push('/dashboard/landlord?tab=inventory');
+      router.push('/dashboard/landlord/operations?tab=assets');
     },
     onError: (err: any) => {
       const msg = err.response?.data?.message || err.message || 'Failed to save fixture';
@@ -305,7 +305,7 @@ export default function NewInventoryAssetPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <Link
-              href="/dashboard/landlord?tab=inventory"
+              href="/dashboard/landlord/operations?tab=assets"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-1 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Room Asset Vault
@@ -328,9 +328,15 @@ export default function NewInventoryAssetPage() {
               key={s.step}
               type="button"
               onClick={() => {
-                if (s.step < currentStep || validateStep(currentStep)) {
+                if (s.step <= currentStep) {
+                  setFormError('');
                   setCurrentStep(s.step as 1 | 2 | 3 | 4);
+                  return;
                 }
+                for (let step = currentStep; step < s.step; step++) {
+                  if (!validateStep(step)) return;
+                }
+                setCurrentStep(s.step as 1 | 2 | 3 | 4);
               }}
               className={clsx(
                 'py-2 text-center font-bold rounded-lg transition-all cursor-pointer truncate px-1',
@@ -372,6 +378,18 @@ export default function NewInventoryAssetPage() {
             {isLoadingProps ? (
               <div className="py-10 flex items-center justify-center gap-2 text-zinc-400 text-xs font-bold">
                 <Loader2 className="w-4 h-4 animate-spin text-[#0F5132]" /> Loading your properties...
+              </div>
+            ) : isPropsError ? (
+              <div className="p-5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between gap-3">
+                <span className="font-bold">Failed to load your properties. Please try again.</span>
+                <button
+                  type="button"
+                  onClick={() => refetchProps()}
+                  disabled={isFetchingProps}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition cursor-pointer disabled:opacity-50 shrink-0"
+                >
+                  {isFetchingProps ? 'Retrying...' : 'Retry'}
+                </button>
               </div>
             ) : propertyList.length === 0 ? (
               <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs space-y-2">
