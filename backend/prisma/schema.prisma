@@ -304,6 +304,7 @@ model PropertySubscription {
   property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   paymentReference String   @unique // Paystack/Hubtel reference ID
   paymentStatus    String   @default("PENDING") // PENDING, COMPLETED, FAILED
+  quotedAmountGhs  Float?   // Locked GHS fee quoted when checkout initialized
   startDate        DateTime
   endDate          DateTime
   isActive         Boolean  @default(false)
@@ -493,6 +494,10 @@ model SystemConfig {
   ghanaCardVerificationEnabled Boolean   @default(true)
   bookingGracePeriodHours      Int       @default(48)
   platformCommissionPercent    Float     @default(5.0)
+  subscriptionFeeStudioGhs     Float     @default(100.0)
+  subscriptionFeeApartmentGhs  Float     @default(150.0)
+  subscriptionFeeHouseGhs      Float     @default(200.0)
+  subscriptionFeeHostelGhs     Float     @default(300.0)
   roommateFinderEnabled        Boolean   @default(true)
   maintenanceMode              Boolean   @default(false)
   maintenanceEndTime           DateTime?

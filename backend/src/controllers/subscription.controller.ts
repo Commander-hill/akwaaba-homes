@@ -7,6 +7,7 @@ import { PaymentFactory, SupportedPaymentProvider } from '../services/payment/Pa
 import { PaystackProvider } from '../services/payment/PaystackProvider';
 import { HubtelProvider } from '../services/payment/HubtelProvider';
 import { ApiResponseHelper, ConflictException, NotFoundException, ValidationException } from '../utils/apiResponse';
+import { getSystemConfig, resolveSubscriptionFeeForType } from '../utils/config.service';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -43,7 +44,10 @@ export const processSuccessfulSubscriptionPayment = async (
     return { success: true, alreadyProcessed: true, subscription: existingSub };
   }
 
-  const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+  const quotedGhs = Number((existingSub as any).quotedAmountGhs);
+  const feeInGhs = Number.isFinite(quotedGhs) && quotedGhs > 0
+    ? quotedGhs
+    : (await resolveSubscriptionFeeForType(existingSub.property?.type)).feeGhs;
   const expectedPesewas = Math.round(feeInGhs * 100);
 
   if (amountPesewas < expectedPesewas) {
@@ -103,9 +107,26 @@ export const processSuccessfulSubscriptionPayment = async (
 /**
  * Get Subscription Status for a specific property
  */
-export const getSubscriptionFee = async (_req: AuthRequest, res: Response): Promise<void> => {
-  const feeGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
-  res.status(200).json({ feeGhs, durationDays: 365 });
+export const getSubscriptionFee = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const propertyId = typeof req.query.propertyId === 'string' ? req.query.propertyId : undefined;
+    let propertyType = typeof req.query.type === 'string' ? req.query.type : undefined;
+
+    if (!propertyType && propertyId) {
+      const prop = await prisma.property.findUnique({
+        where: { id: propertyId },
+        select: { type: true }
+      });
+      propertyType = prop?.type;
+    }
+
+    const { category, feeGhs, feeSchedule } = await resolveSubscriptionFeeForType(propertyType);
+    res.status(200).json({ feeGhs, propertyCategory: category, durationDays: 365, feeSchedule });
+  } catch (error) {
+    console.error('Error resolving subscription fee:', error);
+    const fallback = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+    res.status(200).json({ feeGhs: fallback, propertyCategory: 'Apartment', durationDays: 365 });
+  }
 };
 
 export const getSubscriptionStatus = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -233,7 +254,7 @@ export const initializePayment = async (req: AuthRequest, res: Response): Promis
       throw new ConflictException('This property already has an active subscription.');
     }
 
-    const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+    const { feeGhs: feeInGhs } = await resolveSubscriptionFeeForType(property.type);
     const amountPesewas = Math.round(feeInGhs * 100);
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -280,16 +301,18 @@ export const initializePayment = async (req: AuthRequest, res: Response): Promis
       update: {
         paymentReference: reference,
         paymentStatus: 'PENDING',
+        quotedAmountGhs: feeInGhs,
         isActive: false
-      },
+      } as any,
       create: {
         propertyId,
         paymentReference: reference,
         paymentStatus: 'PENDING',
+        quotedAmountGhs: feeInGhs,
         startDate: new Date(),
         endDate: new Date(),
         isActive: false
-      }
+      } as any
     });
 
     ApiResponseHelper.success(res, {
@@ -357,7 +380,10 @@ export const verifyPayment = async (req: AuthRequest, res: Response): Promise<vo
       providerType = paymentReference.includes('HUBTEL') ? 'HUBTEL' : 'PAYSTACK';
     }
 
-    const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+    const quotedGhs = Number((existingSub as any).quotedAmountGhs);
+  const feeInGhs = Number.isFinite(quotedGhs) && quotedGhs > 0
+    ? quotedGhs
+    : (await resolveSubscriptionFeeForType(existingSub.property?.type)).feeGhs;
     const expectedPesewas = Math.round(feeInGhs * 100);
 
     const isTestRef = paymentReference.includes('TEST_') || paymentReference.startsWith('SUB_TEST_');
@@ -572,15 +598,18 @@ export const getLandlordSubscriptionsOverview = async (req: AuthRequest, res: Re
       return;
     }
 
-    const properties = await prisma.property.findMany({
-      where: { landlordId },
-      include: {
-        subscription: true
-      }
-    });
+    const [properties, sysConfig] = await Promise.all([
+      prisma.property.findMany({
+        where: { landlordId },
+        include: {
+          subscription: true
+        }
+      }),
+      getSystemConfig(),
+    ]);
 
     const now = new Date();
-    const overview = properties.map((property) => {
+    const overview = await Promise.all(properties.map(async (property) => {
       const sub = property.subscription || null;
       let daysLeft = 0;
       let isActive = false;
@@ -594,9 +623,17 @@ export const getLandlordSubscriptionsOverview = async (req: AuthRequest, res: Re
         needsRenewalSoon = isActive && daysLeft <= 7;
       }
 
+      const { category: propertyCategory, feeGhs: annualFeeGhs } = await resolveSubscriptionFeeForType(
+        property.type,
+        sysConfig
+      );
+
       return {
         propertyId: property.id,
         propertyTitle: property.title,
+        propertyType: property.type,
+        propertyCategory,
+        annualFeeGhs,
         location: property.location,
         isAvailable: property.isAvailable,
         subscription: sub
@@ -612,7 +649,7 @@ export const getLandlordSubscriptionsOverview = async (req: AuthRequest, res: Re
             }
           : null
       };
-    });
+    }));
 
     const stats = {
       totalProperties: properties.length,

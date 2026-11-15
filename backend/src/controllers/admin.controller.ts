@@ -2510,7 +2510,11 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
     const { 
       ghanaCardVerificationEnabled, 
       bookingGracePeriodHours, 
-      platformCommissionPercent, 
+      platformCommissionPercent,
+      subscriptionFeeStudioGhs,
+      subscriptionFeeApartmentGhs,
+      subscriptionFeeHouseGhs,
+      subscriptionFeeHostelGhs,
       roommateFinderEnabled, 
       maintenanceMode, 
       maintenanceEndTime,
@@ -2524,6 +2528,24 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
       maintenanceContactPhone,
     } = req.body;
     
+    const feeUpdates: Record<string, number> = {};
+    const feeFields = [
+      ['subscriptionFeeStudioGhs', subscriptionFeeStudioGhs],
+      ['subscriptionFeeApartmentGhs', subscriptionFeeApartmentGhs],
+      ['subscriptionFeeHouseGhs', subscriptionFeeHouseGhs],
+      ['subscriptionFeeHostelGhs', subscriptionFeeHostelGhs],
+    ] as const;
+    for (const [key, val] of feeFields) {
+      if (val !== undefined) {
+        const num = Number(val);
+        if (!Number.isFinite(num) || num < 1) {
+          res.status(400).json({ message: `${key} must be a valid amount of at least GHS 1.` });
+          return;
+        }
+        feeUpdates[key] = num;
+      }
+    }
+
     const previousConfig = await prisma.systemConfig.findUnique({ where: { id: 'GLOBAL' } });
 
     const adminIdentity = req.user?.firstName 
@@ -2536,6 +2558,7 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
         ...(ghanaCardVerificationEnabled !== undefined && { ghanaCardVerificationEnabled }),
         ...(bookingGracePeriodHours !== undefined && { bookingGracePeriodHours }),
         ...(platformCommissionPercent !== undefined && { platformCommissionPercent }),
+        ...feeUpdates,
         ...(roommateFinderEnabled !== undefined && { roommateFinderEnabled }),
         ...(maintenanceMode !== undefined && { maintenanceMode }),
         ...(maintenanceEndTime !== undefined && { maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null }),
@@ -2554,6 +2577,10 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
         ghanaCardVerificationEnabled: ghanaCardVerificationEnabled ?? true,
         bookingGracePeriodHours: bookingGracePeriodHours ?? 48,
         platformCommissionPercent: platformCommissionPercent ?? 5.0,
+        subscriptionFeeStudioGhs: feeUpdates.subscriptionFeeStudioGhs ?? 100.0,
+        subscriptionFeeApartmentGhs: feeUpdates.subscriptionFeeApartmentGhs ?? 150.0,
+        subscriptionFeeHouseGhs: feeUpdates.subscriptionFeeHouseGhs ?? 200.0,
+        subscriptionFeeHostelGhs: feeUpdates.subscriptionFeeHostelGhs ?? 300.0,
         roommateFinderEnabled: roommateFinderEnabled ?? true,
         maintenanceMode: maintenanceMode ?? false,
         maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null,

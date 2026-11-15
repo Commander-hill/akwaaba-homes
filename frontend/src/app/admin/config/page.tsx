@@ -36,6 +36,10 @@ export default function AdminConfigPage() {
     ghanaCardVerificationEnabled: true,
     bookingGracePeriodHours: 48,
     platformCommissionPercent: 5.0,
+    subscriptionFeeStudioGhs: 100,
+    subscriptionFeeApartmentGhs: 150,
+    subscriptionFeeHouseGhs: 200,
+    subscriptionFeeHostelGhs: 300,
     roommateFinderEnabled: true,
     maintenanceMode: false,
     maintenanceEndTime: '',
@@ -47,6 +51,10 @@ export default function AdminConfigPage() {
         ghanaCardVerificationEnabled: configData.ghanaCardVerificationEnabled,
         bookingGracePeriodHours: configData.bookingGracePeriodHours,
         platformCommissionPercent: configData.platformCommissionPercent,
+        subscriptionFeeStudioGhs: configData.subscriptionFeeStudioGhs ?? 100,
+        subscriptionFeeApartmentGhs: configData.subscriptionFeeApartmentGhs ?? 150,
+        subscriptionFeeHouseGhs: configData.subscriptionFeeHouseGhs ?? 200,
+        subscriptionFeeHostelGhs: configData.subscriptionFeeHostelGhs ?? 300,
         roommateFinderEnabled: configData.roommateFinderEnabled,
         maintenanceMode: configData.maintenanceMode,
         maintenanceEndTime: configData.maintenanceEndTime ? new Date(configData.maintenanceEndTime).toISOString().slice(0, 16) : '',
@@ -255,6 +263,65 @@ export default function AdminConfigPage() {
             </div>
           </div>
 
+        </div>
+      </div>
+
+      {/* ── SECTION 2B: ANNUAL LISTING SUBSCRIPTION TIERS ── */}
+      <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-[#0F5132]" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
+              Annual Listing Subscription Fees by Property Type (GHS / Year)
+            </h2>
+          </div>
+          <span className="text-[11px] text-zinc-500">
+            Applies to new listings &amp; renewals; active &amp; in-checkout rates stay locked
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+          {([
+            { key: 'subscriptionFeeStudioGhs', label: 'Studio', hint: 'Single self-contained unit' },
+            { key: 'subscriptionFeeApartmentGhs', label: 'Apartment', hint: 'Flats & multi-bedroom units' },
+            { key: 'subscriptionFeeHouseGhs', label: 'House', hint: 'Detached & family homes' },
+            { key: 'subscriptionFeeHostelGhs', label: 'Hostel', hint: 'Multi-room student residences' },
+          ] as const).map((tier) => (
+            <div
+              key={tier.key}
+              className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 space-y-2"
+            >
+              <div className="flex items-baseline justify-between">
+                <label className="text-xs font-bold text-zinc-900 dark:text-white">
+                  {tier.label}
+                </label>
+                <span className="text-xs font-black text-[#0F5132] dark:text-emerald-400 tabular-nums">
+                  GHS {formData[tier.key]}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500">{tier.hint}</p>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-[11px] text-zinc-400 font-bold">GHS</span>
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  disabled={!isSuperAdmin}
+                  value={formData[tier.key]}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      [tier.key]: Math.max(1, parseFloat(e.target.value) || 0),
+                    }))
+                  }
+                  className={clsx(
+                    "w-full pl-11 pr-3 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none focus:border-[#0F5132]",
+                    !isSuperAdmin && "opacity-70 cursor-not-allowed bg-zinc-50 dark:bg-zinc-800/50"
+                  )}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

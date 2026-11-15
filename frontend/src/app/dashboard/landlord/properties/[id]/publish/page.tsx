@@ -21,11 +21,13 @@ export default function PublishPropertyPage() {
   const queryClient = useQueryClient();
   const propertyId = params?.id as string;
 
-  const { data: fee } = useQuery({
-    queryKey: ['subscriptions', 'fee'],
-    queryFn: async () => Number((await api.get('/subscriptions/fee')).data.feeGhs),
-    staleTime: 10 * 60 * 1000,
+  const { data: feeData } = useQuery({
+    queryKey: ['subscriptions', 'fee', propertyId],
+    queryFn: async () => (await api.get('/subscriptions/fee', { params: { propertyId } })).data,
+    enabled: Boolean(propertyId),
+    staleTime: 60 * 1000,
   });
+  const fee = feeData?.feeGhs !== undefined ? Number(feeData.feeGhs) : undefined;
 
   const [selectedProvider, setSelectedProvider] = useState<'HUBTEL' | 'PAYSTACK'>('PAYSTACK');
   const [momoPhoneNumber, setMomoPhoneNumber] = useState('');
@@ -374,7 +376,9 @@ export default function PublishPropertyPage() {
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex items-center justify-between text-sm">
             <div>
               <p className="font-bold text-zinc-950 dark:text-white">Annual listing subscription</p>
-              <p className="text-xs text-zinc-500">365 days, for this property only</p>
+              <p className="text-xs text-zinc-500">
+                365 days &bull; {feeData?.propertyCategory || property?.type || 'Standard'} tier
+              </p>
             </div>
             <p className="text-lg font-black text-[#0F5132] dark:text-emerald-400 tabular-nums">{feeLabel}</p>
           </div>

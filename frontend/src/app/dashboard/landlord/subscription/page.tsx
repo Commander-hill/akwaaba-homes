@@ -146,7 +146,8 @@ export default function LandlordSubscriptionPage() {
                           <span>
                             {sub?.endDate 
                               ? `Expires ${new Date(sub.endDate).toLocaleDateString()}`
-                              : 'Standard Annual Plan'}
+                              : `${item.propertyCategory || item.propertyType || 'Standard'} Annual Plan`}
+                            {item.annualFeeGhs ? ` • GH₵ ${Number(item.annualFeeGhs).toFixed(0)}/yr` : ''}
                           </span>
                         </div>
                       </td>

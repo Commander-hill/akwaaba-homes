@@ -46,6 +46,10 @@ export const getSystemConfig = async () => {
       ghanaCardVerificationEnabled: true,
       bookingGracePeriodHours: 48,
       platformCommissionPercent: 5.0,
+      subscriptionFeeStudioGhs: 100.0,
+      subscriptionFeeApartmentGhs: 150.0,
+      subscriptionFeeHouseGhs: 200.0,
+      subscriptionFeeHostelGhs: 300.0,
       roommateFinderEnabled: true,
       maintenanceMode: false,
       maintenanceEndTime: null,
@@ -114,6 +118,40 @@ const autoDeactivateMaintenance = async () => {
     return cachedConfig;
   }
 };
+
+export type SubscriptionPropertyCategory = 'Studio' | 'Apartment' | 'House' | 'Hostel';
+
+export function normalizeSubscriptionCategory(propertyType?: string | null): SubscriptionPropertyCategory {
+  const normalized = String(propertyType || '').trim().toLowerCase();
+  if (normalized.includes('hostel')) return 'Hostel';
+  if (normalized.includes('house') || normalized.includes('detached') || normalized.includes('villa')) return 'House';
+  if (normalized.includes('studio')) return 'Studio';
+  return 'Apartment';
+}
+
+export async function resolveSubscriptionFeeForType(
+  propertyType?: string | null,
+  existingConfig?: any
+): Promise<{
+  category: SubscriptionPropertyCategory;
+  feeGhs: number;
+  feeSchedule: Record<SubscriptionPropertyCategory, number>;
+}> {
+  const config = existingConfig || (await getSystemConfig());
+  const envFallback = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+
+  const feeSchedule: Record<SubscriptionPropertyCategory, number> = {
+    Studio: Number(config?.subscriptionFeeStudioGhs ?? envFallback) || 100,
+    Apartment: Number(config?.subscriptionFeeApartmentGhs ?? 150) || 150,
+    House: Number(config?.subscriptionFeeHouseGhs ?? 200) || 200,
+    Hostel: Number(config?.subscriptionFeeHostelGhs ?? 300) || 300,
+  };
+
+  const category = normalizeSubscriptionCategory(propertyType);
+  const feeGhs = propertyType ? feeSchedule[category] : envFallback;
+
+  return { category, feeGhs, feeSchedule };
+}
 
 export const invalidateConfigCache = () => {
   cachedConfig = null;
