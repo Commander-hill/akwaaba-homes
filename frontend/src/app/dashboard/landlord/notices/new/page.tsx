@@ -105,15 +105,11 @@ export default function NewCompoundNoticePage() {
   const [formError, setFormError] = useState<string>('');
 
   // Fetch properties owned by landlord
-  const { data: propertiesData, isLoading: isLoadingProps } = useQuery({
+  const { data: propertiesData, isLoading: isLoadingProps, isError: isPropsError, refetch: refetchProps, isFetching: isFetchingProps } = useQuery({
     queryKey: ['properties', 'landlord', 'mine'],
     queryFn: async () => {
-      try {
-        const res = await api.get('/properties/landlord/mine');
-        return res.data?.data || [];
-      } catch {
-        return [];
-      }
+      const res = await api.get('/properties/landlord/mine');
+      return res.data?.data || [];
     },
   });
 
@@ -152,6 +148,11 @@ export default function NewCompoundNoticePage() {
     setCategory(preset.category);
     setPriority(preset.priority);
     setMessage(preset.message);
+    if (!selectedPropertyId) {
+      toast.success('Template applied! Select a target property first.');
+      setCurrentStep(1);
+      return;
+    }
     toast.success('Template applied! Proceeding to Notice Content...');
     setCurrentStep(3);
   };
@@ -206,7 +207,7 @@ export default function NewCompoundNoticePage() {
     onSuccess: (data) => {
       toast.success(data?.message || 'Notice broadcasted to all residents!');
       queryClient.invalidateQueries({ queryKey: ['compoundNotices', 'landlord'] });
-      router.push('/dashboard/landlord?tab=notices');
+      router.push('/dashboard/landlord/operations?tab=notices');
     },
     onError: (err: any) => {
       const msg = err.response?.data?.message || 'Failed to post compound notice';
@@ -234,7 +235,7 @@ export default function NewCompoundNoticePage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <Link
-              href="/dashboard/landlord?tab=notices"
+              href="/dashboard/landlord/operations?tab=notices"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-1 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Notices
@@ -257,9 +258,15 @@ export default function NewCompoundNoticePage() {
               key={s.step}
               type="button"
               onClick={() => {
-                if (s.step < currentStep || validateStep(currentStep)) {
+                if (s.step <= currentStep) {
+                  setFormError('');
                   setCurrentStep(s.step as 1 | 2 | 3 | 4);
+                  return;
                 }
+                for (let step = currentStep; step < s.step; step++) {
+                  if (!validateStep(step)) return;
+                }
+                setCurrentStep(s.step as 1 | 2 | 3 | 4);
               }}
               className={clsx(
                 'py-2 text-center font-bold rounded-lg transition-all cursor-pointer truncate px-1',
@@ -301,6 +308,18 @@ export default function NewCompoundNoticePage() {
             {isLoadingProps ? (
               <div className="py-10 flex items-center justify-center gap-2 text-zinc-400 text-xs font-bold">
                 <Loader2 className="w-4 h-4 animate-spin text-[#0F5132]" /> Loading your properties...
+              </div>
+            ) : isPropsError ? (
+              <div className="p-5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between gap-3">
+                <span className="font-bold">Failed to load your properties. Please try again.</span>
+                <button
+                  type="button"
+                  onClick={() => refetchProps()}
+                  disabled={isFetchingProps}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition cursor-pointer disabled:opacity-50 shrink-0"
+                >
+                  {isFetchingProps ? 'Retrying...' : 'Retry'}
+                </button>
               </div>
             ) : propertyList.length === 0 ? (
               <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs space-y-2">

@@ -138,7 +138,7 @@ function NewDisciplinaryIncidentContent() {
   const [formError, setFormError] = useState('');
 
   // Fetch properties owned by landlord
-  const { data: propertiesData, isLoading: loadingProperties } = useQuery({
+  const { data: propertiesData, isLoading: loadingProperties, isError: isPropsError, refetch: refetchProps, isFetching: isFetchingProps } = useQuery({
     queryKey: ['properties', 'landlord', 'mine'],
     queryFn: async () => {
       try {
@@ -275,7 +275,7 @@ function NewDisciplinaryIncidentContent() {
       localStorage.setItem(storageKey, JSON.stringify(updated));
 
       toast.success(`Disciplinary dossier ${refCode} logged successfully!`);
-      router.push('/dashboard/landlord?tab=hostel');
+      router.push('/dashboard/landlord/operations?tab=disciplinary');
     } catch {
       triggerError('Failed to save disciplinary record.');
     } finally {
@@ -290,7 +290,7 @@ function NewDisciplinaryIncidentContent() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <Link
-              href="/dashboard/landlord?tab=hostel"
+              href="/dashboard/landlord/operations?tab=disciplinary"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-1 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Conduct &amp; Disciplinary
@@ -313,9 +313,15 @@ function NewDisciplinaryIncidentContent() {
               key={s.step}
               type="button"
               onClick={() => {
-                if (s.step < currentStep || validateStep(currentStep)) {
+                if (s.step <= currentStep) {
+                  setFormError('');
                   setCurrentStep(s.step as 1 | 2 | 3 | 4);
+                  return;
                 }
+                for (let step = currentStep; step < s.step; step++) {
+                  if (!validateStep(step)) return;
+                }
+                setCurrentStep(s.step as 1 | 2 | 3 | 4);
               }}
               className={clsx(
                 'py-2 text-center font-bold rounded-lg transition-all cursor-pointer truncate px-1',
@@ -352,6 +358,28 @@ function NewDisciplinaryIncidentContent() {
             {loadingProperties ? (
               <div className="py-8 flex items-center justify-center gap-2 text-zinc-400 text-xs font-bold">
                 <Loader2 className="w-4 h-4 animate-spin text-[#0F5132]" /> Loading properties...
+              </div>
+            ) : isPropsError ? (
+              <div className="p-5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between gap-3">
+                <span className="font-bold">Failed to load your properties. Please try again.</span>
+                <button
+                  type="button"
+                  onClick={() => refetchProps()}
+                  disabled={isFetchingProps}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition cursor-pointer disabled:opacity-50 shrink-0"
+                >
+                  {isFetchingProps ? 'Retrying...' : 'Retry'}
+                </button>
+              </div>
+            ) : properties.length === 0 ? (
+              <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs space-y-2">
+                <p className="font-bold">No active properties found under your landlord account.</p>
+                <Link
+                  href="/dashboard/landlord/new"
+                  className="inline-flex items-center gap-1.5 text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold underline"
+                >
+                  Publish a property listing first
+                </Link>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
