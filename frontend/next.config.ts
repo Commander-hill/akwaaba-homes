@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 // Trigger router reload for newly added design-system routes
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: path.resolve(__dirname),
   allowedDevOrigins: [
     '192.168.189.163',
     'localhost',

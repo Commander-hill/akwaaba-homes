@@ -155,15 +155,11 @@ export default function NewExpensePage() {
   const [formError, setFormError] = useState<string>('');
 
   // Fetch properties owned by landlord
-  const { data: propertiesData, isLoading: isLoadingProps } = useQuery({
+  const { data: propertiesData, isLoading: isLoadingProps, isError: isPropsError, refetch: refetchProps, isFetching: isFetchingProps } = useQuery({
     queryKey: ['properties', 'landlord', 'mine'],
     queryFn: async () => {
-      try {
-        const res = await api.get('/properties/landlord/mine');
-        return res.data?.data || [];
-      } catch {
-        return [];
-      }
+      const res = await api.get('/properties/landlord/mine');
+      return res.data?.data || [];
     },
   });
 
@@ -253,13 +249,12 @@ export default function NewExpensePage() {
       return;
     }
 
-    if (file.type.startsWith('image/')) {
-      const localUrl = URL.createObjectURL(file);
-      setReceiptPreview(localUrl);
-    } else {
-      setReceiptPreview(null);
+    if (receiptPreview) {
+      URL.revokeObjectURL(receiptPreview);
     }
-
+    const localUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+    setReceiptPreview(localUrl);
+    setReceiptUrl(null);
     setIsUploadingReceipt(true);
 
     try {
@@ -274,6 +269,8 @@ export default function NewExpensePage() {
       if (uploadedUrl) {
         setReceiptUrl(uploadedUrl);
         toast.success('Receipt attached successfully!');
+      } else {
+        throw new Error('Missing uploaded URL');
       }
     } catch {
       try {
@@ -286,8 +283,14 @@ export default function NewExpensePage() {
         if (fallbackUrl) {
           setReceiptUrl(fallbackUrl);
           toast.success('Receipt attached successfully!');
+        } else {
+          throw new Error('Missing fallback URL');
         }
       } catch {
+        if (localUrl) URL.revokeObjectURL(localUrl);
+        setReceiptPreview(null);
+        setReceiptUrl(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         toast.error('Failed to upload receipt file. You can still save the expense details.');
       }
     } finally {
@@ -304,7 +307,7 @@ export default function NewExpensePage() {
       toast.success('Operating expense logged & ledger updated!');
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['expensesAnalytics'] });
-      router.push('/dashboard/landlord?tab=expenses');
+      router.push('/dashboard/landlord/operations?tab=expenses');
     },
     onError: (err: any) => {
       const msg = err.response?.data?.message || 'Failed to log operating expense';
@@ -333,7 +336,7 @@ export default function NewExpensePage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <Link
-              href="/dashboard/landlord?tab=expenses"
+              href="/dashboard/landlord/operations?tab=expenses"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-1 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Expenses &amp; P&amp;L
@@ -400,6 +403,18 @@ export default function NewExpensePage() {
             {isLoadingProps ? (
               <div className="py-10 flex items-center justify-center gap-2 text-zinc-400 text-xs font-bold">
                 <Loader2 className="w-4 h-4 animate-spin text-[#0F5132]" /> Loading your properties...
+              </div>
+            ) : isPropsError ? (
+              <div className="p-5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between gap-3">
+                <span className="font-bold">Failed to load your properties. Please try again.</span>
+                <button
+                  type="button"
+                  onClick={() => refetchProps()}
+                  disabled={isFetchingProps}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition cursor-pointer disabled:opacity-50 shrink-0"
+                >
+                  {isFetchingProps ? 'Retrying...' : 'Retry'}
+                </button>
               </div>
             ) : propertyList.length === 0 ? (
               <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs space-y-2">
@@ -711,8 +726,10 @@ export default function NewExpensePage() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (receiptPreview) URL.revokeObjectURL(receiptPreview);
                       setReceiptUrl(null);
                       setReceiptPreview(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
                     }}
                     className="p-2 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                   >
@@ -795,7 +812,7 @@ export default function NewExpensePage() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={createExpenseMutation.isPending}
+              disabled={createExpenseMutation.isPending || isUploadingReceipt}
               className="px-6 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
             >
               {createExpenseMutation.isPending ? (
