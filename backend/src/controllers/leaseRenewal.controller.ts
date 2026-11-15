@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
 import appCache from '../utils/cache';
+import { addBillingPeriod } from '../utils/billingPeriod';
 
 /**
  * Submit a lease renewal request
@@ -145,7 +146,7 @@ export const respondLeaseRenewal = async (req: Request, res: Response): Promise<
 
     const renewal = await prisma.leaseRenewalRequest.findUnique({
       where: { id },
-      include: { property: true }
+      include: { property: true, booking: true }
     });
 
     if (!renewal) {
@@ -173,6 +174,31 @@ export const respondLeaseRenewal = async (req: Request, res: Response): Promise<
         property: { select: { id: true, title: true, location: true } }
       }
     });
+
+    if (status === 'ACCEPTED' && renewal.status !== 'ACCEPTED' && renewal.booking) {
+      const extendedEndDate = new Date(renewal.proposedStartDate);
+      extendedEndDate.setMonth(extendedEndDate.getMonth() + (renewal.proposedDurationMonths || 12));
+      const finalEndDate = extendedEndDate > new Date(renewal.booking.endDate)
+        ? extendedEndDate
+        : new Date(renewal.booking.endDate);
+
+      const baseDue = renewal.booking.nextRentDueDate
+        ? new Date(renewal.booking.nextRentDueDate)
+        : new Date(renewal.proposedStartDate);
+      let nextDue = addBillingPeriod(baseDue, renewal.property?.pricePeriod);
+      if (nextDue > finalEndDate) {
+        nextDue = finalEndDate;
+      }
+
+      await prisma.booking.update({
+        where: { id: renewal.bookingId },
+        data: {
+          endDate: finalEndDate,
+          nextRentDueDate: nextDue,
+          lastRentReminderSentAt: null,
+        } as any,
+      });
+    }
 
     await prisma.notification.create({
       data: {

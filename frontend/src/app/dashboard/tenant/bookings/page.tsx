@@ -425,6 +425,25 @@ export default function TenantBookingsPage() {
                               <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                               <span>{stayDateRange}</span>
                             </span>
+                            {primaryBooking.rentDueSummary && (
+                              <>
+                                <span>|</span>
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
+                                    primaryBooking.rentDueSummary.isOverdue
+                                      ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                                      : primaryBooking.rentDueSummary.isDueSoon
+                                        ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                                        : 'bg-emerald-50 text-[#0F5132] dark:bg-emerald-950/40 dark:text-emerald-300'
+                                  }`}
+                                >
+                                  {primaryBooking.rentDueSummary.isOverdue
+                                    ? `Rent overdue (${Math.abs(primaryBooking.rentDueSummary.daysUntilDue)}d)`
+                                    : `Next rent due: ${format(new Date(primaryBooking.rentDueSummary.nextDueDate), 'd MMM yyyy')}`}
+                                </span>
+                              </>
+                            )}
+
                           </div>
 
                           {/* Amenity Badges */}

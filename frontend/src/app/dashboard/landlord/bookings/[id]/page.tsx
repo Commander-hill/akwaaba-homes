@@ -440,6 +440,23 @@ export default function BookingDetailPage() {
           <span className="text-[11px] text-zinc-500 block mt-0.5">
             {isPaid ? formatCedis(amountPaid) : `Due: ${formatCedis(balanceDue)}`}
           </span>
+          {booking.rentDueSummary && (
+            <span
+              className={clsx(
+                'inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold',
+                booking.rentDueSummary.isOverdue
+                  ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                  : booking.rentDueSummary.isDueSoon
+                    ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                    : 'bg-emerald-50 text-[#0F5132] dark:bg-emerald-950/40 dark:text-emerald-300'
+              )}
+            >
+              {booking.rentDueSummary.isOverdue
+                ? `Rent overdue (${Math.abs(booking.rentDueSummary.daysUntilDue)}d)`
+                : `Next ${booking.rentDueSummary.billingPeriod} rent: ${formatDate(booking.rentDueSummary.nextDueDate)}`}
+            </span>
+          )}
+
         </div>
 
         <div>
