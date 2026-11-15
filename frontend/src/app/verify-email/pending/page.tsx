@@ -1,15 +1,63 @@
 'use client';
 import '@/app/secondary.css';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, ArrowRight, ArrowLeft, RefreshCw, CheckCircle2 } from 'lucide-react';
+import api from '@/lib/axios';
+import { Mail, ArrowRight, RefreshCw, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export default function PendingVerificationPage() {
+  const [email, setEmail] = useState('');
+  const [hasQueryEmail, setHasQueryEmail] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    const paramEmail = new URLSearchParams(window.location.search).get('email') || '';
+    if (paramEmail) {
+      setEmail(paramEmail);
+      setHasQueryEmail(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  const handleResend = async () => {
+    const targetEmail = email.trim();
+    if (!targetEmail) {
+      setFeedback({ type: 'error', text: 'Please enter the email address you registered with.' });
+      return;
+    }
+
+    setIsSending(true);
+    setFeedback(null);
+    try {
+      const res = await api.post('/auth/resend-verification', { email: targetEmail });
+      setFeedback({
+        type: 'success',
+        text: res.data?.message || 'A new verification link has been sent to your email address.',
+      });
+      setCooldown(60);
+    } catch (error: any) {
+      setFeedback({
+        type: 'error',
+        text: error.response?.data?.message || 'Could not resend verification email. Please try again shortly.',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col justify-between bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
-      
+
       {/* ── Purpose-Built Auth Header ── */}
       <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
         <Link href="/" className="inline-flex items-center gap-2.5 group">
@@ -43,8 +91,8 @@ export default function PendingVerificationPage() {
 
         <div className="flex items-center gap-3 sm:gap-5">
           <ThemeToggle />
-          <Link 
-            href="/login" 
+          <Link
+            href="/login"
             className="text-xs font-semibold text-[#16A34A] dark:text-emerald-400 hover:text-[#15803D] dark:hover:text-emerald-300 transition-colors"
           >
             Sign in &rarr;
@@ -55,9 +103,9 @@ export default function PendingVerificationPage() {
       {/* ── Center Editorial Card ── */}
       <main className="flex-1 flex items-center justify-center px-6 sm:px-10 py-12 sm:py-20">
         <div className="w-full max-w-md mx-auto">
-          
+
           <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-7 sm:p-9 shadow-xs text-center space-y-6">
-            
+
             {/* Status Icon */}
             <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center mx-auto shadow-2xs">
               <Mail className="w-6 h-6" />
@@ -72,7 +120,15 @@ export default function PendingVerificationPage() {
                 Check your inbox
               </h1>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-sm mx-auto">
-                We sent a secure activation link to your registered email address. Click the link in the message to confirm your identity and unlock your account.
+                {hasQueryEmail ? (
+                  <>
+                    We sent a secure activation link to{' '}
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">{email}</span>.
+                    Click the link in the message to confirm your identity and unlock your account.
+                  </>
+                ) : (
+                  'We sent a secure activation link to your registered email address. Click the link in the message to confirm your identity and unlock your account.'
+                )}
               </p>
             </div>
 
@@ -92,8 +148,68 @@ export default function PendingVerificationPage() {
               </div>
             </div>
 
+            {/* Resend Email Box */}
+            <div className="space-y-2.5 text-left">
+              {!hasQueryEmail && (
+                <div>
+                  <label htmlFor="pending-verify-email" className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
+                    Registered Email Address
+                  </label>
+                  <input
+                    id="pending-verify-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full h-10 px-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600"
+                  />
+                </div>
+              )}
+
+              {feedback && (
+                <div
+                  className={`flex items-start gap-2 rounded-xl px-3 py-2 text-[11px] font-medium border ${
+                    feedback.type === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                      : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+                  }`}
+                >
+                  {feedback.type === 'success' ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  )}
+                  <span>{feedback.text}</span>
+                </div>
+              )}
+            </div>
+
             {/* Action Buttons */}
             <div className="space-y-2.5 pt-1">
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isSending || cooldown > 0}
+                className="w-full h-11 flex items-center justify-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800/70 bg-emerald-50/70 dark:bg-emerald-950/30 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40 disabled:opacity-60 disabled:cursor-not-allowed text-[#0F5132] dark:text-emerald-300 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                {isSending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Sending verification link...</span>
+                  </>
+                ) : cooldown > 0 ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Resend available in {cooldown}s</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Resend Verification Email</span>
+                  </>
+                )}
+              </button>
+
               <Link
                 href="/login"
                 className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
@@ -101,7 +217,7 @@ export default function PendingVerificationPage() {
                 <span>Return to Sign In</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
-              
+
               <Link
                 href="/register"
                 className="w-full h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors"

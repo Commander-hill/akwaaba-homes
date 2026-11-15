@@ -11,14 +11,14 @@ import ThemeToggle from '@/components/ThemeToggle';
 function VerifyEmailContent() {
   const [token, setToken] = useState<string | null>(null);
   
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'missing'>('loading');
   const [message, setMessage] = useState('Verifying your email address with AkwaabaHomes identity services...');
 
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('token');
     setToken(t);
     if (!t) {
-      setStatus('error');
+      setStatus('missing');
       setMessage('The verification link is missing an authorization token. Please check the full link in your email.');
       return;
     }
@@ -130,6 +130,49 @@ function VerifyEmailContent() {
                   >
                     <span>Proceed to Sign In</span>
                     <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {status === 'missing' && (
+              <div className="space-y-5 animate-in fade-in">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center mx-auto shadow-2xs">
+                  <Mail className="w-6 h-6" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400">
+                    Verification Link Required
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                    Open your email link
+                  </h2>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-sm mx-auto">
+                    {message}
+                  </p>
+                </div>
+
+                <div className="space-y-2.5 pt-2">
+                  <Link
+                    href="/verify-email/pending"
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+                  >
+                    <span>Resend Verification Email</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <Link
+                    href="/verify-email/pending"
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Request New Verification Link</span>
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="w-full h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors"
+                  >
+                    Return to Sign In
                   </Link>
                 </div>
               </div>

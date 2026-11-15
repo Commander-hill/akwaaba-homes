@@ -636,7 +636,7 @@ export default function RegisterPage() {
               : detectGhanaCarrier(formData.payoutAccountNumber)?.carrier?.toUpperCase()) || formData.payoutProvider || 'MTN'
           : formData.payoutProvider;
 
-      await api.post('/auth/register', {
+      const res = await api.post('/auth/register', {
         ...formData,
         payoutAccountNumber: resolvedPayoutAccount,
         payoutProvider: resolvedPayoutProvider,
@@ -645,8 +645,14 @@ export default function RegisterPage() {
         sessionStorage.removeItem(REGISTRATION_DRAFT_KEY);
         localStorage.removeItem(REGISTRATION_DRAFT_KEY);
       } catch (e) {}
-      toast.success('Registration successful! Please sign in.');
-      router.push('/login?registered=true');
+      // Redirect to verification pending when email verification is required
+      if (res.data?.requireVerification !== false) {
+        toast.success('Registration successful! Please check your email to verify your account.');
+        router.push(`/verify-email/pending?email=${encodeURIComponent(formData.email.trim())}`);
+      } else {
+        toast.success('Registration successful! Please sign in.');
+        router.push('/login?registered=true');
+      }
     } catch (err: any) {
       triggerError(err.response?.data?.message || 'Failed to complete registration. Please try again.');
       setIsLoading(false);

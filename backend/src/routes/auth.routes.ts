@@ -16,6 +16,7 @@ import {
   logout,
   refresh,
   verifyEmail,
+  resendVerificationEmail,
   getMe,
   getSession,
   submitGhanaCard,
@@ -45,6 +46,7 @@ router.post('/login/2fa/mandatory-setup', loginRateLimiter, completeMandatory2FA
 router.post('/logout', logout);
 router.post('/refresh', authRateLimiter, refresh);
 router.post('/verify-email', otpRateLimiter, verifyEmail);
+router.post('/resend-verification', otpRateLimiter, resendVerificationEmail);
 router.post('/ghana-card', authenticate, kycRateLimiter, submitGhanaCard);
 router.post('/landlord-verification', authenticate, kycRateLimiter, submitLandlordVerification);
 router.post('/student-verification', authenticate, submitStudentVerification);

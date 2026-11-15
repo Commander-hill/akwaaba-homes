@@ -203,6 +203,8 @@ function LoginForm() {
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
         setError('ADMIN_PORTAL_REQUIRED');
+      } else if (err.response?.data?.requireVerification) {
+        setError('EMAIL_VERIFICATION_REQUIRED');
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.code === 'ERR_NETWORK' || !err.response) {
@@ -287,7 +289,18 @@ function LoginForm() {
             <a href="/admin/login" className="underline font-bold">Admin Portal</a>.
           </div>
         )}
-        {error && error !== 'ADMIN_PORTAL_REQUIRED' && (
+        {error === 'EMAIL_VERIFICATION_REQUIRED' && (
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-[11px] text-amber-900 dark:text-amber-200 font-medium space-y-1">
+            <p>Please verify your email address before signing in.</p>
+            <Link
+              href={identifier.includes('@') ? `/verify-email/pending?email=${encodeURIComponent(identifier.trim())}` : '/verify-email/pending'}
+              className="inline-flex items-center gap-1 underline font-bold text-[#0F5132] dark:text-emerald-400"
+            >
+              Open verification instructions &amp; resend link &rarr;
+            </Link>
+          </div>
+        )}
+        {error && error !== 'ADMIN_PORTAL_REQUIRED' && error !== 'EMAIL_VERIFICATION_REQUIRED' && (
           <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg px-3 py-1.5 text-[11px] text-rose-700 dark:text-rose-300 font-medium">
             {error}
           </div>
