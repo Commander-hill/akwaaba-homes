@@ -669,3 +669,49 @@ export const verifyMoMoAccountName = async (req: Request, res: Response): Promis
   }
 };
 
+const FALLBACK_GHANA_BANKS = [
+  { name: 'GCB Bank', code: 'GH040100' },
+  { name: 'Ecobank Ghana', code: 'GH130100' },
+  { name: 'Absa Bank Ghana', code: 'GH030100' },
+  { name: 'Access Bank Ghana', code: 'GH280100' },
+  { name: 'Stanbic Bank Ghana', code: 'GH190100' },
+  { name: 'Fidelity Bank Ghana', code: 'GH240100' },
+  { name: 'First National Bank', code: 'GH330100' },
+  { name: 'Agricultural Development Bank (ADB)', code: 'GH080100' },
+  { name: 'National Investment Bank (NIB)', code: 'GH050100' },
+  { name: 'Zenith Bank Ghana', code: 'GH120100' },
+  { name: 'UBA Ghana', code: 'GH230100' },
+  { name: 'CalBank', code: 'GH140100' },
+  { name: 'Consolidated Bank Ghana (CBG)', code: 'GH340100' },
+  { name: 'Standard Chartered Bank', code: 'GH020100' },
+];
+
+/**
+ * Fetch Ghanaian Commercial Banks with Paystack GhIPSS codes
+ */
+export const getGhanaBanks = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    if (!secretKey) {
+      res.status(200).json({ banks: FALLBACK_GHANA_BANKS });
+      return;
+    }
+
+    const response = await axios.get(`${PAYSTACK_BASE}/bank?country=ghana&type=ghipss`, {
+      headers: { Authorization: `Bearer ${secretKey}` },
+      timeout: 8000,
+    });
+
+    const banks = Array.isArray(response.data?.data)
+      ? response.data.data
+          .filter((b: any) => b?.active !== false && b?.code && b?.name)
+          .map((b: any) => ({ name: String(b.name), code: String(b.code) }))
+      : FALLBACK_GHANA_BANKS;
+
+    res.status(200).json({ banks: banks.length > 0 ? banks : FALLBACK_GHANA_BANKS });
+  } catch (error) {
+    console.warn('[Payout] Falling back to static Ghana banks list:', error);
+    res.status(200).json({ banks: FALLBACK_GHANA_BANKS });
+  }
+};
+

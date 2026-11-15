@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -30,6 +30,7 @@ import {
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import { useSocket } from '@/providers/SocketProvider';
 
 const MOMO_NETWORKS = [
   { id: 'MTN', label: 'MTN Mobile Money', short: 'MTN', code: 'MTN' },
@@ -37,21 +38,21 @@ const MOMO_NETWORKS = [
   { id: 'AirtelTigo', label: 'AT Money (AirtelTigo)', short: 'AT Money', code: 'ATL' },
 ];
 
-const GHANA_BANKS = [
-  'GCB Bank',
-  'Ecobank Ghana',
-  'Absa Bank Ghana',
-  'Access Bank Ghana',
-  'Stanbic Bank Ghana',
-  'Fidelity Bank Ghana',
-  'First National Bank',
-  'Agricultural Development Bank (ADB)',
-  'National Investment Bank (NIB)',
-  'Zenith Bank Ghana',
-  'UBA Ghana',
-  'CalBank',
-  'Consolidated Bank Ghana (CBG)',
-  'Standard Chartered Bank',
+const FALLBACK_GHANA_BANKS = [
+  { name: 'GCB Bank', code: 'GH040100' },
+  { name: 'Ecobank Ghana', code: 'GH130100' },
+  { name: 'Absa Bank Ghana', code: 'GH030100' },
+  { name: 'Access Bank Ghana', code: 'GH280100' },
+  { name: 'Stanbic Bank Ghana', code: 'GH190100' },
+  { name: 'Fidelity Bank Ghana', code: 'GH240100' },
+  { name: 'First National Bank', code: 'GH330100' },
+  { name: 'Agricultural Development Bank (ADB)', code: 'GH080100' },
+  { name: 'National Investment Bank (NIB)', code: 'GH050100' },
+  { name: 'Zenith Bank Ghana', code: 'GH120100' },
+  { name: 'UBA Ghana', code: 'GH230100' },
+  { name: 'CalBank', code: 'GH140100' },
+  { name: 'Consolidated Bank Ghana (CBG)', code: 'GH340100' },
+  { name: 'Standard Chartered Bank', code: 'GH020100' },
 ];
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode }> = {
@@ -83,6 +84,7 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; 
 
 export default function LandlordWithdrawalPage() {
   const queryClient = useQueryClient();
+  const { socket } = useSocket();
   
   const [recipientType, setRecipientType] = useState<'MOMO' | 'BANK'>('MOMO');
   const [accountName, setAccountName] = useState('');
@@ -108,7 +110,18 @@ export default function LandlordWithdrawalPage() {
     },
   });
 
-  // 2. Fetch payout history + balance
+  // 2. Fetch Ghanaian commercial banks with Paystack GhIPSS codes
+  const { data: banksData } = useQuery({
+    queryKey: ['payouts', 'banks'],
+    queryFn: async () => {
+      const res = await api.get('/payouts/banks');
+      return res.data;
+    },
+    staleTime: 30 * 60 * 1000,
+  });
+  const ghanaBanks: { name: string; code: string }[] = banksData?.banks?.length ? banksData.banks : FALLBACK_GHANA_BANKS;
+
+  // 3. Fetch payout history + balance
   const { data: payoutData, isLoading, isError: isPayoutError, refetch, isRefetching } = useQuery({
     queryKey: ['payouts', 'history'],
     queryFn: async () => {
@@ -116,6 +129,24 @@ export default function LandlordWithdrawalPage() {
       return res.data;
     },
   });
+
+  // Real-time payout status updates via Socket.IO
+  useEffect(() => {
+    if (!socket) return;
+    const handlePayoutUpdated = (payload: { payoutId?: string; status?: string }) => {
+      queryClient.invalidateQueries({ queryKey: ['payouts'] });
+      queryClient.invalidateQueries({ queryKey: ['payouts', 'history'] });
+      if (payload?.status === 'SUCCESS') {
+        toast.success('Payout transfer completed!');
+      } else if (payload?.status === 'FAILED') {
+        toast.error('A payout transfer failed. Check your withdrawal history for details.');
+      }
+    };
+    socket.on('payout_updated', handlePayoutUpdated);
+    return () => {
+      socket.off('payout_updated', handlePayoutUpdated);
+    };
+  }, [socket, queryClient]);
 
   const summary = payoutData?.summary;
   const payouts: any[] = payoutData?.payouts || [];
@@ -141,21 +172,22 @@ export default function LandlordWithdrawalPage() {
     }
   };
 
-  // Payee lookup verification with telecom gateway
+  // Payee lookup verification with telecom/bank gateway
   const handleVerifyPayee = async () => {
     if (!accountNumber.trim()) {
-      toast.error('Please enter a phone number first');
+      toast.error(recipientType === 'MOMO' ? 'Please enter a phone number first' : 'Please enter an account number first');
       return;
     }
     setIsVerifyingPayee(true);
     setPayeeVerified(false);
     try {
-      const networkObj = MOMO_NETWORKS.find(n => n.id === bankOrNetwork);
-      const networkCode = networkObj ? networkObj.code : 'MTN';
+      const bankCode = recipientType === 'MOMO'
+        ? (MOMO_NETWORKS.find(n => n.id === bankOrNetwork)?.code || 'MTN')
+        : bankOrNetwork;
       
       const res = await api.post('/payouts/verify-account', {
         accountNumber: accountNumber.trim(),
-        bankCode: networkCode,
+        bankCode,
       });
 
       if (res.data?.accountName) {
@@ -562,7 +594,7 @@ export default function LandlordWithdrawalPage() {
                     type="button"
                     onClick={() => {
                       setRecipientType('BANK');
-                      setBankOrNetwork('GCB Bank');
+                      setBankOrNetwork(ghanaBanks[0]?.code || 'GH040100');
                       setPayeeVerified(false);
                     }}
                     className={clsx(
@@ -597,9 +629,9 @@ export default function LandlordWithdrawalPage() {
                               {opt.label}
                             </option>
                           ))
-                        : GHANA_BANKS.map((b) => (
-                            <option key={b} value={b}>
-                              {b}
+                        : ghanaBanks.map((b) => (
+                            <option key={b.code} value={b.code}>
+                              {b.name}
                             </option>
                           ))}
                     </select>
@@ -614,31 +646,29 @@ export default function LandlordWithdrawalPage() {
                       {recipientType === 'MOMO' ? 'MoMo Phone Number *' : 'Bank Account Number *'}
                     </label>
 
-                    {recipientType === 'MOMO' && (
-                      <button
-                        type="button"
-                        onClick={handleVerifyPayee}
-                        disabled={isVerifyingPayee || !accountNumber.trim()}
-                        className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 px-2.5 py-0.5 rounded-lg transition cursor-pointer disabled:opacity-40 flex items-center gap-1"
-                      >
-                        {isVerifyingPayee ? (
-                          <>
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                            <span>Verifying...</span>
-                          </>
-                        ) : payeeVerified ? (
-                          <>
-                            <Check className="w-3 h-3 text-emerald-600" />
-                            <span>Verified Payee</span>
-                          </>
-                        ) : (
-                          <>
-                            <Search className="w-3 h-3" />
-                            <span>Verify Payee Name</span>
-                          </>
-                        )}
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={handleVerifyPayee}
+                      disabled={isVerifyingPayee || !accountNumber.trim()}
+                      className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 px-2.5 py-0.5 rounded-lg transition cursor-pointer disabled:opacity-40 flex items-center gap-1"
+                    >
+                      {isVerifyingPayee ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Verifying...</span>
+                        </>
+                      ) : payeeVerified ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span>Verified Payee</span>
+                        </>
+                      ) : (
+                        <>
+                          <Search className="w-3 h-3" />
+                          <span>Verify Payee Name</span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
                   <input
