@@ -68,80 +68,14 @@ interface BookingItem {
     reviews: number;
   };
   amount: string;
+  createdAt: string;
 }
-
-const initialBookings: BookingItem[] = [
-  {
-    id: 'booking-glacier',
-    propertyTitle: 'Glacier Studio',
-    location: 'Achimota, Accra',
-    rooms: 'Executive Studio',
-    guests: '1 Guest',
-    guestIcon: 'single',
-    dateRange: '12 Oct 2026 – 14 Oct 2026',
-    noteText: '“Great place! Very clean and secure.”',
-    noteTone: 'mint',
-    status: 'Confirmed',
-    image: '/images/resident/residence-glacier-main.jpg',
-    tenant: {
-      name: 'Ama Serwaa',
-      avatar: '/images/messages/chelsea-avatar.png',
-      verified: true,
-      rating: '5.0',
-      reviews: 12,
-    },
-    amount: 'GH₵ 480.00',
-  },
-  {
-    id: 'booking-ssnit',
-    propertyTitle: 'SSNIT Residential Apartments',
-    location: 'Koforidua',
-    rooms: '2-Bedroom Apartment',
-    guests: '2 Guests',
-    guestIcon: 'multiple',
-    dateRange: '18 Oct 2026 – 20 Oct 2026',
-    noteText: 'Awaiting tenant payment',
-    noteAmount: '(GH₵ 750.00)',
-    noteTone: 'amber',
-    status: 'Pending',
-    image: '/images/resident/prop-premium-studio.jpg',
-    tenant: {
-      name: 'Kwame Mensah',
-      avatar: '/images/messages/john-avatar.png',
-      verified: false,
-      rating: '4.8',
-      reviews: 8,
-    },
-    amount: 'GH₵ 750.00',
-  },
-  {
-    id: 'booking-kimo',
-    propertyTitle: 'KIMO APARTMENT',
-    location: 'Burma Camp, Accra',
-    rooms: '1-Bedroom Apartment',
-    guests: '1 Guest',
-    guestIcon: 'single',
-    dateRange: '05 Oct 2026 – 07 Oct 2026',
-    noteText: 'Payment received',
-    noteTone: 'mint',
-    status: 'Confirmed',
-    image: '/images/resident/prop-kimo.jpg',
-    tenant: {
-      name: 'Daniel Osei',
-      avatar: '/images/messages/stephen-avatar.png',
-      verified: true,
-      rating: '5.0',
-      reviews: 5,
-    },
-    amount: 'GH₵ 300.00',
-  },
-];
 
 export default function LandlordBookingsPage() {
   const showSkeleton = useInitialSkeleton();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'ALL' | 'Pending' | 'Confirmed' | 'Cancelled'>('ALL');
-  const [period, setPeriod] = useState('This Month');
+  const [period, setPeriod] = useState<'All Time' | 'This Month'>('All Time');
 
   const { data: rawBookings = [], isLoading } = useQuery({
     queryKey: ['landlord', 'bookings', 'list'],
@@ -215,23 +149,33 @@ export default function LandlordBookingsPage() {
           reviews: 1,
         },
         amount: `GH₵ ${priceVal.toLocaleString()}`,
+        createdAt: b.createdAt || b.startDate,
       };
     });
   }, [rawBookings]);
 
+  const periodBookings = useMemo(() => {
+    if (period === 'All Time') return bookings;
+    const now = new Date();
+    return bookings.filter((b) => {
+      const d = new Date(b.createdAt);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+  }, [bookings, period]);
+
   const counts = useMemo(() => {
     return {
-      ALL: bookings.length,
-      Pending: bookings.filter((b) => b.status === 'Pending').length,
-      Confirmed: bookings.filter((b) => b.status === 'Confirmed').length,
-      Cancelled: bookings.filter((b) => b.status === 'Cancelled').length,
+      ALL: periodBookings.length,
+      Pending: periodBookings.filter((b) => b.status === 'Pending').length,
+      Confirmed: periodBookings.filter((b) => b.status === 'Confirmed').length,
+      Cancelled: periodBookings.filter((b) => b.status === 'Cancelled').length,
     };
-  }, [bookings]);
+  }, [periodBookings]);
 
   const filteredBookings = useMemo(() => {
-    if (activeTab === 'ALL') return bookings;
-    return bookings.filter((b) => b.status === activeTab);
-  }, [bookings, activeTab]);
+    if (activeTab === 'ALL') return periodBookings;
+    return periodBookings.filter((b) => b.status === activeTab);
+  }, [periodBookings, activeTab]);
   if (showSkeleton || isLoading) return <BookingListSkeleton />;
 
   const handleConfirm = (id: string) => {
@@ -422,19 +366,27 @@ export default function LandlordBookingsPage() {
 
       {/* Horizontal Booking Cards List */}
       <div className="space-y-4">
-        {filteredBookings.map((booking) => (
+        {filteredBookings.length === 0 ? (
+          <div className="bg-white dark:bg-[#141816] rounded-3xl border border-zinc-200/70 dark:border-zinc-800 p-10 text-center space-y-2">
+            <CalendarCheck className="w-9 h-9 text-zinc-300 dark:text-zinc-600 mx-auto" />
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">No matching bookings</h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+              There are no {activeTab === 'ALL' ? '' : `${activeTab.toLowerCase()} `}bookings for {period.toLowerCase()}.
+            </p>
+          </div>
+        ) : filteredBookings.map((booking) => (
           <div
             key={booking.id}
             className="bg-white dark:bg-[#141816] rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-2xs hover:shadow-md transition-all p-4 sm:p-5 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-5 xl:gap-6 relative"
           >
             {/* Top-Right 3 Vertical Dots */}
-            <button
-              type="button"
-              aria-label="Booking options"
-              className=" absolute top-4 right-4 p-1.5 rounded-full text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            <Link
+              href={`/dashboard/landlord/bookings/${booking.id}`}
+              aria-label="View booking details"
+              className="absolute top-4 right-4 p-1.5 rounded-full text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <MoreVertical className="w-4 h-4" />
-            </button>
+            </Link>
 
             {/* Left Column: Image & Property Stay Details */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 w-full xl:flex-1 min-w-0 pr-8 xl:pr-0">
@@ -577,15 +529,17 @@ export default function LandlordBookingsPage() {
                 <div className="flex items-center gap-2.5 w-full sm:w-auto">
                   <button
                     type="button"
+                    disabled={statusMutation.isPending}
                     onClick={() => handleConfirm(booking.id)}
-                    className="px-4 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                    className="px-4 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
                   >
                     Confirm Booking
                   </button>
                   <button
                     type="button"
+                    disabled={statusMutation.isPending}
                     onClick={() => handleCancel(booking.id)}
-                    className="px-5 py-2.5 rounded-full bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-bold transition-colors cursor-pointer"
+                    className="px-5 py-2.5 rounded-full bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-60 disabled:cursor-not-allowed text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-bold transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
