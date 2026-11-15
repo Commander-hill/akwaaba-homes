@@ -8,7 +8,7 @@ import {
   Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, 
   Image as ImageIcon, X, Plus, Trash2, AlertCircle, ArrowLeft,
   ArrowRight, Check, CheckCircle2, Zap, Droplets,
-  Car, Wind, Wifi, Dumbbell, Clock, KeyRound
+  Car, Wind, Wifi, Dumbbell, Clock, KeyRound, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import Map from '@/components/Map';
@@ -18,6 +18,11 @@ import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import AlertBanner from '@/components/AlertBanner';
 import { Button } from '@/components/ui/Button';
+import {
+  PROPERTY_TYPE_CONFIGS,
+  resolvePropertyCategory,
+  PropertyCategory,
+} from '@/components/landlord-ui/propertyConfig';
 
 interface RoomInput {
   id: string;
@@ -121,8 +126,47 @@ export default function NewPropertyPage() {
   });
 
   const [rooms, setRooms] = useState<RoomInput[]>([
-    { id: Date.now().toString(), blockName: '', gender: 'MIXED', roomType: '1 in a room', numberOfRooms: 1, price: '' }
+    { id: Date.now().toString(), blockName: '', gender: 'MIXED', roomType: '1 Bedroom Apartment', numberOfRooms: 1, price: '' }
   ]);
+
+  const activeCategory = resolvePropertyCategory(formData.type);
+  const typeConfig = PROPERTY_TYPE_CONFIGS[activeCategory];
+
+  const handlePropertyTypeChange = (newType: string) => {
+    const nextCategory = resolvePropertyCategory(newType);
+    const nextConfig = PROPERTY_TYPE_CONFIGS[nextCategory];
+
+    setFormData(prev => {
+      // Pick first targetAudience and pricePeriod valid for this type if current is incompatible
+      const targetValid = nextConfig.targetAudienceOptions.some(o => o.value === prev.targetAudience);
+      const nextTarget = targetValid ? prev.targetAudience : nextConfig.targetAudienceOptions[0]?.value || 'Open to All';
+
+      const periodValid = nextConfig.billingPeriodOptions.some(o => o.value === prev.pricePeriod);
+      const nextPeriod = periodValid ? prev.pricePeriod : nextConfig.defaultBillingPeriod;
+
+      return {
+        ...prev,
+        type: newType,
+        targetAudience: nextTarget,
+        pricePeriod: nextPeriod,
+        gateLockTime: nextConfig.defaultGateLock,
+        visitorPolicy: nextConfig.defaultVisitorPolicy,
+        quietHours: nextConfig.defaultQuietHours,
+      };
+    });
+
+    // Reset room types to match the new category
+    setRooms([
+      {
+        id: Date.now().toString(),
+        blockName: '',
+        gender: 'MIXED',
+        roomType: nextConfig.roomTypeOptions[0]?.value || '1 in a room',
+        numberOfRooms: 1,
+        price: '',
+      }
+    ]);
+  };
 
   const [fieldErrors, setFieldErrors] = useState<{ title?: boolean; location?: boolean; description?: boolean }>({});
   const [roomErrors, setRoomErrors] = useState<{ [roomId: string]: { numberOfRooms?: boolean; price?: boolean } }>({});
@@ -196,7 +240,17 @@ export default function NewPropertyPage() {
   };
 
   const handleAddRoom = () => {
-    setRooms(prev => [...prev, { id: Date.now().toString(), blockName: '', gender: 'MIXED', roomType: '1 in a room', numberOfRooms: 1, price: '' }]);
+    setRooms(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        blockName: '',
+        gender: 'MIXED',
+        roomType: typeConfig.roomTypeOptions[0]?.value || '1 in a room',
+        numberOfRooms: 1,
+        price: '',
+      }
+    ]);
   };
 
   const handleRemoveRoom = (id: string) => {
@@ -508,9 +562,18 @@ export default function NewPropertyPage() {
                 type="text"
                 value={formData.title}
                 onChange={e => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g. Ridge View Executive Apartments - Suite 4B"
+                placeholder={typeConfig.defaultTitlePlaceholder}
                 className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
               />
+            </div>
+
+            {/* Property Category Notice Pill */}
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 text-xs">
+              <Sparkles className="w-4 h-4 text-[#16A34A] shrink-0" />
+              <p className="text-zinc-700 dark:text-zinc-300">
+                <span className="font-bold text-zinc-900 dark:text-white">{typeConfig.label}:</span>{' '}
+                {typeConfig.description}
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -518,13 +581,13 @@ export default function NewPropertyPage() {
                 <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Property Type</label>
                 <select
                   value={formData.type}
-                  onChange={e => setFormData({ ...formData, type: e.target.value })}
+                  onChange={e => handlePropertyTypeChange(e.target.value)}
                   className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
                 >
                   <option value="Apartment">Residential Apartment</option>
                   <option value="Studio">Executive Studio / Self-Contained</option>
                   <option value="House">Detached House / Townhouse</option>
-                  <option value="Hostel">Multi-Unit Residence</option>
+                  <option value="Hostel">Student Hostel / Hall Residence</option>
                 </select>
               </div>
 
@@ -535,10 +598,11 @@ export default function NewPropertyPage() {
                   onChange={e => setFormData({ ...formData, targetAudience: e.target.value })}
                   className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
                 >
-                  <option value="Open to All">Open to All</option>
-                  <option value="Students Only">Students Only</option>
-                  <option value="Working Professionals">Working Professionals</option>
-                  <option value="Postgraduate Only">Postgraduate Only</option>
+                  {typeConfig.targetAudienceOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -562,10 +626,11 @@ export default function NewPropertyPage() {
                   onChange={e => setFormData({ ...formData, pricePeriod: e.target.value })}
                   className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
                 >
-                  <option value="Monthly">Monthly Rent</option>
-                  <option value="Annual">Annual / Yearly (12 Months)</option>
-                  <option value="Quarterly">Quarterly</option>
-                  <option value="Academic Year">Academic Term / Semester</option>
+                  {typeConfig.billingPeriodOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -629,11 +694,13 @@ export default function NewPropertyPage() {
         <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
             <div>
-              <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 2: Room Units &amp; Rates (GH₵)</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">Configure unit types, bedrooms, flats, and tenancy rates in Ghana Cedis.</p>
+              <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+                Step 2: {typeConfig.unitLabel}
+              </h2>
+              <p className="text-xs text-zinc-500 mt-0.5">{typeConfig.unitHelpText}</p>
             </div>
             <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-xl text-xs font-bold text-[#0F5132] dark:text-emerald-400">
-              Total Capacity: {totalBeds} Residents / Beds
+              Total Capacity: {totalBeds} {activeCategory === 'Hostel' ? 'Residents / Beds' : 'Bedrooms / Capacity'}
             </div>
           </div>
 
@@ -642,7 +709,10 @@ export default function NewPropertyPage() {
               <div key={room.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-zinc-200 dark:border-zinc-700/80 space-y-3 relative">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-zinc-900 dark:text-white">
-                    Unit Configuration #{idx + 1}
+                    {activeCategory === 'Apartment' && `Apartment Unit #${idx + 1}`}
+                    {activeCategory === 'Studio' && `Studio Unit #${idx + 1}`}
+                    {activeCategory === 'House' && `House Layout #${idx + 1}`}
+                    {activeCategory === 'Hostel' && `Hostel Wing #${idx + 1}`}
                   </span>
                   {rooms.length > 1 && (
                     <button
@@ -655,47 +725,62 @@ export default function NewPropertyPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                <div className={clsx(
+                  "grid grid-cols-1 sm:grid-cols-2 gap-3",
+                  typeConfig.showGenderWing ? "md:grid-cols-5" : "md:grid-cols-4"
+                )}>
                   <div>
-                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Block / Wing</label>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                      {typeConfig.blockNameLabel}
+                    </label>
                     <input
                       type="text"
                       value={room.blockName}
                       onChange={e => handleRoomChange(room.id, 'blockName', e.target.value)}
-                      placeholder="e.g. Block A"
+                      placeholder={typeConfig.blockNamePlaceholder}
                       className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Gender Wing</label>
-                    <select
-                      value={room.gender}
-                      onChange={e => handleRoomChange(room.id, 'gender', e.target.value)}
-                      className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
-                    >
-                      <option value="MIXED">Mixed / Open</option>
-                      <option value="MALE">Male Wing Only</option>
-                      <option value="FEMALE">Female Wing Only</option>
-                    </select>
-                  </div>
+                  {typeConfig.showGenderWing && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Gender Wing</label>
+                      <select
+                        value={room.gender}
+                        onChange={e => handleRoomChange(room.id, 'gender', e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
+                      >
+                        <option value="MIXED">Mixed / Open</option>
+                        <option value="MALE">Male Wing Only</option>
+                        <option value="FEMALE">Female Wing Only</option>
+                      </select>
+                    </div>
+                  )}
 
                   <div>
-                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Room Type</label>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                      {activeCategory === 'Apartment' && 'Apartment Layout'}
+                      {activeCategory === 'Studio' && 'Studio Tier'}
+                      {activeCategory === 'House' && 'House Size'}
+                      {activeCategory === 'Hostel' && 'Room Sharing Tier'}
+                    </label>
                     <select
                       value={room.roomType}
                       onChange={e => handleRoomChange(room.id, 'roomType', e.target.value)}
                       className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
                     >
-                      <option value="1 in a room">1 in a room (Single)</option>
-                      <option value="2 in a room">2 in a room (Double)</option>
-                      <option value="3 in a room">3 in a room (Triple)</option>
-                      <option value="4 in a room">4 in a room (Quad)</option>
+                      {typeConfig.roomTypeOptions.map(opt => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Room Count</label>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                      {activeCategory === 'Hostel' ? 'Room Count' : 'Units Available'}
+                    </label>
                     <input
                       type="number"
                       min="1"
@@ -706,12 +791,14 @@ export default function NewPropertyPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Annual Rate (GH₵) *</label>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                      Rate (GH₵ / {formData.pricePeriod}) *
+                    </label>
                     <div className="relative">
                       <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-400">GH₵</span>
                       <input
                         type="number"
-                        placeholder="e.g. 8500"
+                        placeholder="e.g. 4500"
                         value={room.price}
                         onChange={e => handleRoomChange(room.id, 'price', e.target.value)}
                         className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg pl-10 pr-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
@@ -728,7 +815,12 @@ export default function NewPropertyPage() {
               className="inline-flex items-center gap-1.5 px-4 py-2 border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-[#16A34A] text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add Another Room Type / Wing</span>
+              <span>
+                {activeCategory === 'Apartment' && 'Add Another Apartment Layout / Floor'}
+                {activeCategory === 'Studio' && 'Add Another Studio Tier'}
+                {activeCategory === 'House' && 'Add Additional Wing / Quarters'}
+                {activeCategory === 'Hostel' && 'Add Another Room Type / Wing'}
+              </span>
             </button>
           </div>
 
@@ -764,7 +856,15 @@ export default function NewPropertyPage() {
 
           {/* Amenities Grid */}
           <div className="space-y-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Select Available Facilities</div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Select Available Facilities</div>
+              {typeConfig.recommendedAmenities?.length > 0 && (
+                <div className="text-[11px] text-zinc-500">
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Recommended for {typeConfig.badge}:</span>{' '}
+                  {typeConfig.recommendedAmenities.slice(0, 3).join(', ')}...
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {AMENITY_SECTIONS.map((sec) => {
                 const IconComponent = sec.icon;
@@ -802,19 +902,29 @@ export default function NewPropertyPage() {
 
           {/* Rules & Policies */}
           <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-            <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Curfew &amp; Compound Conduct</div>
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                {activeCategory === 'Hostel' ? 'Curfew & Compound Conduct' : 'Tenancy Guidelines & Conduct'}
+              </div>
+              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                Tailored for {typeConfig.label}
+              </span>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Gate Lock / Curfew</label>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  {activeCategory === 'Hostel' ? 'Gate Lock / Curfew' : 'Gate Access & Security'}
+                </label>
                 <select
                   value={formData.gateLockTime}
                   onChange={e => setFormData({ ...formData, gateLockTime: e.target.value })}
                   className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none cursor-pointer"
                 >
-                  <option value="No Curfew / 24/7 Access">24/7 Unrestricted Gate Access</option>
-                  <option value="Gate locks at 10:00 PM">Gate locks at 10:00 PM</option>
-                  <option value="Gate locks at 11:00 PM">Gate locks at 11:00 PM</option>
-                  <option value="Gate locks at 12:00 Midnight">Gate locks at 12:00 Midnight</option>
+                  {typeConfig.gateLockOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -825,23 +935,28 @@ export default function NewPropertyPage() {
                   onChange={e => setFormData({ ...formData, visitorPolicy: e.target.value })}
                   className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none cursor-pointer"
                 >
-                  <option value="Day visitors allowed until 8 PM">Day visitors until 8:00 PM</option>
-                  <option value="No visitors allowed inside rooms">Visitors allowed in lounge only</option>
-                  <option value="Overnight visitors allowed with notice">Overnight permitted with notice</option>
-                  <option value="Strictly no external visitors">Strictly no visitors</option>
+                  {typeConfig.visitorPolicyOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Quiet Hours</label>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  {activeCategory === 'Hostel' ? 'Study & Quiet Hours' : 'Quiet Hours & Conduct'}
+                </label>
                 <select
                   value={formData.quietHours}
                   onChange={e => setFormData({ ...formData, quietHours: e.target.value })}
                   className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none cursor-pointer"
                 >
-                  <option value="From 10:00 PM">Quiet hours from 10:00 PM</option>
-                  <option value="From 11:00 PM">Quiet hours from 11:00 PM</option>
-                  <option value="24/7 Study Atmosphere">24/7 Quiet Study Atmosphere</option>
+                  {typeConfig.quietHoursOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
