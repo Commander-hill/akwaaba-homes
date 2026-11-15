@@ -136,6 +136,9 @@ export function usePublicResource<T = any>(
   const refetchInterval = options?.refetchInterval;
 
   const [data, setData] = useState<T | undefined>(() => {
+    if (typeof window === 'undefined') {
+      return options?.initialData ?? options?.placeholderData;
+    }
     const existing = resourceStore.get(key);
     if (existing?.data !== undefined) return existing.data as T;
     if (options?.initialData !== undefined) {
