@@ -1,17 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import SkeletonTable from '@/components/SkeletonTable';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import { 
-  Loader2, CreditCard, CheckCircle, AlertCircle, Calendar, Building, 
-  MapPin, Smartphone, X, ExternalLink
+  CreditCard, CheckCircle, AlertCircle, Calendar, Building, 
+  MapPin, RefreshCw
 } from 'lucide-react';
 import clsx from 'clsx';
-import toast from 'react-hot-toast';
 
 export default function LandlordSubscriptionPage() {
 
@@ -23,7 +21,7 @@ export default function LandlordSubscriptionPage() {
     },
   });
 
-  const { data: overviewData, isLoading, refetch } = useQuery({
+  const { data: overviewData, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['subscriptions', 'overview'],
     queryFn: async () => {
       const res = await api.get('/subscriptions/overview');
@@ -99,6 +97,22 @@ export default function LandlordSubscriptionPage() {
           <div className="p-12 flex justify-center">
             <SkeletonTable rows={4} columns={5} />
           </div>
+        ) : isError ? (
+          <div className="p-12 text-center space-y-3">
+            <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
+            <p className="text-xs font-bold text-zinc-900 dark:text-white">
+              Failed to load subscription billing overview.
+            </p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={clsx('w-3.5 h-3.5', isFetching && 'animate-spin')} />
+              {isFetching ? 'Retrying...' : 'Retry'}
+            </button>
+          </div>
         ) : properties.length === 0 ? (
           <div className="p-12 text-center text-xs text-zinc-500">
             No properties registered under your landlord account yet.
@@ -118,12 +132,18 @@ export default function LandlordSubscriptionPage() {
               <tbody className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
                 {properties.map((item: any) => {
                   const sub = item.subscription;
-                  const isLive = item.isAvailable && sub?.isActive;
+                  const isSubActive = Boolean(sub?.isActive);
+                  const isLive = Boolean(item.isAvailable && isSubActive);
 
                   return (
                     <tr key={item.propertyId} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-bold text-zinc-900 dark:text-white">{item.propertyTitle}</div>
+                        <Link
+                          href={`/dashboard/landlord/properties/${item.propertyId}/edit`}
+                          className="font-bold text-zinc-900 dark:text-white hover:text-[#16A34A] transition-colors"
+                        >
+                          {item.propertyTitle}
+                        </Link>
                         <div className="text-[11px] text-zinc-500 flex items-center gap-1 mt-0.5">
                           <MapPin className="w-3 h-3 text-zinc-400" />
                           <span>{item.location}</span>
@@ -132,7 +152,11 @@ export default function LandlordSubscriptionPage() {
                       <td className="px-6 py-4">
                         {isLive ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#0F5132] dark:bg-emerald-950/40 dark:text-emerald-400 font-bold text-[11px] border border-emerald-200 dark:border-emerald-800/60">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live & Listed
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live &amp; Listed
+                          </span>
+                        ) : isSubActive ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 font-bold text-[11px] border border-amber-200 dark:border-amber-800/60">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Paid &bull; Hidden / Draft
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 font-bold text-[11px] border border-rose-200 dark:border-rose-800/60">
@@ -164,12 +188,26 @@ export default function LandlordSubscriptionPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {!isLive ? (
+                        {!isSubActive ? (
                           <Link 
                             href={`/dashboard/landlord/properties/${item.propertyId}/publish`}
                             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg font-bold text-[11px] shadow-xs transition-colors"
                           >
                             <CreditCard className="w-3 h-3" /> Pay to Publish
+                          </Link>
+                        ) : sub?.needsRenewalSoon ? (
+                          <Link
+                            href={`/dashboard/landlord/properties/${item.propertyId}/publish`}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] shadow-xs transition-colors"
+                          >
+                            <CreditCard className="w-3 h-3" /> Renew Early
+                          </Link>
+                        ) : !item.isAvailable ? (
+                          <Link
+                            href={`/dashboard/landlord/properties/${item.propertyId}/edit`}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-lg font-bold text-[11px] transition-colors"
+                          >
+                            Manage Listing
                           </Link>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[#0F5132] dark:text-emerald-400 font-bold text-xs">
