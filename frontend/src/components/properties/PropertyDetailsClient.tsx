@@ -9,6 +9,10 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import QueryProvider from '@/providers/QueryProvider';
 import {
+  PROPERTY_TYPE_CONFIGS,
+  resolvePropertyCategory,
+} from '@/components/landlord-ui/propertyConfig';
+import {
   MapPin,
   CheckCircle2,
   BedDouble,
@@ -199,6 +203,10 @@ function PropertyDetailsContent({ propertyId, initialProperty, initialReviews }:
       setSelectedRoomId(property.rooms[0].id);
     }
   }, [property, selectedRoomId]);
+
+  const propertyCategory = resolvePropertyCategory(property?.type);
+  const isHostelAccommodation = propertyCategory === 'Hostel';
+  const typeConfig = PROPERTY_TYPE_CONFIGS[propertyCategory];
 
   // Pre-select first available unit & bed when room changes
   useEffect(() => {
@@ -718,7 +726,7 @@ function PropertyDetailsContent({ propertyId, initialProperty, initialReviews }:
               <section className="space-y-4 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                 <div>
                   <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white">
-                    Available rooms &amp; unit options
+                    {isHostelAccommodation ? 'Available rooms & bed tiers' : 'Available units & layout options'}
                   </h2>
                   <p className="text-xs sm:text-sm text-[#525852] dark:text-[#9EA69F] mt-1">
                     Select a room option below to update the reservation panel and view specific unit availability.
@@ -1232,7 +1240,7 @@ function PropertyDetailsContent({ propertyId, initialProperty, initialReviews }:
                     <div className="p-3.5 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 space-y-3">
                       <div>
                         <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#525852] mb-1.5">
-                          Select Unit ({currentRoom.roomUnits.length} total)
+                          {isHostelAccommodation ? `Select Room (${currentRoom.roomUnits.length} total)` : `Select ${typeConfig.badge} (${currentRoom.roomUnits.length} available)`}
                         </span>
                         <div className="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto pr-1">
                           {currentRoom.roomUnits.map((unit: any) => {
@@ -1271,7 +1279,7 @@ function PropertyDetailsContent({ propertyId, initialProperty, initialReviews }:
                                     isSelected && isAvail ? 'text-white/80' : 'text-[#525852]'
                                   )}
                                 >
-                                  {isAvail ? `${availBeds} open` : 'Occupied'}
+                                  {isAvail ? (isHostelAccommodation ? `${availBeds} open` : 'Available') : 'Occupied'}
                                 </div>
                               </button>
                             );
@@ -1279,7 +1287,7 @@ function PropertyDetailsContent({ propertyId, initialProperty, initialReviews }:
                         </div>
                       </div>
 
-                      {selectedUnitObj?.beds && selectedUnitObj.beds.length > 1 && (
+                      {isHostelAccommodation && selectedUnitObj?.beds && selectedUnitObj.beds.length > 1 && (
                         <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
                           <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#525852] mb-1.5">
                             Select Bed Space
@@ -1402,7 +1410,7 @@ function PropertyDetailsContent({ propertyId, initialProperty, initialReviews }:
                         ? 'Active Booking on Record'
                         : currentRoom?.isSoldOut
                         ? 'Selected Unit Full'
-                        : 'Reserve Accommodation'}
+                        : (isHostelAccommodation ? 'Reserve Bed Space' : 'Reserve Accommodation')}
                     </Button>
 
                     <Button
