@@ -171,7 +171,8 @@ export default function NewInventoryAssetPage() {
     const list = ['RM 101', 'RM 102', 'RM 103', 'RM 201', 'RM 202', 'General Compound'];
     if (activeProperty?.rooms && Array.isArray(activeProperty.rooms)) {
       activeProperty.rooms.forEach((r: any) => {
-        if (r.title && !list.includes(r.title)) list.unshift(r.title);
+        const label = r.title || [r.blockName, r.roomType].filter(Boolean).join(' — ');
+        if (label && !list.includes(label)) list.unshift(label);
       });
     }
     return list;
