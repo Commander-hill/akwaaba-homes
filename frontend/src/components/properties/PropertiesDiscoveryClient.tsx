@@ -15,6 +15,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { publicGet } from '@/lib/publicFetch';
+import { PROPERTY_TYPE_CONFIGS, resolvePropertyCategory } from '@/components/landlord-ui/propertyConfig';
 import PropertyCard, {
   PropertyCardData,
   formatPropertyTypeLabel,
@@ -479,31 +480,115 @@ export default function PropertiesDiscoveryClient({
         </div>
       </div>
 
-      {/* Occupant Capacity */}
-      <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-        <label
-          htmlFor={`${prefix}-filter-capacity`}
-          className="block text-xs font-bold text-[#242925] dark:text-white"
-        >
-          Minimum Capacity
-        </label>
-        <select
-          id={`${prefix}-filter-capacity`}
-          name={`${prefix}-filter-capacity`}
-          value={capacityFilter}
-          onChange={(e) => {
-            setCapacityFilter(e.target.value);
-            updateUrlParams({ capacity: e.target.value });
-          }}
-          className="w-full h-10 px-3 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32] cursor-pointer"
-        >
-          <option value="">Any occupancy</option>
-          <option value="1">1+ Person</option>
-          <option value="2">2+ People</option>
-          <option value="3">3+ People</option>
-          <option value="4">4+ People</option>
-        </select>
-      </div>
+      {/* Dynamic Capacity / Bedrooms / Room Tier based on Accommodation Type */}
+      {(() => {
+        const activeCat = typeFilter ? resolvePropertyCategory(typeFilter) : null;
+        const isHostel = activeCat === 'Hostel';
+        const isStudio = activeCat === 'Studio' || typeFilter === 'SINGLE_ROOM';
+        const isResidential = activeCat === 'Apartment' || activeCat === 'House';
+
+        const label = isHostel
+          ? 'Room Sharing Tier'
+          : isResidential
+          ? 'Minimum Bedrooms'
+          : isStudio
+          ? 'Unit Occupancy'
+          : 'Minimum Capacity';
+
+        const options = isHostel
+          ? [
+              { value: '', label: 'Any room tier' },
+              { value: '1', label: '1 in a room (Single)' },
+              { value: '2', label: '2 in a room (Double)' },
+              { value: '3', label: '3 in a room (Triple)' },
+              { value: '4', label: '4+ in a room (Quad)' },
+            ]
+          : isResidential
+          ? [
+              { value: '', label: 'Any bedrooms' },
+              { value: '1', label: '1+ Bedroom' },
+              { value: '2', label: '2+ Bedrooms' },
+              { value: '3', label: '3+ Bedrooms' },
+              { value: '4', label: '4+ Bedrooms' },
+            ]
+          : isStudio
+          ? [
+              { value: '', label: 'Any occupancy' },
+              { value: '1', label: '1 Person (Solo)' },
+              { value: '2', label: '2 People (Couple)' },
+            ]
+          : [
+              { value: '', label: 'Any occupancy' },
+              { value: '1', label: '1+ Person' },
+              { value: '2', label: '2+ People' },
+              { value: '3', label: '3+ People' },
+              { value: '4', label: '4+ People' },
+            ];
+
+        const audienceOptions = activeCat
+          ? PROPERTY_TYPE_CONFIGS[activeCat].targetAudienceOptions
+          : [
+              { value: 'Open to All', label: 'Open to All' },
+              { value: 'Students Only', label: 'Students Only' },
+              { value: 'Working Professionals', label: 'Working Professionals' },
+              { value: 'Families', label: 'Families' },
+            ];
+
+        return (
+          <>
+            <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+              <label
+                htmlFor={`${prefix}-filter-capacity`}
+                className="block text-xs font-bold text-[#242925] dark:text-white"
+              >
+                {label}
+              </label>
+              <select
+                id={`${prefix}-filter-capacity`}
+                name={`${prefix}-filter-capacity`}
+                value={capacityFilter}
+                onChange={(e) => {
+                  setCapacityFilter(e.target.value);
+                  updateUrlParams({ capacity: e.target.value });
+                }}
+                className="w-full h-10 px-3 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32] cursor-pointer"
+              >
+                {options.map((opt) => (
+                  <option key={opt.value || 'any'} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+              <label
+                htmlFor={`${prefix}-filter-audience`}
+                className="block text-xs font-bold text-[#242925] dark:text-white"
+              >
+                Target Resident
+              </label>
+              <select
+                id={`${prefix}-filter-audience`}
+                name={`${prefix}-filter-audience`}
+                value={targetAudienceParam}
+                onChange={(e) => {
+                  setTargetAudienceParam(e.target.value);
+                  updateUrlParams({ targetAudience: e.target.value });
+                }}
+                className="w-full h-10 px-3 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32] cursor-pointer"
+              >
+                <option value="">All residents</option>
+                {audienceOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        );
+      })()}
 
       {/* Amenities */}
       <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
