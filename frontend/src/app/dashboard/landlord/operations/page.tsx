@@ -29,6 +29,7 @@ import AlertBanner from '@/components/AlertBanner';
 import toast from 'react-hot-toast';
 
 import { getImageUrl } from '@/lib/utils';
+import { formatBookingUnitLabel } from '@/components/landlord-ui/propertyConfig';
 
 export type LandlordPillar = 'portfolio' | 'financials' | 'tenancies' | 'operations';
 
@@ -366,7 +367,11 @@ function LandlordDashboardContent() {
     },
     onSuccess: () => {
       toast.success('Maintenance ticket updated successfully!');
+      setTicketActionModal(prev => ({ ...prev, isOpen: false }));
       queryClient.invalidateQueries({ queryKey: ['tickets', 'landlord'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update maintenance ticket.');
     },
     onSettled: () => setProcessingId(null)
   });
@@ -400,7 +405,7 @@ function LandlordDashboardContent() {
 
   const pendingBookingsCount = bookings.filter((b: any) => b.status === 'PENDING').length;
   const pendingTicketsCount = tickets.filter((t: any) => t.status === 'PENDING').length;
-  const urgentTicketsCount = tickets.filter((t: any) => t.priority === 'URGENT' || t.priority === 'HIGH' || t.isEscalated).length;
+  const urgentTicketsCount = tickets.filter((t: any) => t.status !== 'RESOLVED' && (t.priority === 'URGENT' || t.priority === 'HIGH' || t.isEscalated)).length;
 
   const filteredProperties = useMemo(() => {
     if (!propertySearchQuery.trim()) return myProperties;
@@ -1237,11 +1242,19 @@ function LandlordDashboardContent() {
                             </span>
                           </div>
 
-                          <div className="mt-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-                            <span className="font-medium text-zinc-600 dark:text-zinc-400 truncate max-w-[60%]">
-                              {pending.property?.title}
-                            </span>
-                            <span className="font-mono font-bold text-[#0F5132] dark:text-emerald-400">
+                          <div className="mt-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs gap-2">
+                            <div className="min-w-0">
+                              <Link
+                                href={`/dashboard/landlord/bookings/${pending.id}`}
+                                className="font-medium text-zinc-600 dark:text-zinc-400 hover:text-[#16A34A] truncate block transition-colors"
+                              >
+                                {pending.property?.title}
+                              </Link>
+                              <span className="text-[10px] text-zinc-400 truncate block">
+                                {formatBookingUnitLabel(pending.property?.type, pending.room?.roomType, pending.room?.blockName)}
+                              </span>
+                            </div>
+                            <span className="font-mono font-bold text-[#0F5132] dark:text-emerald-400 shrink-0">
                               {new Date(pending.startDate).toLocaleDateString()}
                             </span>
                           </div>
@@ -1314,7 +1327,15 @@ function LandlordDashboardContent() {
                               </div>
                             </td>
                             <td className="p-3.5 text-zinc-600 dark:text-zinc-300">
-                              {booking.property?.title}
+                              <Link
+                                href={`/dashboard/landlord/bookings/${booking.id}`}
+                                className="font-semibold hover:text-[#16A34A] transition-colors block"
+                              >
+                                {booking.property?.title}
+                              </Link>
+                              <span className="text-[11px] text-zinc-400 block mt-0.5">
+                                {formatBookingUnitLabel(booking.property?.type, booking.room?.roomType, booking.room?.blockName)}
+                              </span>
                             </td>
                             <td className="p-3.5 text-zinc-500 font-mono text-[11px]">
                               {new Date(booking.startDate).toLocaleDateString()} &rarr; {new Date(booking.endDate).toLocaleDateString()}
@@ -1323,7 +1344,9 @@ function LandlordDashboardContent() {
                               <span className={clsx(
                                 "px-2 py-0.5 rounded-full text-[10px] font-bold",
                                 booking.status === 'PENDING' ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
-                                ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE', 'CHECKED_IN'].includes(booking.status) ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
+                                booking.status === 'CHECKED_IN' ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300" :
+                                booking.status === 'COMPLETED' ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300" :
+                                ['APPROVED', 'CONFIRMED', 'PAID', 'ACTIVE'].includes(booking.status) ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
                                 "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300"
                               )}>
                                 {booking.status}
@@ -1349,7 +1372,7 @@ function LandlordDashboardContent() {
                                 </>
                               )}
 
-                              {['CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE'].includes(booking.status) && (
+                              {['CONFIRMED', 'PAID', 'ACTIVE'].includes(booking.status) && (
                                 <button
                                   onClick={() => {
                                     setProcessingId(booking.id);
@@ -1785,7 +1808,6 @@ function LandlordDashboardContent() {
                       completionImageUrl: ticketActionModal.completionImageUrl || undefined,
                     });
                   }
-                  setTicketActionModal(prev => ({ ...prev, isOpen: false }));
                 }}
                 disabled={updateTicketMutation.isPending}
                 className={clsx(
