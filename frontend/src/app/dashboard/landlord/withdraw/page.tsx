@@ -120,6 +120,8 @@ export default function LandlordWithdrawalPage() {
     staleTime: 30 * 60 * 1000,
   });
   const ghanaBanks: { name: string; code: string }[] = banksData?.banks?.length ? banksData.banks : FALLBACK_GHANA_BANKS;
+  const resolveChannelLabel = (codeOrName: string) =>
+    ghanaBanks.find((b) => b.code === codeOrName)?.name || codeOrName;
 
   // 3. Fetch payout history + balance
   const { data: payoutData, isLoading, isError: isPayoutError, refetch, isRefetching } = useQuery({
@@ -359,6 +361,17 @@ export default function LandlordWithdrawalPage() {
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
               Available rental balance
             </p>
+            {((summary?.totalEscrowHeldNet || 0) > 0 || (summary?.totalDisputeHeldNet || 0) > 0) && (
+              <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-1.5">
+                {(summary?.totalEscrowHeldNet || 0) > 0 && (
+                  <span>GH₵ {Number(summary.totalEscrowHeldNet).toFixed(2)} in 24h escrow</span>
+                )}
+                {(summary?.totalEscrowHeldNet || 0) > 0 && (summary?.totalDisputeHeldNet || 0) > 0 && ' • '}
+                {(summary?.totalDisputeHeldNet || 0) > 0 && (
+                  <span>GH₵ {Number(summary.totalDisputeHeldNet).toFixed(2)} held (dispute)</span>
+                )}
+              </p>
+            )}
           </div>
         </div>
 
@@ -467,7 +480,7 @@ export default function LandlordWithdrawalPage() {
                     </strong>
                     <span>to</span>
                     <span className="font-mono font-bold text-zinc-950 dark:text-white">{accountNumber}</span>
-                    <span className="text-zinc-400">({bankOrNetwork})</span>
+                    <span className="text-zinc-400">({resolveChannelLabel(bankOrNetwork)})</span>
                   </div>
                 </div>
 
@@ -916,7 +929,7 @@ export default function LandlordWithdrawalPage() {
                             {p.accountName}
                           </p>
                           <p className="text-[10px] text-zinc-400 truncate">
-                            {p.bankOrNetwork} &bull; {new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {resolveChannelLabel(p.bankOrNetwork)} &bull; {new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </p>
                           {p.failureReason && (
                             <p className="text-[10px] text-rose-500 font-semibold mt-0.5 truncate">
