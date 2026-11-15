@@ -1181,21 +1181,47 @@ function LandlordDashboardContent() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {subProperties.map((prop: any) => (
-                    <div key={prop.id} className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs flex items-center justify-between gap-4">
-                      <div>
-                        <h4 className="font-bold text-sm text-zinc-950 dark:text-white">{prop.title}</h4>
-                        <p className="text-xs text-zinc-500 mt-0.5">Status: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{prop.subscriptionStatus || 'Active'}</span></p>
+                  {subProperties.map((prop: any, idx: number) => {
+                    const propId = prop.propertyId || prop.id;
+                    const propTitle = prop.propertyTitle || prop.title || 'Untitled Property';
+                    const isSubActive = Boolean(prop.subscription?.isActive);
+                    const needsRenewalSoon = Boolean(prop.subscription?.needsRenewalSoon);
+                    const daysLeft = prop.subscription?.daysLeft ?? 0;
+
+                    return (
+                      <div key={propId || idx} className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs flex items-center justify-between gap-4">
+                        <div>
+                          <h4 className="font-bold text-sm text-zinc-950 dark:text-white">{propTitle}</h4>
+                          <p className="text-xs text-zinc-500 mt-0.5">
+                            Status:{' '}
+                            <span
+                              className={clsx(
+                                'font-semibold',
+                                isSubActive
+                                  ? needsRenewalSoon
+                                    ? 'text-amber-600 dark:text-amber-400'
+                                    : 'text-emerald-600 dark:text-emerald-400'
+                                  : 'text-rose-600 dark:text-rose-400'
+                              )}
+                            >
+                              {isSubActive
+                                ? needsRenewalSoon
+                                  ? `Expiring soon (${daysLeft}d left)`
+                                  : `Active (${daysLeft}d left)`
+                                : 'Inactive / Expired'}
+                            </span>
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => propId && renewSubMutation.mutate(propId)}
+                          disabled={!propId || renewSubMutation.isPending}
+                          className="px-3.5 py-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold hover:opacity-90 transition cursor-pointer disabled:opacity-50"
+                        >
+                          Renew
+                        </button>
                       </div>
-                      <button
-                        onClick={() => renewSubMutation.mutate(prop.id)}
-                        disabled={renewSubMutation.isPending}
-                        className="px-3.5 py-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold hover:opacity-90 transition cursor-pointer"
-                      >
-                        Renew
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
