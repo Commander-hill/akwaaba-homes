@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import { formatBookingUnitLabel, isHostelProperty, resolvePropertyCategory } from '@/components/landlord-ui/propertyConfig';
 import {
   Loader2,
   FileSignature,
@@ -173,7 +174,13 @@ export default function AgreementPage() {
   const cryptographicDigest = agreement.cryptographicHash || `${agreement.id.replace(/-/g, '')}7b9e4a`;
   const landlordFullName = `${landlord.firstName} ${landlord.lastName}`;
   const tenantFullName = `${tenant.firstName} ${tenant.lastName}`;
-  const unitDescription = booking.room?.roomType || 'Self-Contained Residential Unit';
+  const isHostel = isHostelProperty(property.type);
+  const propertyCategory = resolvePropertyCategory(property.type);
+  const unitDescription = formatBookingUnitLabel(
+    property.type,
+    booking.room?.roomType,
+    booking.room?.blockName
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20 animate-in fade-in duration-300">
@@ -291,10 +298,12 @@ export default function AgreementPage() {
             Republic of Ghana
           </p>
           <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-[0.12em] text-[#111110]">
-            Tenancy Agreement
+            {isHostel ? 'Student Residence & Hostel Agreement' : 'Residential Tenancy Agreement'}
           </h2>
           <p className="text-xs italic text-[#57534E] pt-0.5">
-            Made pursuant to the Rent Act, 1963 (Act 220) and the Conveyancing Act, 1973 (N.R.C.D. 175)
+            {isHostel
+              ? 'Made pursuant to the Rent Act, 1963 (Act 220) and Institutional Hostel Governance Standards'
+              : 'Made pursuant to the Rent Act, 1963 (Act 220) and the Conveyancing Act, 1973 (N.R.C.D. 175)'}
           </p>
         </header>
 
@@ -331,9 +340,9 @@ export default function AgreementPage() {
                 Ghana (hereinafter referred to as <strong>&ldquo;the Premises&rdquo;</strong>).
               </li>
               <li>
-                The Landlord has agreed to let and the Tenant has agreed to take the Premises for the term and at the
-                rent hereinafter set forth, subject to the covenants, conditions, and stipulations contained in this
-                Agreement.
+                {isHostel
+                  ? `The Landlord has agreed to grant and the Tenant has agreed to accept a residential license for the allocated ${unitDescription} within the Premises for the academic term and at the fee hereinafter set forth, subject to the hostel regulations and stipulations contained in this Agreement.`
+                  : `The Landlord has agreed to let and the Tenant has agreed to take the ${propertyCategory === 'House' ? 'residential house' : propertyCategory === 'Studio' ? 'self-contained studio' : 'residential premises'} (${unitDescription}) for the term and at the rent hereinafter set forth, subject to the covenants, conditions, and stipulations contained in this Agreement.`}
               </li>
             </ol>
           </div>
@@ -450,9 +459,18 @@ export default function AgreementPage() {
                 the Landlord, in compliance with Section 22 of the Rent Act, 1963 (Act 220).
               </p>
               <p>
-                <strong>3.5. Good Neighbourliness and Conduct:</strong> Not to do or permit to be done upon the Premises
-                anything which may constitute a nuisance, annoyance, or disturbance to the Landlord, co-tenants, or
-                occupiers of adjoining properties, nor to use the Premises for any unlawful or immoral purpose.
+                <strong>3.5. {isHostel ? 'Hostel Regulations, Curfew & Conduct:' : 'Good Neighbourliness and Conduct:'}</strong>{' '}
+                Not to do or permit to be done upon the Premises anything which may constitute a nuisance, annoyance, or
+                disturbance to the Landlord, co-tenants, or occupiers of adjoining properties, nor to use the Premises for
+                any unlawful or immoral purpose.
+                {isHostel && (
+                  <>
+                    {' '}The Tenant specifically agrees to observe the Hostel&rsquo;s gate access schedule (
+                    <strong>{property.gateLockTime || 'standard curfew hours'}</strong>), visitor policy (
+                    <strong>{property.visitorPolicy || 'designated visiting hours'}</strong>), and quiet study hours (
+                    <strong>{property.quietHours || 'from 10:00 PM'}</strong>).
+                  </>
+                )}
               </p>
               <p>
                 <strong>3.6. Condition Inspection and Yielding Up:</strong> To participate in a joint condition
