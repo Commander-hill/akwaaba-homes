@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { formatBookingUnitLabel } from '@/components/landlord-ui/propertyConfig';
-import { AlertCircle, Building, ExternalLink, Filter, GraduationCap, Mail, MapPin, MessageSquare, Phone, RefreshCw, Search, User } from 'lucide-react';
+import { AlertCircle, Building, Download, ExternalLink, Filter, GraduationCap, Mail, MapPin, MessageSquare, Phone, RefreshCw, Search, User } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { getImageUrl } from '@/lib/utils';
@@ -71,6 +71,45 @@ export default function LandlordTenantsPage() {
   const activeCount = bookings.filter((b: any) => ['APPROVED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'].includes(b.status)).length;
   const pendingCount = bookings.filter((b: any) => b.status === 'PENDING').length;
   const pastCount = bookings.filter((b: any) => ['COMPLETED', 'CANCELLED', 'REJECTED'].includes(b.status)).length;
+  const hasActiveFilters = searchTerm.trim() !== '' || statusFilter !== 'ALL' || propertyFilter !== 'ALL';
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('ALL');
+    setPropertyFilter('ALL');
+  };
+
+  const exportCsv = () => {
+    const escapeCell = (val: unknown) => {
+      const str = String(val ?? '');
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+    const headers = ['Booking Ref', 'Tenant Name', 'Student ID', 'Property', 'Unit', 'Start Date', 'End Date', 'Email', 'Phone', 'Status'];
+    const rows = filteredBookings.map((b: any) => {
+      const t = b.tenant || {};
+      const isApproved = ['APPROVED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN', 'COMPLETED'].includes(b.status);
+      return [
+        String(b.id || '').substring(0, 8),
+        `${t.firstName || 'Unknown'} ${t.lastName || 'Tenant'}`.trim(),
+        t.studentId || '',
+        b.property?.title || 'Unknown Property',
+        formatBookingUnitLabel(b.property?.type, b.room?.roomType, b.room?.blockName),
+        b.startDate ? new Date(b.startDate).toLocaleDateString() : '',
+        b.endDate ? new Date(b.endDate).toLocaleDateString() : '',
+        isApproved ? (t.email || '') : 'Protected',
+        isApproved ? (t.phoneNumber || '') : 'Protected',
+        b.status || ''
+      ].map(escapeCell).join(',');
+    });
+    const csv = [headers.map(escapeCell).join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `tenant-roster-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="w-full space-y-6 pb-12">
@@ -81,6 +120,16 @@ export default function LandlordTenantsPage() {
             <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Resident Directory &amp; Tenant Roster</h1>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Verified occupants, room allocations, and tenancy contract statuses across your properties.</p>
           </div>
+          {filteredBookings.length > 0 && (
+            <button
+              type="button"
+              onClick={exportCsv}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:border-[#16A34A] hover:text-[#16A34A] transition-colors cursor-pointer self-start sm:self-auto"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export CSV
+            </button>
+          )}
         </div>
 
         {/* 4 Architectural Metric Cards */}
@@ -201,6 +250,15 @@ export default function LandlordTenantsPage() {
               <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm">
                 Try adjusting your search criteria or switch the status filter tab above.
               </p>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:border-[#16A34A] hover:text-[#16A34A] transition-colors cursor-pointer"
+                >
+                  Reset filters
+                </button>
+              )}
             </div>
           ) : (
             <table className="w-full text-left text-xs border-collapse">
@@ -288,9 +346,15 @@ export default function LandlordTenantsPage() {
                         <div className="flex flex-col gap-1">
                           {isApproved ? (
                             <>
-                              <a href={`mailto:${t?.email}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#16A34A] transition-colors">
-                                <Mail className="w-3 h-3 text-zinc-400" /> {t?.email || 'N/A'}
-                              </a>
+                              {t?.email ? (
+                                <a href={`mailto:${t.email}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#16A34A] transition-colors">
+                                  <Mail className="w-3 h-3 text-zinc-400" /> {t.email}
+                                </a>
+                              ) : (
+                                <span className="flex items-center gap-1 text-[11px] text-zinc-400">
+                                  <Mail className="w-3 h-3 text-zinc-400" /> N/A
+                                </span>
+                              )}
                               {t?.phoneNumber && (
                                 <a href={`tel:${t?.phoneNumber}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#16A34A] transition-colors">
                                   <Phone className="w-3 h-3 text-zinc-400" /> {t.phoneNumber}
