@@ -912,7 +912,7 @@ export default function RegisterPage() {
       {(() => {
         const isHost = formData.role === 'LANDLORD';
         return (
-          <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden bg-[#012E27]">
+          <div className="relative hidden lg:block lg:w-[60%] min-h-screen lg:h-screen overflow-hidden bg-[#012E27] shrink-0">
             {/* 1. Tenant/Student View: Exact Master Artwork */}
             <Image
               src="/images/auth/register-hero-exact.webp"
@@ -1035,7 +1035,7 @@ export default function RegisterPage() {
       })()}
 
       {/* ──── RIGHT COLUMN: REGISTRATION FORM (48% Desktop, 100% Mobile) ──── */}
-      <div className="w-full lg:w-[45%] xl:w-[40%] 2xl:w-[38%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-8 lg:p-10 xl:p-12 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
+      <div className="w-full lg:w-[40%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-8 lg:p-10 xl:p-12 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
         
         {/* Top Header: Brand + Theme Toggle + Sign In */}
         <div className="flex items-center justify-between">
