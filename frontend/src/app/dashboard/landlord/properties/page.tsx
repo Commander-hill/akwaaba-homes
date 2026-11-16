@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { CardGridSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   Home,
   CalendarCheck,
@@ -72,7 +73,7 @@ export default function LandlordPropertiesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
-  const { data: rawProperties = [], isLoading } = useQuery({
+  const { data: rawProperties = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['properties', 'landlord-mine'],
     queryFn: async () => {
       const res = await api.get('/properties/landlord/mine');
@@ -149,6 +150,16 @@ export default function LandlordPropertiesPage() {
     });
   }, [liveProperties, activeFilter, searchQuery]);
   if (showSkeleton || isLoading) return <CardGridSkeleton />;
+  if (isError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load your properties"
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12">

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { formatBookingUnitLabel } from '@/components/landlord-ui/propertyConfig';
 import {
   Calendar,
@@ -79,15 +80,11 @@ export default function TenantBookingsPage() {
   const [selectedBookingModal, setSelectedBookingModal] = useState<any | null>(null);
 
   // Query authenticated tenant bookings
-  const { data: bookingsResponse, isLoading } = useQuery({
+  const { data: bookingsResponse, isLoading, isError, refetch } = useQuery({
     queryKey: ['bookings', 'tenant'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/bookings/me');
-        return data;
-      } catch {
-        return [];
-      }
+      const { data } = await api.get('/bookings/me');
+      return data;
     },
   });
 
@@ -267,6 +264,17 @@ export default function TenantBookingsPage() {
           <div className="lg:col-span-8 h-96 rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
           <div className="lg:col-span-4 h-96 rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
         </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="py-12 font-sans">
+        <QueryErrorFallback
+          title="Unable to load your bookings"
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }

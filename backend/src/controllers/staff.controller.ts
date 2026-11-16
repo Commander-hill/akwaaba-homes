@@ -98,7 +98,7 @@ export const assignStaff = async (req: Request, res: Response): Promise<void> =>
     res.status(200).json({ message: `Staff member "${staffUser.firstName} ${staffUser.lastName}" assigned successfully!`, assignment });
   } catch (error: any) {
     console.error('Error assigning staff:', error);
-    res.status(500).json({ message: error.message || 'Internal server error while assigning staff' });
+    res.status(500).json({ message: 'Internal server error while assigning staff' });
   }
 };
 
@@ -288,6 +288,6 @@ export const getMyStaffAssignments = async (req: Request, res: Response): Promis
     res.status(200).json({ assignments });
   } catch (error: any) {
     console.error('Error fetching staff assignments:', error);
-    res.status(500).json({ message: error?.message || 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };

@@ -61,12 +61,15 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Check if the failing request is a public/auth endpoint or if the user is on a public page
+    // Check if the failing request is a public/auth/credential endpoint where 401 means invalid credentials, not expired session
     const requestUrl = originalRequest?.url || '';
     const isPublicAuthUrl =
       requestUrl.startsWith('/auth/login') ||
       requestUrl.startsWith('/auth/register') ||
       requestUrl.startsWith('/auth/refresh') ||
+      requestUrl.startsWith('/auth/unlock') ||
+      requestUrl.startsWith('/auth/verify-step-up') ||
+      requestUrl.startsWith('/auth/2fa') ||
       requestUrl.startsWith('/auth/check-email') ||
       requestUrl.startsWith('/auth/verify-promo') ||
       requestUrl.startsWith('/auth/forgot-password') ||
@@ -76,6 +79,7 @@ api.interceptors.response.use(
     const isPublicPage =
       typeof window !== 'undefined' &&
       (window.location.pathname === '/login' ||
+       window.location.pathname === '/admin/login' ||
        window.location.pathname === '/register' ||
        window.location.pathname === '/forgot-password' ||
        window.location.pathname === '/reset-password');
@@ -166,5 +170,46 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/**
+ * Normalizes any Axios / network / unknown error into a clean, user-facing message.
+ */
+export function extractApiError(
+  error: any,
+  fallback = 'Something went wrong. Please try again.'
+): string {
+  if (!error) return fallback;
+
+  // Handle network / timeout errors where no HTTP response was received
+  if (error.isAxiosError && !error.response) {
+    if (error.code === 'ECONNABORTED' || String(error.message).toLowerCase().includes('timeout')) {
+      return 'The request timed out. Please check your connection and try again.';
+    }
+    return 'Network error. Please check your internet connection and try again.';
+  }
+
+  const status = error?.response?.status;
+  const data = error?.response?.data;
+
+  if (status === 429) {
+    return data?.message || 'Too many requests. Please wait a moment before trying again.';
+  }
+
+  if (status >= 500) {
+    return data?.message && !String(data.message).includes('Internal server error')
+      ? data.message
+      : fallback;
+  }
+
+  const extracted =
+    data?.message ||
+    data?.error ||
+    (Array.isArray(data?.errors) && data.errors[0]?.message) ||
+    (typeof error?.message === 'string' && !error.message.startsWith('Request failed with status code')
+      ? error.message
+      : null);
+
+  return extracted || fallback;
+}
 
 export default api;

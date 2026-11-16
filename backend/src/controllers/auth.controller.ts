@@ -1256,7 +1256,7 @@ export const requestProfileUnlock = async (req: Request, res: Response): Promise
     res.status(200).json({ message: 'Edit request submitted successfully. An administrator will review your request.' });
   } catch (error: any) {
     console.error('Request profile unlock error:', error?.message || error);
-    res.status(500).json({ message: error?.message || 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 

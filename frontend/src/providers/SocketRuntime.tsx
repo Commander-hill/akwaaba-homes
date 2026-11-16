@@ -141,7 +141,11 @@ export default function SocketRuntime({
         showBrowserNotification(data.title, data.message);
 
         const toastFn = isSuccess ? toast.success : isError ? toast.error : toast;
-        toastFn(messageContent, { duration: 6000, position: 'top-right' });
+        toastFn(messageContent, {
+          id: `socket-notif-${data.type || 'info'}-${data.title}-${data.message}`,
+          duration: 6000,
+          position: 'top-right',
+        });
         getRegisteredQueryClient()?.invalidateQueries({ queryKey: ['notifications'] });
         invalidatePublicResource('notifications');
       });

@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   Star,
   MessageSquare,
@@ -81,7 +82,7 @@ export default function AdminReviewsPage() {
     return () => window.removeEventListener('click', close);
   }, []);
 
-  const { data: reviews = [], isLoading } = useQuery({
+  const { data: reviews = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-reviews'],
     queryFn: async () => {
       const res = await api.get('/admin/reviews');
@@ -365,6 +366,11 @@ export default function AdminReviewsPage() {
                 <div key={i} className="h-32 rounded-2xl bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
               ))}
             </div>
+          ) : isError ? (
+            <QueryErrorFallback
+              title="Unable to load tenant reviews"
+              onRetry={() => refetch()}
+            />
           ) : visibleReviews.length === 0 ? (
             <div className="py-14 text-center">
               <MessageSquare className="w-9 h-9 text-zinc-300 dark:text-zinc-600 mx-auto mb-2.5" />

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import api from '@/lib/axios';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   Wrench,
   Clock,
@@ -63,15 +64,11 @@ export default function TenantTicketsPage() {
   const [selectedRequest, setSelectedRequest] = useState<RepairItem | null>(null);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
 
-  const { data: ticketsData, isLoading: isLoadingTickets } = useQuery({
+  const { data: ticketsData, isLoading: isLoadingTickets, isError: isTicketsError, refetch: refetchTickets } = useQuery({
     queryKey: ['tenant-tickets'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/tickets/me');
-        return data.tickets || [];
-      } catch {
-        return [];
-      }
+      const { data } = await api.get('/tickets/me');
+      return data.tickets || [];
     },
   });
 
@@ -543,6 +540,11 @@ export default function TenantTicketsPage() {
                       Loading your maintenance requests...
                     </p>
                   </div>
+                ) : isTicketsError ? (
+                  <QueryErrorFallback
+                    title="Unable to load maintenance requests"
+                    onRetry={() => refetchTickets()}
+                  />
                 ) : filteredRequests.length === 0 ? (
                   <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
                     <div className="w-12 h-12 rounded-2xl bg-[#EAF5EC] dark:bg-emerald-950/60 text-[#16A34A] mx-auto flex items-center justify-center">

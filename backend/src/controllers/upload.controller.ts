@@ -96,12 +96,12 @@ export const isValidFileType = (buffer: Buffer, type: 'image' | 'video' | 'audio
 export const uploadAvatar = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      res.status(400).json({ error: 'No image provided' });
+      res.status(400).json({ message: 'No image provided' });
       return;
     }
 
     if (!isValidFileType(req.file.buffer, 'image')) {
-      res.status(400).json({ error: 'Invalid or corrupted image format. Only JPG, PNG, and WebP are allowed.' });
+      res.status(400).json({ message: 'Invalid or corrupted image format. Only JPG, PNG, and WebP are allowed.' });
       return;
     }
 
@@ -109,12 +109,12 @@ export const uploadAvatar = async (req: Request, res: Response): Promise<void> =
     const metadata = await image.metadata();
 
     if (!metadata.width || !metadata.height) {
-      res.status(400).json({ error: 'Invalid image format' });
+      res.status(400).json({ message: 'Invalid image format' });
       return;
     }
 
     if (metadata.width < 100 || metadata.height < 100) {
-      res.status(400).json({ error: 'Image too small. Minimum size is 100x100 pixels.' });
+      res.status(400).json({ message: 'Image too small. Minimum size is 100x100 pixels.' });
       return;
     }
 
@@ -129,19 +129,19 @@ export const uploadAvatar = async (req: Request, res: Response): Promise<void> =
     res.status(200).json({ url: fileUrl, avatarUrl: fileUrl });
   } catch (error) {
     console.error('Error uploading avatar:', error);
-    res.status(500).json({ error: 'Internal server error during upload' });
+    res.status(500).json({ message: 'Internal server error during upload' });
   }
 };
 
 export const uploadVideo = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      res.status(400).json({ error: 'No video provided' });
+      res.status(400).json({ message: 'No video provided' });
       return;
     }
 
     if (!isValidFileType(req.file.buffer, 'video')) {
-      res.status(400).json({ error: 'Invalid video format. Supported formats: MP4, WebM.' });
+      res.status(400).json({ message: 'Invalid video format. Supported formats: MP4, WebM.' });
       return;
     }
 
@@ -150,19 +150,19 @@ export const uploadVideo = async (req: Request, res: Response): Promise<void> =>
     res.status(200).json({ url: fileUrl });
   } catch (error) {
     console.error('Error uploading video:', error);
-    res.status(500).json({ error: 'Internal server error during upload' });
+    res.status(500).json({ message: 'Internal server error during upload' });
   }
 };
 
 export const uploadDocument = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      res.status(400).json({ error: 'No document image provided' });
+      res.status(400).json({ message: 'No document image provided' });
       return;
     }
 
     if (!isValidFileType(req.file.buffer, 'any')) {
-      res.status(400).json({ error: 'Invalid document format. Supported formats: PDF, PNG, JPEG, WebP.' });
+      res.status(400).json({ message: 'Invalid document format. Supported formats: PDF, PNG, JPEG, WebP.' });
       return;
     }
 
@@ -186,7 +186,7 @@ export const uploadDocument = async (req: Request, res: Response): Promise<void>
     res.status(200).json({ url: fileUrl });
   } catch (error) {
     console.error('Error uploading document:', error);
-    res.status(500).json({ error: 'Internal server error during document upload' });
+    res.status(500).json({ message: 'Internal server error during document upload' });
   }
 };
 
@@ -194,13 +194,13 @@ export const uploadPropertyImages = async (req: Request, res: Response): Promise
   try {
     const files = req.files as Express.Multer.File[];
     if (!files || files.length === 0) {
-      res.status(400).json({ error: 'No images provided' });
+      res.status(400).json({ message: 'No images provided' });
       return;
     }
 
     for (const file of files) {
       if (!isValidFileType(file.buffer, 'image')) {
-        res.status(400).json({ error: `Invalid image detected in upload: ${file.originalname}. Only genuine JPEG, PNG, or WebP images are permitted.` });
+        res.status(400).json({ message: `Invalid image detected in upload: ${file.originalname}. Only genuine JPEG, PNG, or WebP images are permitted.` });
         return;
       }
     }
@@ -245,7 +245,7 @@ export const uploadPropertyImages = async (req: Request, res: Response): Promise
     res.status(200).json({ urls });
   } catch (error: any) {
     console.error('Error uploading property images:', error);
-    res.status(500).json({ error: `Internal server error during property images upload: ${error?.message || String(error)}` });
+    res.status(500).json({ message: 'Internal server error during property images upload' });
   }
 };
 
@@ -260,7 +260,7 @@ export const serveSecureDocument = async (req: Request, res: Response): Promise<
     );
 
     if (!verification.valid) {
-      res.status(403).json({ error: verification.error || 'Access denied' });
+      res.status(403).json({ message: verification.error || 'Access denied' });
       return;
     }
 
@@ -271,7 +271,7 @@ export const serveSecureDocument = async (req: Request, res: Response): Promise<
       const sanitized = rawUrl.replace(/\.\./g, '');
       const localFilePath = path.resolve(process.cwd(), 'public', sanitized.replace(/^\//, ''));
       if (!fs.existsSync(localFilePath)) {
-        res.status(404).json({ error: 'Document file not found' });
+        res.status(404).json({ message: 'Document file not found' });
         return;
       }
       res.setHeader('Content-Type', sanitized.endsWith('.pdf') ? 'application/pdf' : 'image/webp');
@@ -282,7 +282,7 @@ export const serveSecureDocument = async (req: Request, res: Response): Promise<
 
     // Security check: Only allow streaming from verified Cloudinary assets
     if (!rawUrl.startsWith('https://res.cloudinary.com/')) {
-      res.status(400).json({ error: 'Invalid document source' });
+      res.status(400).json({ message: 'Invalid document source' });
       return;
     }
 
@@ -310,21 +310,21 @@ export const serveSecureDocument = async (req: Request, res: Response): Promise<
     documentResponse.data.on('error', (streamErr: any) => {
       console.error('Error during document streaming:', streamErr);
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Failed to stream document' });
+        res.status(500).json({ message: 'Failed to stream document' });
       }
     });
 
     documentResponse.data.pipe(res);
   } catch (error) {
     console.error('Error serving secure document stream:', error);
-    res.status(500).json({ error: 'Internal server error serving secure document' });
+    res.status(500).json({ message: 'Internal server error serving secure document' });
   }
 };
 
 export const uploadMedia = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      res.status(400).json({ error: 'No media file provided' });
+      res.status(400).json({ message: 'No media file provided' });
       return;
     }
 
@@ -334,27 +334,27 @@ export const uploadMedia = async (req: Request, res: Response): Promise<void> =>
 
     if (mime.startsWith('image/')) {
       if (!isValidFileType(req.file.buffer, 'image')) {
-        res.status(400).json({ error: 'File content failed signature inspection. Not a valid image binary.' });
+        res.status(400).json({ message: 'File content failed signature inspection. Not a valid image binary.' });
         return;
       }
       folder = 'chat/images';
       resourceType = 'image';
     } else if (mime.startsWith('audio/')) {
       if (!isValidFileType(req.file.buffer, 'audio')) {
-        res.status(400).json({ error: 'File content failed signature inspection. Not a valid audio binary.' });
+        res.status(400).json({ message: 'File content failed signature inspection. Not a valid audio binary.' });
         return;
       }
       folder = 'chat/audio';
       resourceType = 'video'; // Cloudinary uses resource_type video for audio
     } else if (mime === 'application/pdf') {
       if (!isValidFileType(req.file.buffer, 'document')) {
-        res.status(400).json({ error: 'File content failed signature inspection. Not a valid PDF document.' });
+        res.status(400).json({ message: 'File content failed signature inspection. Not a valid PDF document.' });
         return;
       }
       folder = 'chat/documents';
       resourceType = 'auto';
     } else {
-      res.status(400).json({ error: 'Unsupported file format. Only images, audio files, and PDFs are permitted.' });
+      res.status(400).json({ message: 'Unsupported file format. Only images, audio files, and PDFs are permitted.' });
       return;
     }
 
@@ -363,7 +363,7 @@ export const uploadMedia = async (req: Request, res: Response): Promise<void> =>
     res.status(200).json({ url: fileUrl, fileName: req.file.originalname, mimeType: mime });
   } catch (error: any) {
     console.error('Error uploading chat media:', error);
-    res.status(500).json({ error: error?.message || 'Failed to upload chat media' });
+    res.status(500).json({ message: 'Failed to upload chat media' });
   }
 };
 
