@@ -61,13 +61,31 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle token refresh on 401 Unauthorized
+    // Check if the failing request is a public/auth endpoint or if the user is on a public page
+    const requestUrl = originalRequest?.url || '';
+    const isPublicAuthUrl =
+      requestUrl.startsWith('/auth/login') ||
+      requestUrl.startsWith('/auth/register') ||
+      requestUrl.startsWith('/auth/refresh') ||
+      requestUrl.startsWith('/auth/check-email') ||
+      requestUrl.startsWith('/auth/verify-promo') ||
+      requestUrl.startsWith('/auth/forgot-password') ||
+      requestUrl.startsWith('/auth/reset-password') ||
+      requestUrl.startsWith('/upload/avatar');
+
+    const isPublicPage =
+      typeof window !== 'undefined' &&
+      (window.location.pathname === '/login' ||
+       window.location.pathname === '/register' ||
+       window.location.pathname === '/forgot-password' ||
+       window.location.pathname === '/reset-password');
+
+    // Handle token refresh on 401 Unauthorized only for authenticated sessions
     if (
       error.response?.status === 401 &&
-      !originalRequest._retry &&
-      originalRequest.url !== '/auth/login' &&
-      originalRequest.url !== '/auth/login/2fa' &&
-      originalRequest.url !== '/auth/refresh'
+      !originalRequest?._retry &&
+      !isPublicAuthUrl &&
+      !isPublicPage
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -108,7 +126,7 @@ api.interceptors.response.use(
             window.location.href = currentPath.startsWith('/admin') ? '/admin/login' : '/login';
           }
         }
-        return Promise.reject(refreshError);
+        return Promise.reject(error || refreshError);
       } finally {
         isRefreshing = false;
       }
