@@ -184,7 +184,6 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Incorrect password. Workstation remains secured.';
       setUnlockError(msg);
-      toast.error(msg);
     } finally {
       setIsUnlocking(false);
     }
