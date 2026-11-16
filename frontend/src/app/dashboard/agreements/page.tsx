@@ -200,6 +200,10 @@ export default function TenancyAgreementsPage() {
   };
 
   const handlePrintOrDownload = async (mode: 'print' | 'download') => {
+    if (!primaryAgreement || agreements.length === 0) {
+      toast.error('No tenancy agreement available to export yet.', { id: 'no-agreement-export' });
+      return;
+    }
     let logoSrc = `${window.location.origin}/logo-light.png`;
     try {
       const res = await fetch('/logo-light.png');
@@ -449,8 +453,14 @@ export default function TenancyAgreementsPage() {
           <div className="relative z-10 self-end sm:self-center shrink-0">
             <button
               type="button"
+              disabled={agreements.length === 0}
               onClick={() => handlePrintOrDownload('download')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold shadow-sm transition cursor-pointer"
+              title={
+                agreements.length === 0
+                  ? 'No tenancy agreements available to download yet'
+                  : 'Download tenancy agreements'
+              }
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold shadow-sm transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#16A34A]"
             >
               <Download className="w-4 h-4" />
               <span>Download all</span>
@@ -760,8 +770,9 @@ export default function TenancyAgreementsPage() {
 
                 <button
                   type="button"
+                  disabled={!primaryAgreement}
                   onClick={() => handlePrintOrDownload('download')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#16A34A]"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download PDF</span>
@@ -891,16 +902,18 @@ export default function TenancyAgreementsPage() {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
+                    disabled={!primaryAgreement}
                     onClick={() => handlePrintOrDownload('print')}
-                    className="inline-flex items-center gap-1 text-[11.5px] font-bold text-[#2C3A31] dark:text-zinc-200 hover:text-[#0B3B24] cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[11.5px] font-bold text-[#2C3A31] dark:text-zinc-200 hover:text-[#0B3B24] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Printer className="w-3.5 h-3.5" />
                     <span>Print</span>
                   </button>
                   <button
                     type="button"
+                    disabled={!primaryAgreement}
                     onClick={() => handlePrintOrDownload('download')}
-                    className="inline-flex items-center gap-1 text-[11.5px] font-bold text-[#2C3A31] dark:text-zinc-200 hover:text-[#0B3B24] cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[11.5px] font-bold text-[#2C3A31] dark:text-zinc-200 hover:text-[#0B3B24] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Download</span>
