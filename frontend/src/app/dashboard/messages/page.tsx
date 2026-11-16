@@ -258,7 +258,6 @@ function AudioVoiceNotePlayer({
       audioRef.current.play().catch(() => {
         setHasError(true);
         setIsPlaying(false);
-        toast.error('Unable to play audio recording');
       });
       setIsPlaying(true);
     }

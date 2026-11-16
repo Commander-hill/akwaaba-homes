@@ -311,7 +311,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
       </div>
 
       {/* Session Timeout Banner */}
-      {isTimeout && (
+      {!error && isTimeout && (
         <AlertBanner
           type="warning"
           message="Administrative session timed out. Re-authenticate to access the console."

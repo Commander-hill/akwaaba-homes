@@ -1263,10 +1263,10 @@ export default function RegisterPage() {
                       toast.success('Profile photo uploaded successfully!');
                     }
                   }}
-                  onUploadError={(err) => {
-                    if (err) {
-                      triggerError(err);
-                    }
+                  onUploadError={() => {
+                    // PassportUpload already displays an inline error banner directly beneath the uploader.
+                    // Keep page-level error cleared so the message is not duplicated.
+                    setError('');
                   }}
                   label="Profile Picture"
                   description="Upload a clear portrait or passport-style photo (up to 10MB). Frame, zoom, and crop before automatic HD optimization."
