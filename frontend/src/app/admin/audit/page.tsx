@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { useSocket } from '@/providers/SocketProvider';
@@ -26,7 +27,6 @@ import {
   ArrowRight,
   Eye,
   CheckCircle2,
-  AlertTriangle,
   X,
   RotateCw,
   Loader2,
@@ -458,19 +458,21 @@ export default function AuditLogsPage() {
   const donutSegments = useMemo(() => {
     const r = 46;
     const circumference = 2 * Math.PI * r;
+    const segments: Array<(typeof categoryBreakdown.items)[number] & { dashArray: string; dashOffset: number }> = [];
     let accumulated = 0;
 
-    return categoryBreakdown.items.map((item) => {
+    for (const item of categoryBreakdown.items) {
       const fraction = categoryBreakdown.total > 0 ? item.count / categoryBreakdown.total : 0;
       const dashLength = fraction * circumference;
       const offset = -accumulated;
       accumulated += dashLength;
-      return {
+      segments.push({
         ...item,
         dashArray: `${dashLength} ${circumference}`,
         dashOffset: offset,
-      };
-    });
+      });
+    }
+    return segments;
   }, [categoryBreakdown]);
 
   return (
@@ -1176,9 +1178,12 @@ export default function AuditLogsPage() {
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-2.5">
                             {log.user?.avatarUrl ? (
-                              <img
+                              <Image
                                 src={log.user.avatarUrl}
                                 alt={actorName}
+                                width={28}
+                                height={28}
+                                unoptimized
                                 className="w-7 h-7 rounded-full object-cover border border-zinc-200 dark:border-zinc-700 shrink-0"
                               />
                             ) : (

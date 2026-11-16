@@ -27,11 +27,9 @@ import {
   Copy,
   Check,
   ExternalLink,
-  Clock,
   ArrowRight,
   Loader2,
   UserCheck,
-  FileText,
   Radio,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -158,6 +156,14 @@ export default function AdminActivityPage() {
   const [timeFilter, setTimeFilter] = useState<string>('ALL');
   const [selectedEvent, setSelectedEvent] = useState<TelemetryEvent | null>(null);
   const [copiedPayload, setCopiedPayload] = useState(false);
+  const [nowTimestamp, setNowTimestamp] = useState<number>(() => Date.now());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setNowTimestamp(Date.now());
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Fetch Activity Telemetry
   const {
@@ -243,23 +249,24 @@ export default function AdminActivityPage() {
   const donutSegments = useMemo(() => {
     const r = 46;
     const circumference = 2 * Math.PI * r;
+    const segments: Array<(typeof moduleBreakdown.items)[number] & { dashArray: string; dashOffset: number }> = [];
     let accumulated = 0;
-    return moduleBreakdown.items.map((item) => {
+    for (const item of moduleBreakdown.items) {
       const fraction = moduleBreakdown.total > 0 ? item.count / moduleBreakdown.total : 0;
       const dashLength = fraction * circumference;
       const offset = -accumulated;
       accumulated += dashLength;
-      return {
+      segments.push({
         ...item,
         dashArray: `${dashLength} ${circumference}`,
         dashOffset: offset,
-      };
-    });
+      });
+    }
+    return segments;
   }, [moduleBreakdown]);
 
   // ── Activity Trends Buckets for SVG Chart ──
   const trendChart = useMemo(() => {
-    const now = Date.now();
     const cutoffMs =
       trendWindow === '1h'
         ? 3600_000
@@ -272,7 +279,7 @@ export default function AdminActivityPage() {
         : Infinity;
 
     const scoped = eventList.filter(
-      (e) => now - new Date(e.createdAt).getTime() <= cutoffMs
+      (e) => nowTimestamp - new Date(e.createdAt).getTime() <= cutoffMs
     );
 
     if (scoped.length === 0) return null;
@@ -344,16 +351,15 @@ export default function AdminActivityPage() {
       latestTotal,
       latestLabel: latestBucket.label,
     };
-  }, [eventList, trendWindow]);
+  }, [eventList, trendWindow, nowTimestamp]);
 
   // ── Filtered Activity Table Rows ──
   const filteredEvents = useMemo(() => {
-    const now = Date.now();
     return eventList.filter((ev) => {
       if (categoryFilter !== 'ALL' && ev.type !== categoryFilter) return false;
       if (severityFilter !== 'ALL' && ev.severity !== severityFilter) return false;
-      if (timeFilter === '24H' && now - new Date(ev.createdAt).getTime() > 86400_000) return false;
-      if (timeFilter === '7D' && now - new Date(ev.createdAt).getTime() > 7 * 86400_000) return false;
+      if (timeFilter === '24H' && nowTimestamp - new Date(ev.createdAt).getTime() > 86400_000) return false;
+      if (timeFilter === '7D' && nowTimestamp - new Date(ev.createdAt).getTime() > 7 * 86400_000) return false;
 
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase();
@@ -362,7 +368,7 @@ export default function AdminActivityPage() {
       }
       return true;
     });
-  }, [eventList, categoryFilter, severityFilter, timeFilter, searchTerm]);
+  }, [eventList, categoryFilter, severityFilter, timeFilter, searchTerm, nowTimestamp]);
 
   const liveFeedFive = useMemo(() => eventList.slice(0, 5), [eventList]);
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { useSocket } from '@/providers/SocketProvider';
@@ -19,23 +20,14 @@ import {
   ArrowRight,
   Search,
   ChevronDown,
-  Filter,
-  Eye,
   Settings,
   X,
   ExternalLink,
   Building2,
-  User,
-  CreditCard,
-  FileText,
-  DoorClosed,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  Phone,
-  Mail,
-  ShieldCheck,
-  Check
+  ShieldCheck
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -453,6 +445,7 @@ export default function AdminBookingsPage() {
     if (!startStr || !endStr) return 'Flexible Lease';
     const s = new Date(startStr);
     const e = new Date(endStr);
+    if (isNaN(s.getTime()) || isNaN(e.getTime())) return 'Flexible Lease';
     const sMonth = s.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const eStr = e.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     return `${sMonth} – ${eStr}`;
@@ -510,14 +503,12 @@ export default function AdminBookingsPage() {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#F4FBF6] via-[#EDF8F1] to-[#E6F4EC] dark:from-[#121915] dark:via-[#141F19] dark:to-[#132119] border border-emerald-100/80 dark:border-emerald-900/40 px-6 py-7 sm:px-8 shadow-2xs">
         {/* Subtle architectural photo fade matching the design */}
         <div className="absolute right-0 top-0 bottom-0 w-2/3 sm:w-1/2 pointer-events-none opacity-40 dark:opacity-20 overflow-hidden">
-          <img
+          <Image
             src="/images/admin/dashboard-hero-building.webp"
             alt="Modern Residential Architecture"
-            className="w-full h-full object-cover object-right [mask-image:linear-gradient(to_left,black_25%,transparent_100%)]"
-            onError={(e) => {
-              // Graceful fallback to CSS gradient
-              (e.target as HTMLElement).style.display = 'none';
-            }}
+            fill
+            unoptimized
+            className="object-cover object-right [mask-image:linear-gradient(to_left,black_25%,transparent_100%)]"
           />
         </div>
 
@@ -537,6 +528,28 @@ export default function AdminBookingsPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {/* Live Telemetry Pill */}
+            <div className="h-10 px-4 rounded-xl bg-white dark:bg-[#19221D] border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-200 inline-flex items-center gap-2 shadow-2xs">
+              <span
+                className={clsx(
+                  'w-2 h-2 rounded-full',
+                  isConnected ? 'bg-[#16A34A] animate-pulse' : 'bg-amber-500'
+                )}
+              />
+              <span>{isConnected ? 'Operations Live' : 'Polling'}</span>
+            </div>
+
+            {/* Refresh Button */}
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isRefetching}
+              className="h-10 px-3.5 rounded-xl bg-white dark:bg-[#19221D] border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-700 dark:text-zinc-200 inline-flex items-center gap-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs disabled:opacity-60"
+            >
+              <RefreshCw className={clsx('w-3.5 h-3.5 text-zinc-500', isRefetching && 'animate-spin')} />
+              <span>Refresh</span>
+            </button>
+
             {/* Timeframe Dropdown */}
             <div className="relative">
               <button
@@ -1247,9 +1260,12 @@ export default function AdminBookingsPage() {
                       <td className="py-3.5 px-5 whitespace-nowrap">
                         <div className="flex items-center gap-2.5">
                           {b.tenant?.avatarUrl ? (
-                            <img
+                            <Image
                               src={b.tenant.avatarUrl}
                               alt={tenantName}
+                              width={28}
+                              height={28}
+                              unoptimized
                               className="w-7 h-7 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
                             />
                           ) : (
@@ -1345,9 +1361,12 @@ export default function AdminBookingsPage() {
               <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-850 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {selectedBooking.tenant?.avatarUrl ? (
-                    <img
+                    <Image
                       src={selectedBooking.tenant.avatarUrl}
                       alt="Tenant"
+                      width={40}
+                      height={40}
+                      unoptimized
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (

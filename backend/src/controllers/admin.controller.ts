@@ -2300,10 +2300,13 @@ export const resolveAppeal = async (req: Request, res: Response): Promise<void> 
 
 export const getSystemActivity = async (req: Request, res: Response): Promise<void> => {
   try {
+    const limit = Math.min(250, Math.max(10, parseInt(String(req.query.limit || '100'), 10) || 100));
+    const catTake = Math.max(25, Math.ceil(limit / 3));
+
     // Fetch the most recent cross-entity events to form an executive platform telemetry stream
     const [recentBookings, recentUsers, recentProperties, recentSubscriptions, recentTickets, recentBreaches, recentReviews] = await Promise.all([
       prisma.booking.findMany({
-        take: 12,
+        take: catTake,
         orderBy: { createdAt: 'desc' },
         include: {
           tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
@@ -2312,19 +2315,19 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
       }),
       prisma.user.findMany({
         where: { role: { in: ['TENANT', 'LANDLORD'] } },
-        take: 12,
+        take: catTake,
         orderBy: { createdAt: 'desc' },
         select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, ghanaCardStatus: true, isVerifiedLandlord: true, createdAt: true }
       }),
       prisma.property.findMany({
-        take: 12,
+        take: catTake,
         orderBy: { createdAt: 'desc' },
         include: {
           landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
         }
       }),
       prisma.propertySubscription.findMany({
-        take: 8,
+        take: Math.ceil(catTake * 0.75),
         orderBy: { createdAt: 'desc' },
         include: {
           property: {
@@ -2335,7 +2338,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
         }
       }),
       prisma.maintenanceTicket.findMany({
-        take: 10,
+        take: Math.ceil(catTake * 0.75),
         orderBy: { createdAt: 'desc' },
         include: {
           tenant: { select: { id: true, firstName: true, lastName: true, email: true } },
@@ -2343,7 +2346,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
         }
       }),
       prisma.breachReport.findMany({
-        take: 8,
+        take: Math.ceil(catTake * 0.5),
         orderBy: { createdAt: 'desc' },
         include: {
           reporter: { select: { id: true, firstName: true, lastName: true, role: true } },
@@ -2352,7 +2355,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
         }
       }),
       prisma.review.findMany({
-        take: 8,
+        take: Math.ceil(catTake * 0.5),
         orderBy: { createdAt: 'desc' },
         include: {
           author: { select: { id: true, firstName: true, lastName: true } },
@@ -2514,7 +2517,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
         status: r.isFlagged ? 'FLAGGED' : 'PUBLISHED',
         createdAt: r.createdAt
       }))
-    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 30);
+    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, limit);
 
     res.status(200).json(activity);
   } catch (error) {
