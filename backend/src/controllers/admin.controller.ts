@@ -1523,7 +1523,7 @@ export const getAllBookings = async (req: Request, res: Response): Promise<void>
     const bookings = await prisma.booking.findMany({
       include: {
         tenant: { 
-          select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } 
+          select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } 
         },
         property: { 
           select: { 
