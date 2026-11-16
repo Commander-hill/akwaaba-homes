@@ -11,7 +11,17 @@ export async function generateTenancyAgreementPDF(data: {
   bookingId: string;
   propertyTitle: string;
   propertyAddress: string;
+  propertyType?: string | null;
   roomType: string;
+  unitLabel?: string | null;
+  pricePeriod?: string | null;
+  paymentSchedule?: string | null;
+  cautionDeposit?: number | null;
+  furnishing?: string | null;
+  includedUtilities?: string[];
+  gateLockTime?: string | null;
+  visitorPolicy?: string | null;
+  quietHours?: string | null;
   landlordName: string;
   landlordPhone: string;
   tenantName: string;
@@ -165,33 +175,48 @@ export async function generateTenancyAgreementPDF(data: {
     doc.font('Times-Bold').fontSize(9.5).text('SCHEDULE OF TENANCY PARTICULARS', 54, y);
     y = doc.y + 5;
 
+    const unitDetails = [data.propertyType, data.roomType, data.unitLabel].filter(Boolean).join(' • ');
+    const utilitiesText =
+      data.includedUtilities && data.includedUtilities.length > 0
+        ? data.includedUtilities.join(', ')
+        : 'Tenant-metered / billed separately';
+    const depositText =
+      data.cautionDeposit && Number(data.cautionDeposit) > 0
+        ? `GHS ${Number(data.cautionDeposit).toLocaleString('en-GH', { minimumFractionDigits: 2 })} (Refundable Escrow)`
+        : 'None Required';
+    const billingCycle = data.pricePeriod || 'Per Term';
+
     const scheduleRows = [
-      ['1. Description & Location of Premises', `${data.propertyTitle}, situated at ${data.propertyAddress}`],
-      ['2. Unit / Accommodation Category', data.roomType || 'Self-Contained Residential Unit'],
-      ['3. Term of Tenancy', `From ${data.startDate} to ${data.endDate}`],
-      ['4. Agreed Rent for the Term', `GHS ${Number(data.rentAmount).toLocaleString('en-GH', { minimumFractionDigits: 2 })} (Ghana Cedis)`],
-      ['5. Permitted Use', 'Private Residential Occupation Only'],
+      ['1. Description & Location', `${data.propertyTitle}, situated at ${data.propertyAddress}`],
+      ['2. Property & Unit Allocation', unitDetails || 'Residential Unit'],
+      ['3. Furnishing & Utilities', `${data.furnishing || 'Unfurnished'} | Utilities: ${utilitiesText}`],
+      ['4. Term of Tenancy', `From ${data.startDate} to ${data.endDate}`],
+      ['5. Agreed Rent & Cycle', `GHS ${Number(data.rentAmount).toLocaleString('en-GH', { minimumFractionDigits: 2 })} (${billingCycle} • ${data.paymentSchedule || 'Full Upfront'})`],
+      ['6. Caution / Security Deposit', depositText],
+      ['7. Compound Access & Rules', `Gate: ${data.gateLockTime || '24/7 Access'} | Quiet: ${data.quietHours || 'From 10:00 PM'}`],
     ];
 
-    const col1Width = 185;
-    const col2Width = 302;
-    const rowHeight = 20;
+    const col1Width = 175;
+    const col2Width = 312;
 
     scheduleRows.forEach(([label, val]) => {
+      doc.font('Times-Roman').fontSize(8.8);
+      const valHeight = doc.heightOfString(val, { width: col2Width - 14 });
+      const rowHeight = Math.max(18, valHeight + 8);
       doc.rect(54, y, col1Width, rowHeight).fillAndStroke('#F5F2EB', '#A8A29E');
       doc.rect(54 + col1Width, y, col2Width, rowHeight).stroke('#A8A29E');
 
       doc
         .font('Times-Bold')
-        .fontSize(9.5)
+        .fontSize(8.8)
         .fillColor('#292524')
-        .text(label, 60, y + 5, { width: col1Width - 12 });
+        .text(label, 60, y + 4, { width: col1Width - 12 });
 
       doc
         .font('Times-Roman')
-        .fontSize(9.5)
+        .fontSize(8.8)
         .fillColor('#1C1917')
-        .text(val, 54 + col1Width + 8, y + 5, { width: col2Width - 16 });
+        .text(val, 54 + col1Width + 7, y + 4, { width: col2Width - 14 });
 
       y += rowHeight;
     });
@@ -233,11 +258,11 @@ export async function generateTenancyAgreementPDF(data: {
     doc.font('Times-Roman').fontSize(10).text('The Tenant hereby covenants with the Landlord as follows:', 54, y);
 
     const tenantClauses = [
-      '3.1. Payment of Rent and Utilities: To pay the reserved rent punctually as stipulated, and to pay all charges for electricity, water, sanitation, and other utilities consumed on or attributable to the Premises during the tenancy.',
+      `3.1. Payment of Rent and Utilities: To pay the reserved rent punctually (${billingCycle}) as stipulated. Included utilities: ${utilitiesText}. Any non-included utilities consumed on the Premises shall be borne by the Tenant.`,
       '3.2. Care of Interior and Fixtures: To keep the interior of the Premises, including all doors, windows, locks, sanitary fittings, electrical appliances, and fixtures provided by the Landlord, in a clean and tenantable state of repair (fair wear and tear excepted).',
       '3.3. Alterations: Not to make any structural alterations, additions, or permanent modifications to the Premises without obtaining the prior written consent of the Landlord.',
       '3.4. Prohibition on Assignment and Subletting: Not to assign, sublet, or part with the possession of the Premises or any part thereof to any third party without the prior written consent of the Landlord, in compliance with Section 22 of the Rent Act, 1963 (Act 220).',
-      '3.5. Good Neighbourliness and Conduct: Not to do or permit to be done upon the Premises anything which may constitute a nuisance, annoyance, or disturbance to the Landlord, co-tenants, or occupiers of adjoining properties.',
+      `3.5. Compound Rules & Conduct: To abide by the property gate policy (${data.gateLockTime || 'No Curfew / 24/7 Access'}), visitor policy (${data.visitorPolicy || 'Day visitors allowed until 8 PM'}), and quiet hours (${data.quietHours || 'From 10:00 PM'}), and avoid causing nuisance to co-tenants or neighbours.`,
       "3.6. Condition Inspection and Yielding Up: To participate in a joint condition inspection upon taking possession and at the expiration of the tenancy, and to peaceably yield up the Premises with all keys and Landlord's fixtures in good tenantable order at the determination of the tenancy.",
     ];
 

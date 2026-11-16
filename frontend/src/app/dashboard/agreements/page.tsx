@@ -136,8 +136,93 @@ export default function TenancyAgreementsPage() {
     primaryAgreement?.booking?.property?.price ||
     0;
   const rentDisplay = `GH₵${Number(rentAmountNum).toLocaleString()}`;
+  const propertyObj = primaryAgreement?.booking?.property;
+  const propertyTypeLabel = propertyObj?.type || 'Residential Unit';
+  const roomObj = primaryAgreement?.booking?.room;
+  const roomUnitObj = primaryAgreement?.booking?.roomUnit;
+  const bedObj = primaryAgreement?.booking?.bed;
+  const unitAllocation = [
+    roomObj?.roomType || roomObj?.name,
+    roomUnitObj?.unitName || roomUnitObj?.label,
+    bedObj?.label ? `Bed ${bedObj.label}` : null,
+  ]
+    .filter(Boolean)
+    .join(' • ');
+
+  const pricePeriodRaw = String(propertyObj?.pricePeriod || 'Monthly').toLowerCase();
+  const periodSuffix =
+    pricePeriodRaw === 'annual' || pricePeriodRaw === 'yearly'
+      ? '/ year'
+      : pricePeriodRaw === 'quarterly'
+      ? '/ quarter'
+      : pricePeriodRaw === 'nightly'
+      ? '/ night'
+      : pricePeriodRaw === 'semester'
+      ? '/ semester'
+      : '/ month';
+
+  const paymentScheduleLabel = propertyObj?.paymentSchedule || 'Full Upfront';
+  const cautionDepositNum = Number(propertyObj?.cautionDeposit || 0);
+  const cautionDepositDisplay =
+    cautionDepositNum > 0 ? `GH₵${cautionDepositNum.toLocaleString()}` : 'None Required';
+  const furnishingLabel = propertyObj?.furnishing || 'Unfurnished';
+  let includedUtilitiesList: string[] = [];
+  try {
+    const rawUtil = propertyObj?.includedUtilities;
+    if (Array.isArray(rawUtil)) includedUtilitiesList = rawUtil;
+    else if (typeof rawUtil === 'string' && rawUtil.trim()) {
+      const parsed = JSON.parse(rawUtil);
+      if (Array.isArray(parsed)) includedUtilitiesList = parsed;
+    }
+  } catch {
+    includedUtilitiesList = [];
+  }
+  const utilitiesSummary =
+    includedUtilitiesList.length > 0
+      ? includedUtilitiesList.join(', ')
+      : 'Tenant-metered / billed separately';
+
+  const gateLockTime = propertyObj?.gateLockTime || 'No Curfew / 24/7 Access';
+  const visitorPolicy = propertyObj?.visitorPolicy || 'Day visitors allowed until 8 PM';
+  const quietHours = propertyObj?.quietHours || 'From 10:00 PM';
+
+  const executionDateLabel = primaryAgreement?.createdAt
+    ? new Date(primaryAgreement.createdAt).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : new Date().toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+
+  const termDurationLabel = (() => {
+    const s = primaryAgreement?.booking?.startDate;
+    const e = primaryAgreement?.booking?.endDate;
+    if (!s || !e) return 'Fixed Term';
+    const diffDays = Math.max(1, Math.round((new Date(e).getTime() - new Date(s).getTime()) / (1000 * 60 * 60 * 24)));
+    if (diffDays >= 330) {
+      const yrs = Math.round(diffDays / 365);
+      return yrs === 1 ? '12 Months' : `${yrs} Years`;
+    }
+    if (diffDays >= 28) {
+      const mos = Math.max(1, Math.round(diffDays / 30));
+      return `${mos} Month${mos > 1 ? 's' : ''}`;
+    }
+    return `${diffDays} Day${diffDays > 1 ? 's' : ''}`;
+  })();
+
+  const landlordSignedDate = primaryAgreement?.landlordSignedAt
+    ? new Date(primaryAgreement.landlordSignedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
+  const tenantSignedDate = primaryAgreement?.tenantSignedAt
+    ? new Date(primaryAgreement.tenantSignedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
+
   const agreementRef = primaryAgreement?.id
-    ? `AKW/2026/${primaryAgreement.id.slice(0, 8).toUpperCase()}`
+    ? `AKW/${new Date(primaryAgreement.createdAt || Date.now()).getFullYear()}/${primaryAgreement.id.slice(0, 8).toUpperCase()}`
     : '—';
 
   const activeCount = agreements.length;
@@ -377,23 +462,23 @@ export default function TenancyAgreementsPage() {
               <div class="ref">Agreement Ref: ${agreementRef}</div>
             </div>
             <h2>1. PARTIES</h2>
-            <p>This Tenancy Agreement is made on this <strong>6th day of September, 2026</strong> between <strong>${landlordName}</strong> (hereinafter referred to as the "Landlord") of the one part, and <strong>${tenantName}</strong> (hereinafter referred to as the "Tenant") of the other part.</p>
-            <h2>2. PREMISES &amp; TERM</h2>
-            <p>The Landlord hereby demises unto the Tenant all that self-contained residential unit known as <strong>${propertyTitle}</strong> located at <strong>${propertyLocation}</strong> for a fixed term of <strong>12 Months</strong> commencing on <strong>${startDate}</strong> and expiring on <strong>${endDate}</strong>.</p>
-            <h2>3. RENT &amp; STATUTORY COMPLIANCE</h2>
-            <p>The reserved rent for the demised premises shall be <strong>${rentDisplay}</strong> payable via verified Paystack digital settlement in full compliance with Section 25 of the <strong>Ghana Rent Act, 1963 (Act 220)</strong>.</p>
-            <h2>4. COVENANTS &amp; OBLIGATIONS</h2>
-            <p>The Tenant covenants to use the premises strictly for residential purposes only, maintain the interior and fixtures in good tenantable repair, and abide by compound quiet hours and security regulations. The Landlord covenants that the Tenant paying the reserved rent shall peaceably hold and enjoy the demised premises without lawful interruption.</p>
+            <p>This Tenancy Agreement is made on <strong>${executionDateLabel}</strong> between <strong>${landlordName}</strong> (hereinafter referred to as the "Landlord") of the one part, and <strong>${tenantName}</strong> (hereinafter referred to as the "Tenant") of the other part.</p>
+            <h2>2. PREMISES, ALLOCATION &amp; TERM</h2>
+            <p>The Landlord hereby demises unto the Tenant the <strong>${propertyTypeLabel}</strong> premises known as <strong>${propertyTitle}</strong>${unitAllocation ? ` (Allocated Unit: <strong>${unitAllocation}</strong>)` : ''} located at <strong>${propertyLocation}</strong>, in <strong>${furnishingLabel}</strong> condition, for a fixed term of <strong>${termDurationLabel}</strong> commencing on <strong>${startDate}</strong> and expiring on <strong>${endDate}</strong>.</p>
+            <h2>3. RENT, DEPOSIT &amp; STATUTORY COMPLIANCE</h2>
+            <p>The reserved rent for the demised premises shall be <strong>${rentDisplay} ${periodSuffix}</strong> (${paymentScheduleLabel}) settled via verified AkwaabaHomes digital escrow in full compliance with Section 25 of the <strong>Ghana Rent Act, 1963 (Act 220)</strong>. Caution / Security Deposit: <strong>${cautionDepositDisplay}</strong>${cautionDepositNum > 0 ? ' (held in refundable escrow subject to move-out inspection)' : ''}. Included Utilities: <strong>${utilitiesSummary}</strong>.</p>
+            <h2>4. COVENANTS &amp; COMPOUND POLICIES</h2>
+            <p>The Tenant covenants to use the premises strictly for residential purposes only, maintain the interior and fixtures in good tenantable repair, and abide by the property's configured policies—Gate Access: <strong>${gateLockTime}</strong>; Visitor Policy: <strong>${visitorPolicy}</strong>; Quiet Hours: <strong>${quietHours}</strong>. The Landlord covenants that the Tenant paying the reserved rent shall peaceably hold and enjoy the demised premises without lawful interruption.</p>
             <div class="sig-grid">
               <div class="sig-box">
                 <strong>SIGNED BY LANDLORD:</strong><br/>
                 ${landlordName}<br/>
-                Status: Verified &amp; Executed (${startDate})
+                Status: ${landlordSignedDate ? `Verified &amp; Executed (${landlordSignedDate})` : 'Pending Landlord Signature'}
               </div>
               <div class="sig-box">
                 <strong>SIGNED BY TENANT:</strong><br/>
                 ${tenantName}<br/>
-                Status: Verified &amp; Executed (${startDate})
+                Status: ${tenantSignedDate ? `Verified &amp; Executed (${tenantSignedDate})` : 'Pending Tenant Signature'}
               </div>
             </div>
           </div>
@@ -1033,8 +1118,8 @@ export default function TenancyAgreementsPage() {
                             1. &nbsp;PARTIES
                           </h4>
                           <p className="text-[#233128] dark:text-zinc-200">
-                            This Tenancy Agreement is made on this{' '}
-                            <strong>6th day of September, 2026</strong> between{' '}
+                            This Tenancy Agreement is made on{' '}
+                            <strong>{executionDateLabel}</strong> between{' '}
                             <strong>{landlordName}</strong> of {propertyLocation} (hereinafter
                             referred to as the <strong>&ldquo;Landlord&rdquo;</strong>) of the one
                             part, and <strong>{tenantName}</strong> (hereinafter referred to as the{' '}
@@ -1052,11 +1137,18 @@ export default function TenancyAgreementsPage() {
                             2. &nbsp;DEMISED PREMISES &amp; TERM
                           </h4>
                           <p className="text-[#233128] dark:text-zinc-200">
-                            The Landlord hereby lets and the Tenant hereby takes all that
-                            self-contained residential unit known as{' '}
-                            <strong>{propertyTitle}</strong> situated at{' '}
-                            <strong>{propertyLocation}</strong>, Ghana, for a fixed tenancy term of{' '}
-                            <strong>12 Months</strong> commencing on <strong>{startDate}</strong>{' '}
+                            The Landlord hereby lets and the Tenant hereby takes the{' '}
+                            <strong>{propertyTypeLabel}</strong> premises known as{' '}
+                            <strong>{propertyTitle}</strong>
+                            {unitAllocation ? (
+                              <>
+                                {' '}
+                                (Allocated Unit: <strong>{unitAllocation}</strong>)
+                              </>
+                            ) : null}{' '}
+                            situated at <strong>{propertyLocation}</strong>, Ghana, in{' '}
+                            <strong>{furnishingLabel}</strong> condition, for a fixed tenancy term of{' '}
+                            <strong>{termDurationLabel}</strong> commencing on <strong>{startDate}</strong>{' '}
                             and expiring on <strong>{endDate}</strong>.
                           </p>
                         </div>
@@ -1071,11 +1163,15 @@ export default function TenancyAgreementsPage() {
                             3. &nbsp;RENT &amp; STATUTORY COMPLIANCE
                           </h4>
                           <p className="text-[#233128] dark:text-zinc-200">
-                            The reserved rent for the demised unit shall be{' '}
-                            <strong>{rentDisplay} / month</strong>, settled electronically via
-                            AkwaabaHomes verified Paystack escrow in strict compliance with the{' '}
-                            <strong>Ghana Rent Act, 1963 (Act 220)</strong>. Official digital
-                            receipts are issued automatically upon settlement.
+                            The reserved rent for the demised premises shall be{' '}
+                            <strong>
+                              {rentDisplay} {periodSuffix}
+                            </strong>{' '}
+                            ({paymentScheduleLabel}), settled electronically via verified
+                            AkwaabaHomes digital escrow in strict compliance with the{' '}
+                            <strong>Ghana Rent Act, 1963 (Act 220)</strong>. Caution Deposit:{' '}
+                            <strong>{cautionDepositDisplay}</strong>. Included Utilities:{' '}
+                            <strong>{utilitiesSummary}</strong>.
                           </p>
                         </div>
 
@@ -1091,9 +1187,12 @@ export default function TenancyAgreementsPage() {
                           <p className="text-[#233128] dark:text-zinc-200">
                             The Tenant covenants to utilize the demised premises strictly for{' '}
                             <strong>Residential Only</strong> purposes, preserve interior fixtures
-                            in good tenantable condition, and provide at least{' '}
-                            <strong>30 days prior notice</strong> (by <strong>31 Aug 2027</strong>)
-                            of intent to renew or vacate.
+                            in good tenantable condition, and abide by the property&apos;s policies —
+                            Gate Access: <strong>{gateLockTime}</strong>; Visitor Policy:{' '}
+                            <strong>{visitorPolicy}</strong>; Quiet Hours:{' '}
+                            <strong>{quietHours}</strong> — and provide at least{' '}
+                            <strong>30 days prior notice</strong> before expiration on{' '}
+                            <strong>{endDate}</strong> of intent to renew or vacate.
                           </p>
                         </div>
 
@@ -1113,8 +1212,8 @@ export default function TenancyAgreementsPage() {
                               <span className="font-bold text-[#14221A] dark:text-white">
                                 {landlordName}
                               </span>
-                              <span className="text-[10px] text-[#15803D] block mt-0.5">
-                                ✓ Verified • {startDate}
+                              <span className={`text-[10px] block mt-0.5 ${landlordSignedDate ? 'text-[#15803D]' : 'text-amber-600 dark:text-amber-400'}`}>
+                                {landlordSignedDate ? `✓ Verified • ${landlordSignedDate}` : '⏳ Pending Landlord Signature'}
                               </span>
                             </div>
                             <div className="p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
@@ -1122,8 +1221,8 @@ export default function TenancyAgreementsPage() {
                               <span className="font-bold text-[#14221A] dark:text-white">
                                 {tenantName}
                               </span>
-                              <span className="text-[10px] text-[#15803D] block mt-0.5">
-                                ✓ Verified • {startDate}
+                              <span className={`text-[10px] block mt-0.5 ${tenantSignedDate ? 'text-[#15803D]' : 'text-amber-600 dark:text-amber-400'}`}>
+                                {tenantSignedDate ? `✓ Verified • ${tenantSignedDate}` : '⏳ Pending Tenant Signature'}
                               </span>
                             </div>
                           </div>
@@ -1151,7 +1250,7 @@ export default function TenancyAgreementsPage() {
                 <div className="py-2.5 flex items-center justify-between gap-2">
                   <span className="text-[#536358] dark:text-zinc-400 font-medium">Rent</span>
                   <span className="font-black text-[#14221A] dark:text-white">
-                    {rentDisplay} / month
+                    {rentDisplay} {periodSuffix}
                   </span>
                 </div>
 

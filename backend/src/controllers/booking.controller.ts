@@ -20,6 +20,8 @@ export const downloadAgreementPDF = async (req: Request, res: Response): Promise
       include: {
         property: { include: { landlord: true } },
         room: true,
+        roomUnit: true,
+        bed: true,
         tenant: true,
         leaseAgreement: true
       }
@@ -34,6 +36,8 @@ export const downloadAgreementPDF = async (req: Request, res: Response): Promise
             include: {
               property: { include: { landlord: true } },
               room: true,
+              roomUnit: true,
+              bed: true,
               tenant: true,
               leaseAgreement: true
             }
@@ -65,12 +69,29 @@ export const downloadAgreementPDF = async (req: Request, res: Response): Promise
       return;
     }
 
+    const bAny = booking as any;
+    const unitParts = [
+      bAny.roomUnit?.unitName || bAny.roomUnit?.label,
+      bAny.bed?.label ? `Bed ${bAny.bed.label}` : null,
+    ].filter(Boolean);
+    const parsedUtilities = safeJsonParse<string[]>(booking.property.includedUtilities, []);
+
     const pdfBuffer = await generateTenancyAgreementPDF({
       agreementId: booking.leaseAgreement?.id || booking.id,
       bookingId: booking.id,
       propertyTitle: booking.property.title,
       propertyAddress: booking.property.location,
+      propertyType: booking.property.type,
       roomType: booking.room.roomType,
+      unitLabel: unitParts.length > 0 ? unitParts.join(' • ') : null,
+      pricePeriod: booking.property.pricePeriod,
+      paymentSchedule: booking.property.paymentSchedule,
+      cautionDeposit: booking.property.cautionDeposit,
+      furnishing: booking.property.furnishing,
+      includedUtilities: Array.isArray(parsedUtilities) ? parsedUtilities : [],
+      gateLockTime: booking.property.gateLockTime,
+      visitorPolicy: booking.property.visitorPolicy,
+      quietHours: booking.property.quietHours,
       landlordName: `${booking.property.landlord.firstName} ${booking.property.landlord.lastName}`,
       landlordPhone: booking.property.landlord.phoneNumber || 'N/A',
       tenantName: `${booking.tenant.firstName} ${booking.tenant.lastName}`,
