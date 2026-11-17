@@ -296,7 +296,19 @@ app.use(xssSanitizer);
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'public/uploads')));
 
-// ─── Health Check & Resilience Heartbeat (unthrottled) ──────────────────────
+// ─── Root Service Info & Health Check (unthrottled) ─────────────────────────
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    service: 'AkwaabaHomes API',
+    status: 'ok',
+    version: 'v1',
+    health: '/api/health',
+    readiness: '/api/health/ready',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/api/health', (req: Request, res: Response) => {
   const mem = process.memoryUsage();
   const uploadsDir = path.resolve(process.cwd(), 'public/uploads');
