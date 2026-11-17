@@ -35,6 +35,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import toast from 'react-hot-toast';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import clsx from 'clsx';
 
 type ChartMetric = 'revenue' | 'bookings' | 'users';
@@ -49,7 +50,7 @@ export default function AdminAnalyticsPage() {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [activeMetric, setActiveMetric] = useState<ChartMetric>('revenue');
 
-  const { data: analytics, isLoading, isRefetching, refetch } = useQuery({
+  const { data: analytics, isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: ['admin-analytics'],
     queryFn: async () => {
       const res = await api.get('/admin/analytics');
@@ -190,6 +191,17 @@ export default function AdminAnalyticsPage() {
       <div className="min-h-[420px] flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#16A34A]" />
         <p className="text-xs font-semibold text-zinc-500">Aggregating real-time platform analytics...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load platform analytics"
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }

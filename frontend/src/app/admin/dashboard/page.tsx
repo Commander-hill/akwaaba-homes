@@ -6,6 +6,7 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { LiveHealthHeartbeat } from '@/components/admin/LiveHealthHeartbeat';
 import { DashboardOverviewSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { useSocket } from '@/providers/SocketProvider';
@@ -65,6 +66,7 @@ export default function AdminDashboardPage() {
   const {
     data: stats,
     isLoading: statsLoading,
+    isError: statsError,
     refetch: refetchStats
   } = useQuery({
     queryKey: ['admin-stats'],
@@ -80,6 +82,7 @@ export default function AdminDashboardPage() {
   const {
     data: actionQueue = [],
     isLoading: queueLoading,
+    isError: queueError,
     refetch: refetchQueue
   } = useQuery({
     queryKey: ['admin-action-queue'],
@@ -179,6 +182,19 @@ export default function AdminDashboardPage() {
   }, [activityData]);
   const showSkeleton = useInitialSkeleton();
   if (showSkeleton) return <DashboardOverviewSkeleton />;
+  if ((statsError || queueError) && !statsLoading && !queueLoading) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load executive dashboard"
+          onRetry={() => {
+            if (statsError) refetchStats();
+            if (queueError) refetchQueue();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12">

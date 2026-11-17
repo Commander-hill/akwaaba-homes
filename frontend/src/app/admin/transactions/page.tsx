@@ -26,6 +26,7 @@ import {
   Building2,
 } from 'lucide-react';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { getImageUrl } from '@/lib/utils';
 import TransactionKpiCards from '@/components/admin/TransactionKpiCards';
 
@@ -142,7 +143,7 @@ export default function AdminTransactionsPage() {
     return () => window.removeEventListener('click', closeMenu);
   }, []);
 
-  const { data: rawTransactions = [], isLoading: txLoading } = useQuery({
+  const { data: rawTransactions = [], isLoading: txLoading, isError: txError, refetch: refetchTx } = useQuery({
     queryKey: ['admin-transactions'],
     queryFn: async () => {
       const res = await api.get('/admin/transactions');
@@ -605,6 +606,13 @@ export default function AdminTransactionsPage() {
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="h-14 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
                 ))}
+              </div>
+            ) : txError ? (
+              <div className="p-6">
+                <QueryErrorFallback
+                  title="Unable to load financial transactions"
+                  onRetry={() => refetchTx()}
+                />
               </div>
             ) : paginatedEntries.length === 0 ? (
               <div className="py-16 px-6 text-center">
