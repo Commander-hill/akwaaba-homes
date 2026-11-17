@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   CreditCard,
   Download,
@@ -81,34 +82,26 @@ export default function TenantPaymentsPage() {
   const currentUser = userResponse?.user;
 
   // 2. Fetch tenant transactions
-  const { data: transactionsData, isLoading: isLoadingTx } = useQuery({
+  const { data: transactionsData, isLoading: isLoadingTx, isError: isTxError, refetch: refetchTx } = useQuery({
     queryKey: ['tenant-transactions', currentUser?.role],
     enabled: Boolean(currentUser),
     queryFn: async () => {
-      try {
-        const { data } = await api.get(currentUser?.role === 'LANDLORD' ? '/transactions/landlord' : '/transactions/tenant');
-        if (Array.isArray(data)) return data;
-        if (Array.isArray(data?.transactions)) return data.transactions;
-        return [];
-      } catch {
-        return [];
-      }
+      const { data } = await api.get(currentUser?.role === 'LANDLORD' ? '/transactions/landlord' : '/transactions/tenant');
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.transactions)) return data.transactions;
+      return [];
     },
   });
 
   // 3. Fetch active/pending bookings
-  const { data: bookingsData, isLoading: isLoadingBookings } = useQuery({
+  const { data: bookingsData, isLoading: isLoadingBookings, isError: isBookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ['tenant-bookings', currentUser?.role],
     enabled: Boolean(currentUser),
     queryFn: async () => {
-      try {
-        const { data } = await api.get(currentUser?.role === 'LANDLORD' ? '/bookings/landlord' : '/bookings/me');
-        if (Array.isArray(data)) return data;
-        if (Array.isArray(data?.bookings)) return data.bookings;
-        return [];
-      } catch {
-        return [];
-      }
+      const { data } = await api.get(currentUser?.role === 'LANDLORD' ? '/bookings/landlord' : '/bookings/me');
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.bookings)) return data.bookings;
+      return [];
     },
   });
 
@@ -579,6 +572,16 @@ export default function TenantPaymentsPage() {
                 <div className="py-12 flex flex-col items-center justify-center space-y-2 text-zinc-400">
                   <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
                   <p className="text-xs font-medium">Loading transactions...</p>
+                </div>
+              ) : (isTxError || isBookingsError) ? (
+                <div className="p-4">
+                  <QueryErrorFallback
+                    title="Unable to load billing records"
+                    onRetry={() => {
+                      if (isTxError) refetchTx();
+                      if (isBookingsError) refetchBookings();
+                    }}
+                  />
                 </div>
               ) : displayTransactions.length === 0 ? (
                 // Clean Empty State for Zero Transactions (Resolves Anomaly 1)

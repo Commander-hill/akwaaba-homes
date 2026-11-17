@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   FileText,
   FileSignature,
@@ -46,15 +47,11 @@ export default function TenantDocumentsAndVerificationPage() {
   });
 
   // ── 2. Fetch Digital Tenancy Agreements ──
-  const { data: agreementsData, isLoading: isLoadingAgreements } = useQuery({
+  const { data: agreementsData, isLoading: isLoadingAgreements, isError: isAgreementsError, refetch: refetchAgreements } = useQuery({
     queryKey: ['tenant-agreements'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/agreements/tenant');
-        return data.agreements || [];
-      } catch {
-        return [];
-      }
+      const { data } = await api.get('/agreements/tenant');
+      return data.agreements || [];
     },
   });
 
@@ -864,14 +861,21 @@ export default function TenantDocumentsAndVerificationPage() {
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                  <p className="text-xs font-bold text-[#14221A] dark:text-white">
-                    No executed tenancy agreements on record
-                  </p>
-                  <p className="text-xs text-[#54635A] dark:text-zinc-400 leading-relaxed">
-                    Once your rental booking is confirmed and both you and your property owner digitally sign the tenancy agreement, your tamper-proof SHA-256 sealed contract will be accessible here for instant preview and PDF download.
-                  </p>
-                </div>
+                {isAgreementsError ? (
+                  <QueryErrorFallback
+                    title="Unable to load tenancy agreements"
+                    onRetry={() => refetchAgreements()}
+                  />
+                ) : (
+                  <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                    <p className="text-xs font-bold text-[#14221A] dark:text-white">
+                      No executed tenancy agreements on record
+                    </p>
+                    <p className="text-xs text-[#54635A] dark:text-zinc-400 leading-relaxed">
+                      Once your rental booking is confirmed and both you and your property owner digitally sign the tenancy agreement, your tamper-proof SHA-256 sealed contract will be accessible here for instant preview and PDF download.
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex justify-end gap-2 pt-1">
                   <Link

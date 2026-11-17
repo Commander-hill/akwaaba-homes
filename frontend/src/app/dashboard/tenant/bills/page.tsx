@@ -28,33 +28,26 @@ import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import ResidentLockedTeaser from '@/components/tenant-ui/ResidentLockedTeaser';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function TenantBillsPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'ALL' | 'ACTIVE' | 'SETTLED'>('ALL');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const { data: billsData, isLoading } = useQuery({
+  const { data: billsData, isLoading, isError: isBillsError, refetch: refetchBills } = useQuery({
     queryKey: ['billSplits', 'tenant'],
     queryFn: async () => {
-      try {
-        const res = await api.get('/bill-splits');
-        return res.data?.splits || res.data?.billSplits || [];
-      } catch {
-        return [];
-      }
+      const res = await api.get('/bill-splits');
+      return res.data?.splits || res.data?.billSplits || [];
     }
   });
 
-  const { data: bookingsData, isLoading: isBookingsLoading } = useQuery({
+  const { data: bookingsData, isLoading: isBookingsLoading, isError: isBookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ['bookings', 'tenant'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/bookings/me');
-        return Array.isArray(data) ? data : data?.bookings || [];
-      } catch {
-        return [];
-      }
+      const { data } = await api.get('/bookings/me');
+      return Array.isArray(data) ? data : data?.bookings || [];
     },
   });
 
@@ -87,6 +80,20 @@ export default function TenantBillsPage() {
   const rawSplits: any[] = billsData || [];
   const showSkeleton = useInitialSkeleton(isLoading || isBookingsLoading);
   if (showSkeleton) return <TablePageSkeleton rows={4} columns={4} />;
+
+  if (isBillsError || isBookingsError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load shared bills"
+          onRetry={() => {
+            if (isBillsError) refetchBills();
+            if (isBookingsError) refetchBookings();
+          }}
+        />
+      </div>
+    );
+  }
 
   if (!isLoading && !isBookingsLoading && !hasActiveStay && rawSplits.length === 0) {
     return (

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import toast from 'react-hot-toast';
 import {
   MapPin,
@@ -44,7 +45,7 @@ export default function TenantDashboardPage() {
   const session = sessionData?.user || sessionData;
 
   // 2. Tenant Bookings
-  const { data: bookingsResponse, isLoading: bookingsLoading } = useQuery({
+  const { data: bookingsResponse, isLoading: bookingsLoading, isError: bookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ['bookings', 'tenant'],
     queryFn: async () => {
       const { data } = await api.get('/bookings/me');
@@ -117,6 +118,17 @@ export default function TenantDashboardPage() {
     : 0;
 
 
+
+  if (bookingsError && !bookingsLoading) {
+    return (
+      <div className="py-12 font-sans">
+        <QueryErrorFallback
+          title="Unable to load your resident dashboard"
+          onRetry={() => refetchBookings()}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 font-sans">

@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import { DashboardOverviewSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   MapPin,
   Calendar,
@@ -149,7 +150,7 @@ function ResidencePageContent() {
   const [wifiModalOpen, setWifiModalOpen] = useState(false);
 
   // Query active resident tenancy
-  const { data: activeBookingData, isLoading } = useQuery({
+  const { data: activeBookingData, isLoading, isError, refetch } = useQuery({
     queryKey: ['tenant-active-residence'],
     queryFn: async () => {
       try {
@@ -157,16 +158,12 @@ function ResidencePageContent() {
         return data.booking || null;
       } catch {
         // Fallback: check /bookings/me for active or checked in stay
-        try {
-          const { data: res } = await api.get('/bookings/me');
-          const list = Array.isArray(res) ? res : res?.bookings || [];
-          const found = list.find((b: any) =>
-            ['ACTIVE', 'CHECKED_IN', 'CONFIRMED', 'APPROVED'].includes(b.status)
-          );
-          return found || null;
-        } catch {
-          return null;
-        }
+        const { data: res } = await api.get('/bookings/me');
+        const list = Array.isArray(res) ? res : res?.bookings || [];
+        const found = list.find((b: any) =>
+          ['ACTIVE', 'CHECKED_IN', 'CONFIRMED', 'APPROVED'].includes(b.status)
+        );
+        return found || null;
       }
     },
   });
@@ -291,6 +288,16 @@ function ResidencePageContent() {
   const activeImageIndex = selectedImageIndex < galleryImages.length ? selectedImageIndex : 0;
   const showSkeleton = useInitialSkeleton(isLoading);
   if (showSkeleton) return <DashboardOverviewSkeleton />;
+  if (isError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load your residence details"
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
   const currentMainImage = galleryImages[activeImageIndex] || galleryImages[0];
 
   const copyToClipboard = (text: string, key: string) => {

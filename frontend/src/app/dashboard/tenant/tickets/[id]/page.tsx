@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function TicketDetailsPage() {
   const params = useParams();
@@ -33,15 +34,11 @@ export default function TicketDetailsPage() {
   const ticketId = params?.id as string;
   const [commentText, setCommentText] = useState('');
 
-  const { data: ticketData, isLoading, error } = useQuery({
+  const { data: ticketData, isLoading, isError, refetch } = useQuery({
     queryKey: ['maintenanceTicket', ticketId],
     queryFn: async () => {
-      try {
-        const res = await api.get(`/tickets/${ticketId}`);
-        return res.data?.ticket || null;
-      } catch (err: any) {
-        return null;
-      }
+      const res = await api.get(`/tickets/${ticketId}`);
+      return res.data?.ticket || null;
     },
     enabled: Boolean(ticketId)
   });
@@ -85,6 +82,17 @@ export default function TicketDetailsPage() {
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#16A34A]" />
         <p className="text-xs font-semibold text-zinc-500">Loading repair request details...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-xl mx-auto py-20 px-4">
+        <QueryErrorFallback
+          title="Unable to load repair request"
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }

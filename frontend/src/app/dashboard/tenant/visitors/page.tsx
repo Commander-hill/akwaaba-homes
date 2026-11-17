@@ -30,6 +30,7 @@ import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import ResidentLockedTeaser from '@/components/tenant-ui/ResidentLockedTeaser';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function TenantVisitorsPage() {
   const queryClient = useQueryClient();
@@ -37,27 +38,19 @@ export default function TenantVisitorsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const { data: passesData, isLoading } = useQuery({
+  const { data: passesData, isLoading, isError: isPassesError, refetch: refetchPasses } = useQuery({
     queryKey: ['visitorPasses', 'tenant'],
     queryFn: async () => {
-      try {
-        const res = await api.get('/visitor-passes');
-        return res.data?.passes || [];
-      } catch {
-        return [];
-      }
+      const res = await api.get('/visitor-passes');
+      return res.data?.passes || [];
     }
   });
 
-  const { data: bookingsData, isLoading: isBookingsLoading } = useQuery({
+  const { data: bookingsData, isLoading: isBookingsLoading, isError: isBookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ['bookings', 'tenant'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/bookings/me');
-        return Array.isArray(data) ? data : data?.bookings || [];
-      } catch {
-        return [];
-      }
+      const { data } = await api.get('/bookings/me');
+      return Array.isArray(data) ? data : data?.bookings || [];
     },
   });
 
@@ -90,6 +83,20 @@ export default function TenantVisitorsPage() {
   const rawPasses: any[] = passesData || [];
   const showSkeleton = useInitialSkeleton(isLoading || isBookingsLoading);
   if (showSkeleton) return <TablePageSkeleton rows={4} columns={4} />;
+
+  if (isPassesError || isBookingsError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load visitor passes"
+          onRetry={() => {
+            if (isPassesError) refetchPasses();
+            if (isBookingsError) refetchBookings();
+          }}
+        />
+      </div>
+    );
+  }
 
   if (!isLoading && !isBookingsLoading && !hasActiveStay && rawPasses.length === 0) {
     return (

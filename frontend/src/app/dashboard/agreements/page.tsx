@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   Scale,
   Download,
@@ -81,15 +82,11 @@ export default function TenancyAgreementsPage() {
   });
 
   // ── 2. Fetch Digital Tenancy Agreements from Backend ──
-  const { data: agreementsData } = useQuery({
+  const { data: agreementsData, isError: isAgreementsError, refetch: refetchAgreements } = useQuery({
     queryKey: ['tenant-agreements', session?.role],
     queryFn: async () => {
-      try {
-        const { data } = await api.get(session?.role === 'LANDLORD' ? '/agreements/landlord' : '/agreements/tenant');
-        return data.agreements || [];
-      } catch {
-        return [];
-      }
+      const { data } = await api.get(session?.role === 'LANDLORD' ? '/agreements/landlord' : '/agreements/tenant');
+      return data.agreements || [];
     },
     enabled: !!session?.role,
   });
@@ -552,6 +549,13 @@ export default function TenancyAgreementsPage() {
             </button>
           </div>
         </section>
+
+        {isAgreementsError && (
+          <QueryErrorFallback
+            title="Unable to load tenancy agreements"
+            onRetry={() => refetchAgreements()}
+          />
+        )}
 
         {/* ════════════════════════════════════════════════════════════════════
             2. 4 SUMMARY KPI CARDS ROW

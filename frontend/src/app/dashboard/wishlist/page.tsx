@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { getGuestWishlistIds, setGuestWishlistIds } from '@/components/WishlistButton';
 import {
   Heart,
@@ -82,7 +83,7 @@ export default function WishlistPage() {
   }, []);
 
   // Authenticated Wishlist Query
-  const { data: authWishlistData, isLoading: isAuthWishlistLoading } = useQuery({
+  const { data: authWishlistData, isLoading: isAuthWishlistLoading, isError: isAuthWishlistError, refetch: refetchAuthWishlist } = useQuery({
     queryKey: ['wishlist'],
     queryFn: async () => {
       const res = await api.get('/wishlist');
@@ -92,7 +93,7 @@ export default function WishlistPage() {
   });
 
   // Guest Wishlist Query (hydrate properties from public catalog)
-  const { data: guestCatalogData, isLoading: isGuestCatalogLoading } = useQuery({
+  const { data: guestCatalogData, isLoading: isGuestCatalogLoading, isError: isGuestCatalogError, refetch: refetchGuestCatalog } = useQuery({
     queryKey: ['guest-wishlist-properties', guestIds],
     queryFn: async () => {
       if (guestIds.length === 0) return [];
@@ -812,6 +813,11 @@ export default function WishlistPage() {
             <PropertyCardSkeleton key={i} />
           ))}
         </div>
+      ) : (isAuthenticated ? isAuthWishlistError : isGuestCatalogError) ? (
+        <QueryErrorFallback
+          title="Unable to load saved properties"
+          onRetry={() => (isAuthenticated ? refetchAuthWishlist() : refetchGuestCatalog())}
+        />
       ) : savedProperties.length === 0 ? (
         <EmptyState
           icon={<Heart className="w-6 h-6" />}
