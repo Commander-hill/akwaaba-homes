@@ -447,11 +447,17 @@ export default function TenantShell({
 
                     {isLocked ? (
                       <span
-                        title="Unlocks once your stay begins"
+                        title={
+                          item.requiresStay
+                            ? 'Unlocks once you have an active residence stay'
+                            : 'Unlocks once you submit a booking'
+                        }
                         className="flex items-center gap-1 text-[9px] font-bold text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800/90 px-1.5 py-0.5 rounded-md shrink-0 border border-zinc-200/50 dark:border-zinc-700/50"
                       >
                         <Lock className="w-2.5 h-2.5" />
-                        <span className="hidden xl:inline tracking-tight">Stay</span>
+                        <span className="hidden xl:inline tracking-tight">
+                          {item.requiresStay ? 'Stay' : 'Booking'}
+                        </span>
                       </span>
                     ) : item.badge !== undefined && item.badge > 0 ? (
                       <span className="w-4.5 h-4.5 rounded-full bg-[#E0533C] text-white text-[9.5px] font-bold flex items-center justify-center shrink-0">
