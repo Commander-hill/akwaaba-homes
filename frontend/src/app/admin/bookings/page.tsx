@@ -307,9 +307,9 @@ export default function AdminBookingsPage() {
   // Donut Distribution Breakdown
   const distributionData = useMemo(() => {
     const total = stats.total || 1;
-    const confirmedPct = stats.total > 0 ? (stats.confirmed / total) * 100 : 89.1;
-    const pendingPct = stats.total > 0 ? (stats.pending / total) * 100 : 7.0;
-    const cancelledPct = stats.total > 0 ? (stats.cancelled / total) * 100 : 3.9;
+    const confirmedPct = stats.total > 0 ? (stats.confirmed / total) * 100 : 0;
+    const pendingPct = stats.total > 0 ? (stats.pending / total) * 100 : 0;
+    const cancelledPct = stats.total > 0 ? (stats.cancelled / total) * 100 : 0;
 
     const r = 38;
     const circumference = 2 * Math.PI * r;
