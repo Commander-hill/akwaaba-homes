@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { useSocket } from '@/providers/SocketProvider';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   Calendar,
   CalendarCheck,
@@ -128,11 +129,13 @@ export default function AdminBookingsPage() {
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
 
   // Fetch real bookings
-  const { data: rawBookings = [], isLoading, refetch, isRefetching } = useQuery<BookingRecord[]>({
+  const { data: rawBookings = [], isLoading, isError, refetch, isRefetching } = useQuery<BookingRecord[]>({
     queryKey: ['admin-bookings'],
     queryFn: async () => {
       const res = await api.get('/admin/bookings');
-      return Array.isArray(res.data) ? res.data : [];
+      if (Array.isArray(res.data)) return res.data;
+      if (Array.isArray(res.data?.bookings)) return res.data.bookings;
+      return [];
     },
     staleTime: 15000,
     refetchInterval: 30000
@@ -166,7 +169,7 @@ export default function AdminBookingsPage() {
   // Accurate Status Categorization
   const isConfirmed = (status: string) => {
     const s = (status || '').toUpperCase();
-    return s === 'CONFIRMED' || s === 'COMPLETED' || s === 'ACTIVE' || s === 'APPROVED';
+    return s === 'CONFIRMED' || s === 'COMPLETED' || s === 'ACTIVE' || s === 'APPROVED' || s === 'CHECKED_IN';
   };
 
   const isPending = (status: string) => {
@@ -1209,7 +1212,17 @@ export default function AdminBookingsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-xs">
-              {isLoading ? (
+              {isError ? (
+                <tr>
+                  <td colSpan={7} className="p-6">
+                    <QueryErrorFallback
+                      title="Unable to load bookings"
+                      onRetry={() => refetch()}
+                      isRetrying={isRefetching}
+                    />
+                  </td>
+                </tr>
+              ) : isLoading ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-zinc-400">
                     <div className="inline-flex items-center gap-2">
