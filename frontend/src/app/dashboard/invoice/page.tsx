@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
+import ResidentLockedTeaser from '@/components/tenant-ui/ResidentLockedTeaser';
 import {
   CreditCard,
   Download,
@@ -293,6 +294,31 @@ export default function TenantPaymentsPage() {
     if (recentPayments.length === 0) return 1;
     return Math.max(...recentPayments.map((p: any) => Number(p.amount) || 0), 1);
   }, [recentPayments]);
+
+  if (
+    !isLoadingTx &&
+    !isLoadingBookings &&
+    !isTxError &&
+    !isBookingsError &&
+    !isDemo &&
+    currentUser?.role !== 'LANDLORD' &&
+    bookings.length === 0 &&
+    displayTransactions.length === 0
+  ) {
+    return (
+      <ResidentLockedTeaser
+        icon={Receipt}
+        badge="Unlocks Upon Booking"
+        title="Invoices & Payment Receipts"
+        description="Once you submit your first accommodation booking, your rent invoices, caution deposit escrow records, and downloadable PDF receipts will unlock here."
+        bullets={[
+          'Instant verified PDF rent receipts under Act 220',
+          'Track caution deposit escrow & installment schedules',
+          'Download full annual payment statements anytime',
+        ]}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans relative overflow-x-hidden flex flex-col justify-between">
