@@ -8,6 +8,7 @@ import clsx from 'clsx';
 import api from '@/lib/axios';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
+import ResidentLockedTeaser from '@/components/tenant-ui/ResidentLockedTeaser';
 import {
   Wrench,
   Clock,
@@ -96,6 +97,27 @@ export default function TenantTicketsPage() {
   const hasActiveTenancy = Boolean(activeBookingData);
   const showSkeleton = useInitialSkeleton(isLoadingTickets || isLoadingResidence);
   if (showSkeleton) return <TablePageSkeleton rows={4} columns={4} />;
+
+  if (
+    !isLoadingTickets &&
+    !isLoadingResidence &&
+    !isTicketsError &&
+    !hasActiveTenancy &&
+    (ticketsData || []).length === 0
+  ) {
+    return (
+      <ResidentLockedTeaser
+        icon={Wrench}
+        title="Maintenance & Repair Requests"
+        description="Once your stay is confirmed, you can log plumbing, electrical, AC, or fixture repair requests directly to your landlord and compound caretaker."
+        bullets={[
+          'Instant ticket dispatch to caretaker & property manager',
+          'Upload fault photos and track technician progress live',
+          'Full repair timeline and resolution audit history',
+        ]}
+      />
+    );
+  }
   const propertyTitle = activeBookingData?.property?.title || 'Residential Residence';
   const propertyLocation =
     activeBookingData?.property?.location || activeBookingData?.property?.address || 'Accra, Ghana';
