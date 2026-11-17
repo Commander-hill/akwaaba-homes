@@ -452,16 +452,20 @@ function dispatchVerificationEmail(
       })
       .catch((emailError) => {
         console.error('Failed to send verification email via SMTP:', emailError);
-        console.log('\n=============================================');
-        console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
-        console.log(`🔗 Verification Link: ${verifyLink}`);
-        console.log('=============================================\n');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('\n=============================================');
+          console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
+          console.log(`🔗 Verification Link: ${verifyLink}`);
+          console.log('=============================================\n');
+        }
       });
-  } else {
+  } else if (process.env.NODE_ENV !== 'production') {
     console.log('\n=============================================');
     console.log(`⚠️ SMTP NOT CONFIGURED. MOCK EMAIL SENT TO: ${user.email}`);
     console.log(`🔗 Verification Link: ${verifyLink}`);
     console.log('=============================================\n');
+  } else {
+    console.warn(`⚠️ SMTP NOT CONFIGURED in production; verification email skipped for ${user.email}`);
   }
 }
 
@@ -1668,10 +1672,12 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       .then(() => console.log(`✉️  Password reset email successfully sent to ${user.email}`))
       .catch((emailError) => {
         console.error('Failed to send password reset email via SMTP:', emailError);
-        console.log('\n=============================================');
-        console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
-        console.log(`🔗 Password Reset Link: ${resetUrl}`);
-        console.log('=============================================\n');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('\n=============================================');
+          console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
+          console.log(`🔗 Password Reset Link: ${resetUrl}`);
+          console.log('=============================================\n');
+        }
       });
     }
 
