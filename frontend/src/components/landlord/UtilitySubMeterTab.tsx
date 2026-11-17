@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { 
   Zap, Droplet, Calculator, Send, CheckCircle, Clock, AlertCircle,
   Loader2, RefreshCw, Copy, Check, Users, User, Building, DollarSign,
@@ -95,7 +96,7 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
   }, [propertyList, selectedPropertyId]);
 
   // Fetch occupancy matrix to get room units & residents
-  const { data: matrixData, isLoading: isLoadingMatrix, refetch: refetchMatrix } = useQuery({
+  const { data: matrixData, isLoading: isLoadingMatrix, isError: isMatrixError, refetch: refetchMatrix } = useQuery({
     queryKey: ['occupancyMatrix', selectedPropertyId],
     queryFn: async () => {
       if (!selectedPropertyId) return null;
@@ -106,7 +107,7 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
   });
 
   // Fetch existing bill splits for this property
-  const { data: billSplitsData, isLoading: isLoadingBills, refetch: refetchBills } = useQuery<{ billSplits: BillSplitItem[] }>({
+  const { data: billSplitsData, isLoading: isLoadingBills, isError: isBillsError, refetch: refetchBills } = useQuery<{ billSplits: BillSplitItem[] }>({
     queryKey: ['propertyBillSplits', selectedPropertyId],
     queryFn: async () => {
       if (!selectedPropertyId) return { billSplits: [] };
@@ -397,6 +398,11 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
           <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
           <p className="text-sm font-medium">Loading room sub-meters and resident data...</p>
         </div>
+      ) : isMatrixError ? (
+        <QueryErrorFallback
+          title="Unable to load room sub-meters"
+          onRetry={() => refetchMatrix()}
+        />
       ) : roomUnits.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs">
           No room units configured for this property yet. Add room units in Property Settings.
@@ -569,6 +575,11 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
             <p className="text-xs">Loading settlement records...</p>
           </div>
+        ) : isBillsError ? (
+          <QueryErrorFallback
+            title="Unable to load utility bill splits"
+            onRetry={() => refetchBills()}
+          />
         ) : (!billSplitsData?.billSplits || billSplitsData.billSplits.length === 0) ? (
           <div className="p-8 text-center text-slate-400 text-xs">
             No utility bills dispatched for this property yet.

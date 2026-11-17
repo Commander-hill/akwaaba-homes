@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '@/lib/utils';
 import { formatBookingUnitLabel } from '@/components/landlord-ui/propertyConfig';
@@ -77,7 +78,7 @@ export default function LandlordBookingsPage() {
   const [activeTab, setActiveTab] = useState<'ALL' | 'Pending' | 'Confirmed' | 'Cancelled'>('ALL');
   const [period, setPeriod] = useState<'All Time' | 'This Month'>('All Time');
 
-  const { data: rawBookings = [], isLoading } = useQuery({
+  const { data: rawBookings = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['landlord', 'bookings', 'list'],
     queryFn: async () => {
       const { data } = await api.get('/bookings/landlord');
@@ -177,6 +178,16 @@ export default function LandlordBookingsPage() {
     return periodBookings.filter((b) => b.status === activeTab);
   }, [periodBookings, activeTab]);
   if (showSkeleton || isLoading) return <BookingListSkeleton />;
+  if (isError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load landlord bookings"
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
 
   const handleConfirm = (id: string) => {
     statusMutation.mutate({ id, status: 'APPROVED' });

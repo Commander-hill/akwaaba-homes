@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { 
   Clock, User, Phone, Check, AlertCircle, Loader2, 
   Search, RefreshCw, KeyRound, LogOut, LogIn, AlertTriangle, 
@@ -72,7 +73,7 @@ export default function GateLogbookTab({ properties = [] }: GateLogbookTabProps)
   }, [propertyList, selectedPropertyId]);
 
   // Fetch passes for selected property
-  const { data: passesData, isLoading, refetch, isFetching } = useQuery<{ passes: VisitorPass[] }>({
+  const { data: passesData, isLoading, isError, refetch, isFetching } = useQuery<{ passes: VisitorPass[] }>({
     queryKey: ['propertyVisitorPasses', selectedPropertyId],
     queryFn: async () => {
       if (!selectedPropertyId) return { passes: [] };
@@ -407,6 +408,11 @@ export default function GateLogbookTab({ properties = [] }: GateLogbookTabProps)
           <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
           <p className="text-sm font-medium">Loading gate logbook records...</p>
         </div>
+      ) : isError ? (
+        <QueryErrorFallback
+          title="Unable to load gate logbook records"
+          onRetry={() => refetch()}
+        />
       ) : filteredPasses.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs">
           No visitor log records matching the selected view.

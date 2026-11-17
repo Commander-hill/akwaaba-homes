@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { 
   Calendar, DollarSign, CheckCircle2, Clock, AlertTriangle, KeyRound, 
   Send, Phone, User, Building, Search, Filter, Loader2, RefreshCw,
@@ -92,7 +93,7 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
   }, [propertyList, selectedPropertyId]);
 
   // Fetch bookings for landlord
-  const { data: bookingsResponse, isLoading, refetch, isFetching } = useQuery<{ bookings: BookingItem[] }>({
+  const { data: bookingsResponse, isLoading, isError, refetch, isFetching } = useQuery<{ bookings: BookingItem[] }>({
     queryKey: ['bookings', 'landlord'],
     queryFn: async () => {
       const res = await api.get('/bookings/landlord');
@@ -348,6 +349,11 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
           <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
           <p className="text-sm font-medium">Calculating academic semester balances...</p>
         </div>
+      ) : isError ? (
+        <QueryErrorFallback
+          title="Unable to load semester installment records"
+          onRetry={() => refetch()}
+        />
       ) : filteredList.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs">
           No residents matching the selected tranche criteria.

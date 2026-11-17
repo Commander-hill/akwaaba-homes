@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { 
   Building, Layers, Users, CheckCircle, Wrench, Clock,
   Loader2, Filter, AlertCircle, Phone, Mail, Calendar, Eye, RefreshCw,
@@ -106,7 +107,7 @@ export default function FloorplanOccupancyTab({
     }
   }, [propertyList, selectedPropertyId]);
 
-  const { data, isLoading, refetch, isFetching } = useQuery<MatrixResponse>({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery<MatrixResponse>({
     queryKey: ['occupancyMatrix', selectedPropertyId],
     queryFn: async () => {
       if (!selectedPropertyId) return null as any;
@@ -259,6 +260,11 @@ export default function FloorplanOccupancyTab({
           <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
           <p className="text-sm font-medium">Generating visual floorplan grid...</p>
         </div>
+      ) : isError ? (
+        <QueryErrorFallback
+          title="Unable to load occupancy matrix"
+          onRetry={() => refetch()}
+        />
       ) : (
         <>
           {/* Occupancy KPI Summary Cards */}
