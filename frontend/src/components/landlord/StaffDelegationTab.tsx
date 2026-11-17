@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import Link from 'next/link';
 import { 
   UserCheck, Plus, Trash2, UserCog, Mail, Phone,
@@ -59,7 +60,7 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
     location: p.location || p.propertyLocation || ''
   })).filter((p: any) => Boolean(p.id));
 
-  const { data, isLoading } = useQuery<{ staff: StaffAssignment[] }>({
+  const { data, isLoading, isError, refetch } = useQuery<{ staff: StaffAssignment[] }>({
     queryKey: ['propertyStaff', 'landlord'],
     queryFn: async () => {
       const res = await api.get('/staff');
@@ -109,6 +110,11 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
         <div className="p-16 flex items-center justify-center text-slate-400">
           <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
         </div>
+      ) : isError ? (
+        <QueryErrorFallback
+          title="Unable to load delegated staff"
+          onRetry={() => refetch()}
+        />
       ) : staffList.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
           <UserCheck className="w-12 h-12 text-slate-400 mx-auto mb-3" />

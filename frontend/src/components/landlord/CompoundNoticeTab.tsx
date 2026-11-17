@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import Link from 'next/link';
 import { 
   Megaphone, Plus, Trash2, Users, AlertTriangle, 
@@ -53,7 +54,7 @@ export default function CompoundNoticeTab({ properties = [] }: { properties?: an
     location: p.location || p.propertyLocation || ''
   })).filter((p: any) => Boolean(p.id));
 
-  const { data, isLoading } = useQuery<{ notices: NoticeItem[] }>({
+  const { data, isLoading, isError, refetch } = useQuery<{ notices: NoticeItem[] }>({
     queryKey: ['compoundNotices', 'landlord'],
     queryFn: async () => {
       const res = await api.get('/compound-notices/landlord');
@@ -105,6 +106,11 @@ export default function CompoundNoticeTab({ properties = [] }: { properties?: an
         <div className="p-16 flex items-center justify-center text-slate-400">
           <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
         </div>
+      ) : isError ? (
+        <QueryErrorFallback
+          title="Unable to load compound announcements"
+          onRetry={() => refetch()}
+        />
       ) : notices.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
           <BellRing className="w-12 h-12 text-slate-400 mx-auto mb-3" />

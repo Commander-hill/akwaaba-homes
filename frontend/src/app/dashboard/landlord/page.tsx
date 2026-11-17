@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import { DashboardOverviewSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   Home,
   CalendarCheck,
@@ -108,7 +109,7 @@ export default function LandlordDashboardPage() {
     staleTime: 60_000,
   });
 
-  const { data: propertiesData, isLoading: propsLoading } = useQuery({
+  const { data: propertiesData, isLoading: propsLoading, isError: propsError, refetch: refetchProps } = useQuery({
     queryKey: ['landlord-properties'],
     queryFn: async () => {
       const res = await api.get('/properties/landlord/mine');
@@ -117,7 +118,7 @@ export default function LandlordDashboardPage() {
     },
   });
 
-  const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
+  const { data: bookingsData, isLoading: bookingsLoading, isError: bookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ['landlord-bookings'],
     queryFn: async () => {
       const res = await api.get('/bookings/landlord');
@@ -197,6 +198,20 @@ export default function LandlordDashboardPage() {
 
   if (meLoading && propsLoading && bookingsLoading) {
     return <DashboardOverviewSkeleton />;
+  }
+
+  if ((propsError || bookingsError) && !propsLoading && !bookingsLoading) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load your landlord dashboard"
+          onRetry={() => {
+            if (propsError) refetchProps();
+            if (bookingsError) refetchBookings();
+          }}
+        />
+      </div>
+    );
   }
 
   return (

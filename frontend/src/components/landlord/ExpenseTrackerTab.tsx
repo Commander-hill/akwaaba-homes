@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import Link from 'next/link';
 import { 
   DollarSign, Plus, Trash2, Download, TrendingUp, TrendingDown,
@@ -74,7 +75,7 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
     location: p.location || p.propertyLocation || ''
   })).filter((p: any) => Boolean(p.id));
 
-  const { data: expensesData, isLoading: isLoadingExpenses } = useQuery<{ expenses: ExpenseRecord[]; totalExpenseAmount: number }>({
+  const { data: expensesData, isLoading: isLoadingExpenses, isError: isExpensesError, refetch: refetchExpenses } = useQuery<{ expenses: ExpenseRecord[]; totalExpenseAmount: number }>({
     queryKey: ['expenses', selectedPropertyId],
     queryFn: async () => {
       const url = selectedPropertyId !== 'ALL' ? `/expenses?propertyId=${selectedPropertyId}` : '/expenses';
@@ -209,6 +210,13 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
           </Link>
         </div>
       </div>
+
+      {isExpensesError && (
+        <QueryErrorFallback
+          title="Unable to load operating expenses"
+          onRetry={() => refetchExpenses()}
+        />
+      )}
 
       {/* P&L Financial KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
