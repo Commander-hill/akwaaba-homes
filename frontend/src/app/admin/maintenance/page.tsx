@@ -261,6 +261,7 @@ export default function AdminMaintenancePage() {
   const {
     data: historyData,
     isLoading: isLoadingHistory,
+    isError: isHistoryError,
     refetch: refetchHistory,
     isFetching: isFetchingHistory,
   } = useQuery<{
@@ -280,6 +281,19 @@ export default function AdminMaintenancePage() {
         params.set('search', historySearch);
       }
       const res = await api.get(`/admin/maintenance/history?${params.toString()}`);
+      return res.data;
+    },
+    staleTime: 30 * 1000,
+  });
+
+  // Unfiltered summary query so KPI sparkline cards stay stable regardless of table search/filter/page
+  const { data: kpiSummaryData, refetch: refetchKpiSummary } = useQuery<{
+    history: MaintenanceAuditRecord[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }>({
+    queryKey: ['admin-maintenance-kpi-summary'],
+    queryFn: async () => {
+      const res = await api.get('/admin/maintenance/history?page=1&limit=50');
       return res.data;
     },
     staleTime: 30 * 1000,
@@ -338,6 +352,7 @@ export default function AdminMaintenancePage() {
     const handleConfigUpdated = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-config'] });
       queryClient.invalidateQueries({ queryKey: ['admin-maintenance-history'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-maintenance-kpi-summary'] });
     };
     socket.on('config_updated', handleConfigUpdated);
     return () => {
@@ -389,6 +404,7 @@ export default function AdminMaintenancePage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-config'] });
       queryClient.invalidateQueries({ queryKey: ['admin-maintenance-history'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-maintenance-kpi-summary'] });
       setImpactModalOpen(false);
       setConfirmPhraseInput('');
       setActionInProgress(null);
@@ -448,6 +464,27 @@ export default function AdminMaintenancePage() {
       maintenanceEndTime: endTime ? new Date(endTime).toISOString() : null,
       maintenanceScheduled: Boolean(startTime && new Date(startTime) > new Date()),
     });
+  };
+
+  const handleScheduleWindow = () => {
+    if (!isSuperAdmin) {
+      toast.error('Super Administrator clearance is required to schedule maintenance.');
+      return;
+    }
+    if (!startTime) {
+      toast.error('Please select a Planned Start Date & Time to schedule a maintenance window.');
+      return;
+    }
+    const startMs = new Date(startTime).getTime();
+    if (Number.isNaN(startMs) || startMs <= Date.now()) {
+      toast.error('Planned Start Date & Time must be in the future.');
+      return;
+    }
+    if (endTime && new Date(endTime).getTime() <= startMs) {
+      toast.error('Target End / Restoration Time must occur after the planned start time.');
+      return;
+    }
+    handleSaveDraft();
   };
 
   const handleOpenActivationModal = () => {
@@ -530,7 +567,8 @@ export default function AdminMaintenancePage() {
 
   // ── Derived KPI & Log Metrics ──
   const rawHistory = useMemo(() => historyData?.history || [], [historyData]);
-  const totalHistoryCount = historyData?.pagination?.total ?? rawHistory.length;
+  const summaryHistory = useMemo(() => kpiSummaryData?.history || rawHistory, [kpiSummaryData, rawHistory]);
+  const totalHistoryCount = kpiSummaryData?.pagination?.total ?? historyData?.pagination?.total ?? summaryHistory.length;
 
   const filteredHistory = useMemo(() => {
     if (historyRangeFilter === 'ALL') return rawHistory;
@@ -540,16 +578,16 @@ export default function AdminMaintenancePage() {
   }, [rawHistory, historyRangeFilter]);
 
   const scheduledTasksCount = useMemo(() => {
-    const fromLog = rawHistory.filter((r) => r.action === 'MAINTENANCE_SCHEDULED').length;
+    const fromLog = summaryHistory.filter((r) => r.action === 'MAINTENANCE_SCHEDULED').length;
     return serverScheduled ? Math.max(1, fromLog) : fromLog;
-  }, [rawHistory, serverScheduled]);
+  }, [summaryHistory, serverScheduled]);
 
   const completedTasksCount = useMemo(
     () =>
-      rawHistory.filter((r) =>
+      summaryHistory.filter((r) =>
         ['MAINTENANCE_DEACTIVATED', 'MAINTENANCE_CONFIG_UPDATED'].includes(r.action)
       ).length,
-    [rawHistory]
+    [summaryHistory]
   );
 
   const pendingActionsCount = useMemo(
@@ -558,7 +596,7 @@ export default function AdminMaintenancePage() {
   );
 
   const lastModifiedLabel = useMemo(() => {
-    const latest = rawHistory[0]?.createdAt || configData?.updatedAt;
+    const latest = summaryHistory[0]?.createdAt || configData?.updatedAt;
     if (!latest) return '—';
     return new Date(latest).toLocaleString('en-US', {
       month: 'short',
@@ -686,6 +724,7 @@ export default function AdminMaintenancePage() {
             onClick={() => {
               refetchConfig();
               refetchHistory();
+              refetchKpiSummary();
               toast.success('Maintenance telemetry refreshed');
             }}
             disabled={isFetchingConfig || isFetchingHistory}
@@ -1179,7 +1218,7 @@ export default function AdminMaintenancePage() {
                   target="_blank"
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-200 transition"
                 >
-                  <Phone className="w-3 h-3" />
+                  <Eye className="w-3 h-3" />
                   <span>Preview Message</span>
                 </Link>
               </div>
@@ -1299,7 +1338,7 @@ export default function AdminMaintenancePage() {
 
                 <button
                   type="button"
-                  onClick={handleSaveDraft}
+                  onClick={handleScheduleWindow}
                   disabled={!isSuperAdmin || actionInProgress !== null}
                   className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-xs transition shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -1391,6 +1430,15 @@ export default function AdminMaintenancePage() {
                   <td colSpan={7} className="py-12 text-center text-zinc-400">
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#16A34A]" />
                     Loading maintenance audit log...
+                  </td>
+                </tr>
+              ) : isHistoryError ? (
+                <tr>
+                  <td colSpan={7} className="p-6">
+                    <QueryErrorFallback
+                      title="Unable to load maintenance audit log"
+                      onRetry={() => refetchHistory()}
+                    />
                   </td>
                 </tr>
               ) : filteredHistory.length === 0 ? (
