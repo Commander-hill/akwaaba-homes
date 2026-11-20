@@ -18,7 +18,6 @@ import {
   Sparkles,
   X,
   MapPin,
-  Clock,
   CheckCircle2,
   LayoutGrid,
   List,
@@ -33,6 +32,7 @@ import PropertyCard, {
   parseStringArray,
 } from '@/components/tenant-ui/PropertyCard';
 import PropertyImage from '@/components/PropertyImage';
+import WishlistButton from '@/components/WishlistButton';
 import { PropertyCardSkeleton, Button } from '@/components/tenant-ui/primitives';
 
 type CategoryFilter = 'ALL' | 'HOSTEL' | 'APARTMENT' | 'HOUSE';
@@ -84,7 +84,11 @@ export default function WishlistPage() {
     const sync = () => setGuestIds(getGuestWishlistIds());
     sync();
     window.addEventListener('akwaaba_wishlist_changed', sync);
-    return () => window.removeEventListener('akwaaba_wishlist_changed', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('akwaaba_wishlist_changed', sync);
+      window.removeEventListener('storage', sync);
+    };
   }, []);
 
   // Authenticated Wishlist Query
@@ -177,6 +181,25 @@ export default function WishlistPage() {
     return guestIds.filter((id) => !savedIdSet.has(id));
   }, [isAuthenticated, guestIds, savedProperties]);
 
+  // Category Counts
+  const categoryCounts = useMemo(() => {
+    let hostel = 0;
+    let apartment = 0;
+    let house = 0;
+    savedProperties.forEach((p: any) => {
+      const upper = (p.type || '').toUpperCase();
+      if (upper.includes('HOSTEL')) hostel++;
+      else if (upper.includes('APARTMENT') || upper.includes('STUDIO')) apartment++;
+      else house++;
+    });
+    return {
+      ALL: savedProperties.length,
+      HOSTEL: hostel,
+      APARTMENT: apartment,
+      HOUSE: house,
+    };
+  }, [savedProperties]);
+
   // Filter & Sort
   const filteredProperties = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -214,7 +237,10 @@ export default function WishlistPage() {
       if (sortBy === 'RATING_DESC') {
         return Number(b.avgRating || 0) - Number(a.avgRating || 0);
       }
-      return 0; // RECENT preserves backend order
+      // RECENT: Deterministic timestamp descending sort
+      const dateA = new Date(a.savedAt || a.createdAt || 0).getTime();
+      const dateB = new Date(b.savedAt || b.createdAt || 0).getTime();
+      return dateB - dateA;
     });
   }, [savedProperties, searchQuery, categoryFilter, sortBy]);
 
@@ -747,6 +773,69 @@ export default function WishlistPage() {
         </div>
       </div>
 
+      {/* Filter Chips & Search Bar (Cleanly revealed when user has saved properties) */}
+      {!isLoading && savedProperties.length > 0 && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#171C19] p-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+          {/* Category Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+            {(
+              [
+                { id: 'ALL', label: 'All Saved', count: categoryCounts.ALL },
+                { id: 'HOSTEL', label: 'Student Hostels', count: categoryCounts.HOSTEL },
+                { id: 'APARTMENT', label: 'Apartments & Studios', count: categoryCounts.APARTMENT },
+                { id: 'HOUSE', label: 'Houses & Rooms', count: categoryCounts.HOUSE },
+              ] as const
+            ).map((tab) => {
+              const active = categoryFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setCategoryFilter(tab.id)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                    active
+                      ? 'bg-[#059669] text-white shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded text-[10px] ${
+                      active
+                        ? 'bg-white/20 text-white'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search Input */}
+          <div className="relative w-full md:w-64">
+            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search saved homes..."
+              className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121614] text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#059669]"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ======================================================== */}
       {/* 4. CONTENT AREA: Loading / Error / Empty / Property List */}
       {/* ======================================================== */}
@@ -890,14 +979,9 @@ export default function WishlistPage() {
                     alt={prop.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(prop.id)}
-                    className="absolute top-2.5 right-2.5 p-2 rounded-full bg-white/95 dark:bg-zinc-900/95 text-rose-500 hover:text-rose-600 shadow-xs cursor-pointer"
-                    title="Remove from saved properties"
-                  >
-                    <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
-                  </button>
+                  <div className="absolute top-2.5 right-2.5">
+                    <WishlistButton propertyId={prop.id} initialIsSaved={true} />
+                  </div>
                   <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/95 dark:bg-zinc-900/95 text-zinc-800 dark:text-zinc-200 shadow-2xs">
                     {formatPropertyTypeLabel(prop.type)}
                   </div>

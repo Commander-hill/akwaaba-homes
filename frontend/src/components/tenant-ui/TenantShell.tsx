@@ -558,7 +558,7 @@ export default function TenantShell({
                   : pathname.includes('/visitors')
                   ? 'Visitor Gate Passes'
                   : pathname.includes('/wishlist')
-                  ? 'Saved Wishlist'
+                  ? 'Wishlist'
                   : pathname.includes('/bills')
                   ? 'Rent & Utility Bills'
                   : pathname.includes('/documents') || pathname.includes('/verification')
@@ -574,7 +574,7 @@ export default function TenantShell({
             <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 shrink-0">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[10.5px] font-mono uppercase tracking-wider font-bold">
-                Portal Live
+                OPERATIONS LIVE
               </span>
             </div>
           </div>
