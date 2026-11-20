@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { useSocket } from '@/providers/SocketProvider';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import toast from 'react-hot-toast';
 import {
   ShieldCheck,
@@ -102,7 +103,7 @@ export default function AdminVerificationsQueuePage() {
   const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false);
 
   // Query raw users & landlords
-  const { data: rawUsers = [], isLoading, refetch } = useQuery({
+  const { data: rawUsers = [], isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: ['admin-users-verifications'],
     queryFn: async () => {
       const res = await api.get('/admin/users');
@@ -430,6 +431,17 @@ export default function AdminVerificationsQueuePage() {
   };
   const showSkeleton = useInitialSkeleton(isLoading);
   if (showSkeleton) return <TablePageSkeleton rows={6} columns={5} />;
+  if (isError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load verifications"
+          onRetry={() => refetch()}
+          isRetrying={isRefetching}
+        />
+      </div>
+    );
+  }
   if (false) {
   };
 

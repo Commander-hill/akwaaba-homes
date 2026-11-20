@@ -25,6 +25,7 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import { resolvePropertyCategory } from '@/components/landlord-ui/propertyConfig';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminSubscriptionDetailPage({
   params,
@@ -37,7 +38,7 @@ export default function AdminSubscriptionDetailPage({
 
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
 
-  const { data: subscription, isLoading, error } = useQuery({
+  const { data: subscription, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-subscription', subscriptionId],
     queryFn: async () => {
       const res = await api.get(`/admin/subscriptions/${subscriptionId}`);
@@ -86,7 +87,19 @@ export default function AdminSubscriptionDetailPage({
     );
   }
 
-  if (error || !subscription) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load subscription record"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!subscription) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
         <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center mb-4">

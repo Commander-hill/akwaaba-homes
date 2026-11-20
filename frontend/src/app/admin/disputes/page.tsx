@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 type TabFilter = 'ALL' | 'PENDING' | 'IN_REVIEW' | 'RESOLVED' | 'ESCALATED';
 type TimeRange = 'Last 30 Days' | 'Last 6 Months' | 'Last 12 Months' | 'All Time';
@@ -213,7 +214,7 @@ export default function AdminDisputesPage() {
   // Info modal for "+ New Dispute"
   const [newDisputeModalOpen, setNewDisputeModalOpen] = useState(false);
 
-  const { data, isLoading, isRefetching, refetch } = useQuery({
+  const { data, isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: ['admin-breaches'],
     queryFn: async () => {
       const res = await api.get('/admin/breaches');
@@ -605,6 +606,12 @@ export default function AdminDisputesPage() {
           </div>
           <div className="lg:col-span-5 xl:col-span-4 h-[460px] rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 animate-pulse" />
         </div>
+      ) : isError ? (
+        <QueryErrorFallback
+          title="Unable to load disputes"
+          onRetry={() => refetch()}
+          isRetrying={isRefetching}
+        />
       ) : filteredDisputes.length === 0 ? (
         <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-12 text-center">
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#16A34A] flex items-center justify-center mx-auto mb-4">

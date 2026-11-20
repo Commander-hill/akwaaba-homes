@@ -29,6 +29,7 @@ import toast from 'react-hot-toast';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 const formatLeaseDuration = (startDate: string, endDate: string) => {
   if (!startDate || !endDate) return 'N/A';
@@ -63,7 +64,7 @@ export default function AdminBookingDetailPage({
     action: null
   });
 
-  const { data: booking, isLoading, error } = useQuery({
+  const { data: booking, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-booking', bookingId],
     queryFn: async () => {
       const res = await api.get(`/admin/bookings/${bookingId}`);
@@ -80,7 +81,19 @@ export default function AdminBookingDetailPage({
     );
   }
 
-  if (error || !booking) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load booking record"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!booking) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
         <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center mb-4">

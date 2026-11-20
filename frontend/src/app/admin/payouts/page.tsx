@@ -31,6 +31,7 @@ import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import { useStepUpAuth } from '@/hooks/useStepUpAuth';
 import PayoutKpiCards from '@/components/admin/PayoutKpiCards';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 type PayoutStatusFilter = 'ALL' | 'SUCCESS' | 'PENDING' | 'PROCESSING' | 'FAILED';
 type DateRangeOption = '7D' | '30D' | '90D' | 'ALL';
@@ -83,7 +84,7 @@ export default function AdminPayoutsPage() {
   const [selectedPayout, setSelectedPayout] = useState<any | null>(null);
   const [isReconciling, setIsReconciling] = useState(false);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: ['admin-payouts', statusFilter],
     queryFn: async () => {
       const res = await api.get('/admin/payouts', {
@@ -611,6 +612,14 @@ export default function AdminPayoutsPage() {
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
                 ))}
+              </div>
+            ) : isError ? (
+              <div className="p-6">
+                <QueryErrorFallback
+                  title="Unable to load payouts"
+                  onRetry={() => refetch()}
+                  isRetrying={isRefetching}
+                />
               </div>
             ) : visiblePayouts.length === 0 ? (
               <div className="py-12 px-6 text-center">

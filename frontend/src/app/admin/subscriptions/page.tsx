@@ -25,6 +25,7 @@ import {
 import api from '@/lib/axios';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 import SubscriptionKpiCards from '@/components/admin/SubscriptionKpiCards';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface SubscriptionRecord {
   id: string;
@@ -169,7 +170,7 @@ export default function AdminSubscriptionsPage() {
     return () => document.removeEventListener('mousedown', onOutsideClick);
   }, []);
 
-  const { data: rawSubscriptions = [], isLoading, refetch } = useQuery({
+  const { data: rawSubscriptions = [], isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: ['admin-subscriptions'],
     queryFn: async () => {
       const res = await api.get('/admin/subscriptions');
@@ -654,6 +655,16 @@ export default function AdminSubscriptionsPage() {
                           </td>
                         </tr>
                       ))
+                    ) : isError ? (
+                      <tr>
+                        <td colSpan={8} className="p-6">
+                          <QueryErrorFallback
+                            title="Unable to load subscriptions"
+                            onRetry={() => refetch()}
+                            isRetrying={isRefetching}
+                          />
+                        </td>
+                      </tr>
                     ) : paginatedSubscriptions.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="py-12 px-4 text-center">
@@ -893,7 +904,15 @@ export default function AdminSubscriptionsPage() {
             ) : (
               /* Grid View */
               <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {paginatedSubscriptions.length === 0 ? (
+                {isError ? (
+                  <div className="col-span-full p-2">
+                    <QueryErrorFallback
+                      title="Unable to load subscriptions"
+                      onRetry={() => refetch()}
+                      isRetrying={isRefetching}
+                    />
+                  </div>
+                ) : paginatedSubscriptions.length === 0 ? (
                   <div className="col-span-full py-10 text-center text-xs text-zinc-500">
                     No matching subscriptions found.
                   </div>

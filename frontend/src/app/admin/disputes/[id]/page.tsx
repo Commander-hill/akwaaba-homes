@@ -30,6 +30,7 @@ import { getImageUrl } from '@/lib/utils';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminDisputeDetailPage({
   params,
@@ -52,7 +53,7 @@ export default function AdminDisputeDetailPage({
   const [penaltyPoints, setPenaltyPoints] = useState<number>(1.0);
   const [suspendRespondent, setSuspendRespondent] = useState<boolean>(false);
 
-  const { data: dispute, isLoading, error } = useQuery({
+  const { data: dispute, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-dispute', disputeId],
     queryFn: async () => {
       const res = await api.get(`/admin/disputes/${disputeId}`);
@@ -104,7 +105,19 @@ export default function AdminDisputeDetailPage({
     );
   }
 
-  if (error || !dispute) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load dispute dossier"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!dispute) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
         <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center mb-4">

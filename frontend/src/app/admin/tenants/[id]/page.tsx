@@ -30,6 +30,7 @@ import toast from 'react-hot-toast';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminTenantDetailPage({
   params
@@ -50,7 +51,7 @@ export default function AdminTenantDetailPage({
     type: 'SUSPEND'
   });
 
-  const { data: tenant, isLoading, refetch } = useQuery({
+  const { data: tenant, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-tenant', tenantId],
     queryFn: async () => {
       const res = await api.get(`/admin/users/${tenantId}`);
@@ -95,6 +96,18 @@ export default function AdminTenantDetailPage({
       <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
         <p className="text-xs font-bold text-zinc-500">Loading resident credentials...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load tenant profile"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }

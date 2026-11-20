@@ -27,6 +27,7 @@ import toast from 'react-hot-toast';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminReviewDetailPage({
   params,
@@ -46,7 +47,7 @@ export default function AdminReviewDetailPage({
     action: null
   });
 
-  const { data: review, isLoading, error } = useQuery({
+  const { data: review, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-review', reviewId],
     queryFn: async () => {
       const res = await api.get(`/admin/reviews/${reviewId}`);
@@ -93,7 +94,19 @@ export default function AdminReviewDetailPage({
     );
   }
 
-  if (error || !review) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load review record"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!review) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
         <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center mb-4">

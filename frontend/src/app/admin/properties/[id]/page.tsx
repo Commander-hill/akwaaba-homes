@@ -32,6 +32,7 @@ import { getImageUrl } from '@/lib/utils';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminPropertyDetailPage({
   params,
@@ -47,7 +48,7 @@ export default function AdminPropertyDetailPage({
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
 
   // Single-entity lookup from backend
-  const { data: property, isLoading, error } = useQuery({
+  const { data: property, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-property', propertyId],
     queryFn: async () => {
       const res = await api.get(`/admin/properties/${propertyId}`);
@@ -99,7 +100,19 @@ export default function AdminPropertyDetailPage({
     );
   }
 
-  if (error || !property) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load property listing"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!property) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
         <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center mb-4">

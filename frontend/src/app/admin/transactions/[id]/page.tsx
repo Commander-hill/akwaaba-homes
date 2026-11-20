@@ -25,6 +25,7 @@ import {
 import toast from 'react-hot-toast';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminTransactionDetailPage({
   params,
@@ -34,7 +35,7 @@ export default function AdminTransactionDetailPage({
   const resolvedParams = use(params);
   const transactionId = resolvedParams.id;
 
-  const { data: transaction, isLoading, error } = useQuery({
+  const { data: transaction, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-transaction', transactionId],
     queryFn: async () => {
       const res = await api.get(`/admin/transactions/${transactionId}`);
@@ -56,7 +57,19 @@ export default function AdminTransactionDetailPage({
     );
   }
 
-  if (error || !transaction) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load transaction record"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!transaction) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
         <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center mb-4">

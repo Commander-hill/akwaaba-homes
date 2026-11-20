@@ -30,6 +30,7 @@ import {
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import TicketKpiCards from '@/components/admin/TicketKpiCards';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 type TicketTab = 'ALL' | 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | 'OVERDUE';
 type DateRangeOption = '7D' | '30D' | '90D' | 'ALL';
@@ -161,7 +162,7 @@ export default function AdminTicketsPage() {
     return () => window.removeEventListener('click', close);
   }, []);
 
-  const { data: rawTickets = [], isLoading } = useQuery({
+  const { data: rawTickets = [], isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['admin-tickets'],
     queryFn: async () => {
       const res = await api.get('/admin/tickets');
@@ -651,6 +652,14 @@ export default function AdminTicketsPage() {
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="h-14 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
                 ))}
+              </div>
+            ) : isError ? (
+              <div className="p-6">
+                <QueryErrorFallback
+                  title="Unable to load support tickets"
+                  onRetry={() => refetch()}
+                  isRetrying={isRefetching}
+                />
               </div>
             ) : paginatedTickets.length === 0 ? (
               <div className="py-16 px-6 text-center">

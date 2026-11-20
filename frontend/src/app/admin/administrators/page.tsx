@@ -24,6 +24,7 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminDataTable, { Column } from '@/components/admin/AdminDataTable';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminAdministratorsPage() {
   const queryClient = useQueryClient();
@@ -59,7 +60,7 @@ export default function AdminAdministratorsPage() {
     role: 'ADMIN' as 'ADMIN' | 'SUPER_ADMIN'
   });
 
-  const { data: admins = [], isLoading } = useQuery({
+  const { data: admins = [], isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['admin-administrators'],
     queryFn: async () => {
       const res = await api.get('/admin/administrators');
@@ -262,7 +263,14 @@ export default function AdminAdministratorsPage() {
         }
       />
 
-      <AdminDataTable
+      {isError ? (
+        <QueryErrorFallback
+          title="Unable to load administrators"
+          onRetry={() => refetch()}
+          isRetrying={isRefetching}
+        />
+      ) : (
+        <AdminDataTable
         columns={columns}
         data={admins}
         keyExtractor={(a) => a.id}
@@ -270,6 +278,8 @@ export default function AdminAdministratorsPage() {
         emptyTitle="No administrator accounts found"
         emptyDescription="Unable to load administrative users."
       />
+
+      )}
 
       {/* Provisioning Drawer / Modal */}
       {isProvisionOpen && (

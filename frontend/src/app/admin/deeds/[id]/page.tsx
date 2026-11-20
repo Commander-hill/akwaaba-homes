@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminLandlordDeedAuditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -71,7 +72,7 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
   });
 
   // Fetch deed details
-  const { data: landlord, isLoading, refetch } = useQuery({
+  const { data: landlord, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-landlord-deeds-single', id],
     queryFn: async () => {
       try {
@@ -88,13 +89,9 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
       } catch {}
 
       // Fallback lookup via admin users directory
-      try {
-        const userRes = await api.get('/admin/users');
-        const usersList = Array.isArray(userRes.data) ? userRes.data : (userRes.data?.users || []);
-        return usersList.find((u: any) => u.id === id) || null;
-      } catch {
-        return null;
-      }
+      const userRes = await api.get('/admin/users');
+      const usersList = Array.isArray(userRes.data) ? userRes.data : (userRes.data?.users || []);
+      return usersList.find((u: any) => u.id === id) || null;
     }
   });
 
@@ -151,6 +148,18 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 text-zinc-400">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
         <p className="text-xs font-bold">Loading Title Deed Audit Workstation...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load title deed record"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }

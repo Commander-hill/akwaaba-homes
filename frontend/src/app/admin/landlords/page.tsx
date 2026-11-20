@@ -36,6 +36,7 @@ import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 import LandlordKpiCards, { LandlordKpiStats } from '@/components/admin/LandlordKpiCards';
 import LandlordFormModal, { LandlordFormInitialData } from '@/components/admin/LandlordFormModal';
 import { useStepUpAuth } from '@/hooks/useStepUpAuth';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 const CATEGORY_LABELS: Record<string, string> = {
   INDIVIDUAL_OWNER: 'Individual Owner',
@@ -137,7 +138,7 @@ export default function AdminLandlordsPage() {
   }, []);
 
   // Fetch all landlords so KPI cards, area/category facets, export & client pagination reflect live totals
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['admin-landlords'],
     queryFn: async () => {
       const res = await api.get('/admin/users?role=LANDLORD');
@@ -675,6 +676,16 @@ export default function AdminLandlordsPage() {
                       <td colSpan={7} className="py-16 text-center text-zinc-500 dark:text-zinc-400">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#04793d]" />
                         <span className="font-medium">Loading registered landlords...</span>
+                      </td>
+                    </tr>
+                  ) : isError ? (
+                    <tr>
+                      <td colSpan={7} className="p-6">
+                        <QueryErrorFallback
+                          title="Unable to load landlords"
+                          onRetry={() => refetch()}
+                          isRetrying={isRefetching}
+                        />
                       </td>
                     </tr>
                   ) : paginatedLandlords.length === 0 ? (

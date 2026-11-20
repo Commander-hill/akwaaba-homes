@@ -32,6 +32,7 @@ import api from '@/lib/axios';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 import TenantKpiCards from '@/components/admin/TenantKpiCards';
 import TenantFormModal, { TenantFormInitialData } from '@/components/admin/TenantFormModal';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface LatestBookingSummary {
   id: string;
@@ -166,7 +167,7 @@ export default function AdminTenantsPage() {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: ['admin-tenants-directory'],
     queryFn: async () => {
       const res = await api.get('/admin/users?role=TENANT');
@@ -711,6 +712,16 @@ export default function AdminTenantsPage() {
                         </td>
                       </tr>
                     ))
+                  ) : isError ? (
+                    <tr>
+                      <td colSpan={7} className="p-6">
+                        <QueryErrorFallback
+                          title="Unable to load tenants"
+                          onRetry={() => refetch()}
+                          isRetrying={isRefetching}
+                        />
+                      </td>
+                    </tr>
                   ) : paginatedTenants.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-12 px-4 text-center">

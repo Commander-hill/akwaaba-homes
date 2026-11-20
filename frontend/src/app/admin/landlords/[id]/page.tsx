@@ -35,6 +35,7 @@ import { getImageUrl } from '@/lib/utils';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminLandlordDetailPage({
   params
@@ -59,7 +60,7 @@ export default function AdminLandlordDetailPage({
     type: 'SUSPEND'
   });
 
-  const { data: landlord, isLoading, refetch } = useQuery({
+  const { data: landlord, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-landlord', landlordId],
     queryFn: async () => {
       const res = await api.get(`/admin/users/${landlordId}`);
@@ -106,6 +107,18 @@ export default function AdminLandlordDetailPage({
       <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
         <p className="text-xs font-bold text-zinc-500">Loading landlord profile and compliance records...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load landlord profile"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }

@@ -43,6 +43,7 @@ import TitleDeedDrawer, { LandlordDeedRecord } from '@/components/admin/deeds/Ti
 import AddTitleDeedModal from '@/components/admin/deeds/AddTitleDeedModal';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 type FilterTab = 'ALL' | 'PENDING' | 'VERIFIED' | 'REJECTED' | 'MISSING';
 type SortOption = 'newest' | 'oldest' | 'name' | 'properties';
@@ -88,7 +89,7 @@ export default function AdminTitleDeedsPage() {
   }, []);
 
   // Fetch deed audits from backend
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: ['admin-landlord-deeds'],
     queryFn: async () => {
       const res = await api.get('/admin/landlord-deeds');
@@ -242,6 +243,18 @@ export default function AdminTitleDeedsPage() {
       <div className="flex flex-col items-center justify-center min-h-[450px] gap-3">
         <Loader2 className="w-10 h-10 animate-spin text-[#16A34A]" />
         <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Loading Title Deeds &amp; Ownership Ledger...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load title deeds"
+          onRetry={() => refetch()}
+          isRetrying={isRefetching}
+        />
       </div>
     );
   }

@@ -34,6 +34,7 @@ import {
 import toast from 'react-hot-toast';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import { ICON_MAP, GHANA_TEMPLATES } from '@/components/admin/notices/NoticeDrawer';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 const GHANA_REGIONS = [
   'All Ghana (Nationwide Broadcast)',
@@ -75,7 +76,7 @@ function AdminNoticeComposerContent() {
   const [targetRole, setTargetRole] = useState('ALL');
 
   // Load existing notice for edit mode
-  const { data: notices, isLoading: isLoadingNotices } = useQuery({
+  const { data: notices, isLoading: isLoadingNotices, isError: isNoticesError, refetch: refetchNotices, isRefetching: isRefetchingNotices } = useQuery({
     queryKey: ['admin-notices'],
     queryFn: async () => {
       const res = await api.get('/admin/notices');
@@ -147,6 +148,18 @@ function AdminNoticeComposerContent() {
       <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 text-zinc-400">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
         <span className="text-xs font-semibold">Loading announcement data...</span>
+      </div>
+    );
+  }
+
+  if (editId && isNoticesError) {
+    return (
+      <div className="max-w-5xl mx-auto py-12">
+        <QueryErrorFallback
+          title="Unable to load announcement"
+          onRetry={() => refetchNotices()}
+          isRetrying={isRefetchingNotices}
+        />
       </div>
     );
   }

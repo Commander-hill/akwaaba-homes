@@ -35,6 +35,7 @@ import {
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface TelemetryActor {
   id?: string;
@@ -169,6 +170,7 @@ export default function AdminActivityPage() {
   const {
     data: activity,
     isLoading,
+    isError,
     dataUpdatedAt,
     refetch,
     isRefetching,
@@ -898,6 +900,16 @@ export default function AdminActivityPage() {
                   <td colSpan={8} className="py-12 text-center text-zinc-500">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#16A34A]" />
                     Loading live platform telemetry...
+                  </td>
+                </tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={8} className="p-6">
+                    <QueryErrorFallback
+                      title="Unable to load platform activity"
+                      onRetry={() => refetch()}
+                      isRetrying={isRefetching}
+                    />
                   </td>
                 </tr>
               ) : filteredEvents.length === 0 ? (

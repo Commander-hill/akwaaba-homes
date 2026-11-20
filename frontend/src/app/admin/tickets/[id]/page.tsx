@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '@/lib/utils';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminTicketDetailPage({
   params,
@@ -43,7 +44,7 @@ export default function AdminTicketDetailPage({
   const [zoomedPhoto, setZoomedPhoto] = useState<{ url: string; title: string } | null>(null);
 
   // Fetch single ticket directly with resilient fallback
-  const { data: ticket, isLoading } = useQuery({
+  const { data: ticket, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: ['admin-ticket', ticketId],
     queryFn: async () => {
       try {
@@ -80,6 +81,18 @@ export default function AdminTicketDetailPage({
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
         <p className="text-xs font-semibold text-slate-500">Loading case arbitration file...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load maintenance ticket"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }

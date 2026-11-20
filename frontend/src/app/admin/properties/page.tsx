@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminPropertiesPage() {
   const queryClient = useQueryClient();
@@ -183,7 +184,7 @@ export default function AdminPropertiesPage() {
   }, []);
 
   // Fetch properties
-  const { data: properties = [], isLoading } = useQuery({
+  const { data: properties = [], isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['admin-properties'],
     queryFn: async () => {
       const res = await api.get('/admin/properties');
@@ -332,6 +333,17 @@ export default function AdminPropertiesPage() {
   }, [stats]);
   const showSkeleton = useInitialSkeleton(isLoading);
   if (showSkeleton) return <TablePageSkeleton rows={6} columns={6} />;
+  if (isError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load properties"
+          onRetry={() => refetch()}
+          isRetrying={isRefetching}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12">

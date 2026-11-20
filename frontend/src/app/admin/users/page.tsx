@@ -48,6 +48,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { getImageUrl } from '@/lib/utils';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 type RoleFilter = 'ALL' | 'TENANT' | 'LANDLORD' | 'CARETAKER' | 'ADMIN' | 'SUPER_ADMIN';
 type KycStatusFilter = 'ALL' | 'VERIFIED' | 'PENDING' | 'UNDER_REVIEW' | 'RESUBMISSION_REQUIRED' | 'REJECTED' | 'NOT_SUBMITTED';
@@ -121,7 +122,7 @@ export default function AdminUsersPage() {
   }, []);
 
   // Fetch Users
-  const { data: rawUsers, isLoading, refetch } = useQuery({
+  const { data: rawUsers, isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
       const res = await api.get('/admin/users');
@@ -332,6 +333,17 @@ export default function AdminUsersPage() {
   const showSkeleton = useInitialSkeleton(isLoading);
   if (showSkeleton) {
     return <TablePageSkeleton rows={6} columns={6} />;
+  }
+  if (isError) {
+    return (
+      <div className="py-12">
+        <QueryErrorFallback
+          title="Unable to load users"
+          onRetry={() => refetch()}
+          isRetrying={isRefetching}
+        />
+      </div>
+    );
   }
   if (false) {
     return (

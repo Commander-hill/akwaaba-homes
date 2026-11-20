@@ -50,6 +50,7 @@ import BroadcastDetailDrawer, {
   BroadcastRecord,
 } from '@/components/admin/broadcasts/BroadcastDetailDrawer';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 type TargetFilter = 'ALL' | 'ALL_TENANTS' | 'ALL_LANDLORDS' | 'ALL_USERS';
 type SortOption = 'newest' | 'oldest' | 'reach';
@@ -142,6 +143,7 @@ export default function AdminBroadcastsPage() {
   const {
     data: rawHistory,
     isLoading,
+    isError,
     isRefetching,
     refetch,
   } = useQuery({
@@ -790,6 +792,12 @@ export default function AdminBroadcastsPage() {
                   <div key={i} className="h-14 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
                 ))}
               </div>
+            ) : isError ? (
+              <QueryErrorFallback
+                title="Unable to load broadcasts"
+                onRetry={() => refetch()}
+                isRetrying={isRefetching}
+              />
             ) : recentFour.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center py-8 text-center">
                 <Radio className="w-8 h-8 text-zinc-300 dark:text-zinc-600 mb-2" />
@@ -1100,6 +1108,12 @@ export default function AdminBroadcastsPage() {
           {/* Ledger Table */}
           {isLoading ? (
             <SkeletonTable rows={5} />
+          ) : isError ? (
+            <QueryErrorFallback
+              title="Unable to load broadcast ledger"
+              onRetry={() => refetch()}
+              isRetrying={isRefetching}
+            />
           ) : filteredHistory.length === 0 ? (
             <div className="text-center py-8 text-xs text-zinc-500">
               No broadcast records match your filters.

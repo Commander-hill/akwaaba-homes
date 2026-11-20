@@ -33,6 +33,7 @@ import { useDialog } from '@/providers/DialogProvider';
 import toast from 'react-hot-toast';
 import NoticeDrawer, { Notice, ICON_MAP } from '@/components/admin/notices/NoticeDrawer';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 type StatusFilterTab = 'ALL' | 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
 type SortOption = 'newest' | 'oldest' | 'title' | 'order';
@@ -160,6 +161,7 @@ export default function AdminNoticesPage() {
   const {
     data: rawNotices,
     isLoading,
+    isError,
     isRefetching,
     refetch,
   } = useQuery({
@@ -713,6 +715,12 @@ export default function AdminNoticesPage() {
                 </div>
               ))}
             </div>
+          ) : isError ? (
+            <QueryErrorFallback
+              title="Unable to load notices"
+              onRetry={() => refetch()}
+              isRetrying={isRefetching}
+            />
           ) : filteredNotices.length === 0 ? (
             <div className="rounded-[22px] bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-12 text-center space-y-3 shadow-2xs">
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-[#059669] flex items-center justify-center mx-auto">

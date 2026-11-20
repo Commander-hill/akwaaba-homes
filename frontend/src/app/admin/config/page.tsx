@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function AdminConfigPage() {
   const queryClient = useQueryClient();
@@ -24,7 +25,7 @@ export default function AdminConfigPage() {
   });
   const isSuperAdmin = authData?.user?.role === 'SUPER_ADMIN';
 
-  const { data: configData, isLoading } = useQuery({
+  const { data: configData, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['admin-config'],
     queryFn: async () => {
       const res = await api.get('/admin/config');
@@ -81,6 +82,18 @@ export default function AdminConfigPage() {
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
         <p className="text-xs font-bold text-zinc-400">Loading platform settings...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-4xl mx-auto py-12">
+        <QueryErrorFallback
+          title="Unable to load platform configuration"
+          onRetry={() => refetch()}
+          isRetrying={isRefetching}
+        />
       </div>
     );
   }

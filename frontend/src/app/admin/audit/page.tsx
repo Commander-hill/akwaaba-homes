@@ -39,6 +39,7 @@ import { WebhookDLQViewer } from '@/components/admin/audit/WebhookDLQViewer';
 import AuditDetailDrawer, {
   AuditLogItem,
 } from '@/components/admin/audit/AuditDetailDrawer';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface AuditLogsResponse {
   logs: AuditLogItem[];
@@ -230,7 +231,7 @@ export default function AuditLogsPage() {
     return '';
   }, [datePreset]);
 
-  const { data, isLoading, isFetching, refetch } = useQuery<AuditLogsResponse>({
+  const { data, isLoading, isError, isFetching, refetch } = useQuery<AuditLogsResponse>({
     queryKey: ['admin-audit-logs', page, limit, debouncedSearch, resourceFilter, actorFilter, startDate],
     queryFn: async () => {
       const params: Record<string, string | number> = { page, limit: showAllLogs ? 50 : limit };
@@ -1124,6 +1125,16 @@ export default function AuditLogsPage() {
                     <td colSpan={9} className="py-12 text-center text-zinc-500">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#16A34A]" />
                       Loading forensic audit trail...
+                    </td>
+                  </tr>
+                ) : isError ? (
+                  <tr>
+                    <td colSpan={9} className="p-6">
+                      <QueryErrorFallback
+                        title="Unable to load audit logs"
+                        onRetry={() => refetch()}
+                        isRetrying={isFetching}
+                      />
                     </td>
                   </tr>
                 ) : filteredLogs.length === 0 ? (
