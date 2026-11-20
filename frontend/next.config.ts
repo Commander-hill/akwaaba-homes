@@ -5,6 +5,7 @@ import path from "path";
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.resolve(__dirname),
   allowedDevOrigins: [
+    '10.58.140.48',
     '192.168.189.163',
     'localhost',
     '127.0.0.1'
