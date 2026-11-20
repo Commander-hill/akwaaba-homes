@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import { invalidatePublicResource } from '@/lib/publicFetch';
 import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { getGuestWishlistIds, setGuestWishlistIds } from '@/components/WishlistButton';
 import {
@@ -106,7 +107,7 @@ export default function WishlistPage() {
     enabled: isAuthenticated,
   });
 
-  // Guest Wishlist Query (hydrate properties from public catalog)
+  // Guest Wishlist Query (hydrate exact saved properties by IDs)
   const {
     data: guestCatalogData,
     isLoading: isGuestCatalogLoading,
@@ -116,9 +117,9 @@ export default function WishlistPage() {
     queryKey: ['guest-wishlist-properties', guestIds],
     queryFn: async () => {
       if (guestIds.length === 0) return [];
-      const res = await api.get('/properties?limit=100');
-      const all: any[] = res.data?.data || res.data?.properties || [];
-      return all.filter((p) => guestIds.includes(p.id));
+      const res = await api.get(`/properties?ids=${encodeURIComponent(guestIds.join(','))}`);
+      const list: any[] = res.data?.data || res.data?.properties || [];
+      return list.filter((p) => guestIds.includes(p.id));
     },
     enabled: !isAuthenticated && guestIds.length > 0,
   });
@@ -130,6 +131,7 @@ export default function WishlistPage() {
     onSuccess: (_res, propertyId) => {
       toast.success('Removed from saved properties');
       setCompareIds((prev) => prev.filter((id) => id !== propertyId));
+      invalidatePublicResource('wishlist');
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
     },
     onError: () => {
@@ -145,6 +147,7 @@ export default function WishlistPage() {
       setGuestWishlistIds([]);
       setGuestIds([]);
       toast.success(res.data?.message || 'Browser shortlist synced to your account');
+      invalidatePublicResource('wishlist');
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
     },
     onError: () => {
@@ -173,6 +176,18 @@ export default function WishlistPage() {
     }
     return guestCatalogData || [];
   }, [isAuthenticated, authWishlistData, guestCatalogData]);
+
+  // Keep comparison selection strictly in sync when items are removed via WishlistButton or WebSocket
+  useEffect(() => {
+    const validIds = new Set(savedProperties.map((p: any) => p.id));
+    setCompareIds((prev) => {
+      const next = prev.filter((id) => validIds.has(id));
+      if (next.length < 2) {
+        setShowComparePanel(false);
+      }
+      return next.length === prev.length ? prev : next;
+    });
+  }, [savedProperties]);
 
   // Detect any browser-saved guest items not yet imported into the authenticated user's account
   const unsyncedGuestIds = useMemo(() => {

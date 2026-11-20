@@ -216,6 +216,7 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
       furnishing,
       pricePeriod,
       sort,
+      ids,
       limit = 20,
       page = 1,
     } = req.query;
@@ -250,6 +251,19 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
       take: Number(limit),
       orderBy,
     };
+
+    if (ids) {
+      const idList = String(ids)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 100);
+      if (idList.length > 0) {
+        queryOptions.where.id = { in: idList };
+        queryOptions.take = idList.length;
+        queryOptions.skip = 0;
+      }
+    }
 
     if (isAvailable !== undefined) {
       queryOptions.where.isAvailable = String(isAvailable).toLowerCase() === 'true';
@@ -816,6 +830,53 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
     const keys = appCache.keys();
     const propertyKeys = keys.filter(k => k.startsWith('properties_'));
     appCache.del(propertyKeys);
+
+    // Notify residents who saved this property if the starting price changed
+    if (Number(updatedProperty.price) !== Number(property.price)) {
+      try {
+        const watchers = await prisma.wishlist.findMany({
+          where: { propertyId: updatedProperty.id },
+          select: { userId: true }
+        });
+        if (watchers.length > 0) {
+          const oldPrice = Number(property.price || 0);
+          const newPrice = Number(updatedProperty.price || 0);
+          const dropped = newPrice < oldPrice;
+          const titleText = dropped
+            ? `Price Drop on ${updatedProperty.title}`
+            : `Price Updated on ${updatedProperty.title}`;
+          const msgText = dropped
+            ? `Good news! Starting rent dropped from GH₵ ${oldPrice.toLocaleString()} to GH₵ ${newPrice.toLocaleString()}.`
+            : `Starting rent was updated from GH₵ ${oldPrice.toLocaleString()} to GH₵ ${newPrice.toLocaleString()}.`;
+
+          await prisma.notification.createMany({
+            data: watchers.map((w) => ({
+              userId: w.userId,
+              type: 'PRICE_ALERT',
+              title: titleText,
+              message: msgText,
+              link: `/properties/${updatedProperty.id}`
+            }))
+          });
+
+          const io = getIO();
+          for (const w of watchers) {
+            io.to(w.userId).emit('notification', {
+              type: 'PRICE_ALERT',
+              title: titleText,
+              message: msgText,
+              link: `/properties/${updatedProperty.id}`
+            });
+            io.to(w.userId).emit('wishlist_updated', {
+              propertyId: updatedProperty.id,
+              priceChanged: true
+            });
+          }
+        }
+      } catch (notifyErr) {
+        console.error('Wishlist price-change notification failed:', notifyErr);
+      }
+    }
 
     try {
       getIO().to(landlordId).emit('property_updated', { propertyId: updatedProperty.id });
