@@ -246,7 +246,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
   if (mounted && sessionData && ['ADMIN', 'SUPER_ADMIN'].includes(sessionData.role) && !isTimeout) {
     return (
       <div className="-mt-16 min-h-screen flex items-center justify-center bg-[#F4FBF7] text-[#141816] p-4">
-        <div className="max-w-md w-full p-8 bg-white border border-zinc-200/90 rounded-[32px] text-center space-y-5 shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
+        <div className="max-w-md w-full p-8 bg-[#FFFFFF] border border-zinc-200/90 rounded-[32px] text-center space-y-5 shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
           <div className="w-16 h-16 rounded-2xl bg-[#EEF4EC] border border-[#DCE5DA] flex items-center justify-center mx-auto text-[#0F5132]">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -347,7 +347,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
           {setupData?.qrCodeSvg && (
             <div className="flex flex-col items-center gap-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
               <div
-                className="mx-auto w-[150px] h-[150px] bg-white rounded-xl p-2 shadow-xs border border-zinc-200 [&>svg]:w-full [&>svg]:h-full"
+                className="mx-auto w-[150px] h-[150px] bg-[#FFFFFF] rounded-xl p-2 shadow-xs border border-zinc-200 [&>svg]:w-full [&>svg]:h-full"
                 aria-label="Authenticator QR code"
                 dangerouslySetInnerHTML={{ __html: setupData.qrCodeSvg }}
               />
@@ -407,7 +407,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
 
               <div className="grid grid-cols-2 gap-1.5 font-mono text-xs text-zinc-800 select-all">
                 {setupData.rawCodes.map((c) => (
-                  <span key={c} className="bg-white border border-zinc-200 rounded px-2 py-1 text-center font-bold">
+                  <span key={c} className="bg-[#FFFFFF] border border-zinc-200 rounded px-2 py-1 text-center font-bold">
                     {c}
                   </span>
                 ))}
@@ -559,7 +559,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
         <form onSubmit={handleSubmit} className="space-y-3.5 xl:space-y-4">
           
           {/* Field 1: Work Email Address */}
-          <div className="rounded-2xl border border-zinc-200/90 bg-white p-3 xl:p-3.5 px-4 flex items-center gap-3.5 focus-within:border-[#0F5132] focus-within:ring-2 focus-within:ring-[#0F5132]/10 transition-all shadow-2xs">
+          <div className="rounded-2xl border border-zinc-200/90 bg-[#FFFFFF] p-3 xl:p-3.5 px-4 flex items-center gap-3.5 focus-within:border-[#0F5132] focus-within:ring-2 focus-within:ring-[#0F5132]/10 transition-all shadow-2xs">
             <Mail className="w-4 h-4 xl:w-5 xl:h-5 text-zinc-500 stroke-[1.75] shrink-0" />
             <div className="flex-1 min-w-0">
               <label htmlFor={`${formPrefix}-admin-email`} className="block text-[10.5px] xl:text-[11px] font-semibold text-zinc-600 leading-none mb-1">
@@ -578,7 +578,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
           </div>
 
           {/* Field 2: Password */}
-          <div className="rounded-2xl border border-zinc-200/90 bg-white p-3 xl:p-3.5 px-4 flex items-center gap-3.5 focus-within:border-[#0F5132] focus-within:ring-2 focus-within:ring-[#0F5132]/10 transition-all shadow-2xs">
+          <div className="rounded-2xl border border-zinc-200/90 bg-[#FFFFFF] p-3 xl:p-3.5 px-4 flex items-center gap-3.5 focus-within:border-[#0F5132] focus-within:ring-2 focus-within:ring-[#0F5132]/10 transition-all shadow-2xs">
             <Lock className="w-4 h-4 xl:w-5 xl:h-5 text-zinc-500 stroke-[1.75] shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between leading-none mb-1">
@@ -758,7 +758,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
             maxHeight: '92vh',
           }}
         >
-          <div className="w-full bg-white rounded-[28px] xl:rounded-[32px] p-6 xl:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] border border-zinc-100 overflow-y-auto">
+          <div className="w-full bg-[#FFFFFF] rounded-[28px] xl:rounded-[32px] p-6 xl:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] border border-zinc-100 overflow-y-auto">
             {renderCardContent('desktop')}
           </div>
         </div>
@@ -778,7 +778,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
       {/* ── Mobile View (< lg) ── */}
       <div className="lg:hidden flex flex-col w-full min-h-screen bg-[#F4FBF7]">
         {/* Mobile Top Header */}
-        <div className="w-full px-5 py-4 flex items-center justify-between bg-white border-b border-zinc-200/70 shadow-2xs">
+        <div className="w-full px-5 py-4 flex items-center justify-between bg-[#FFFFFF] border-b border-zinc-200/70 shadow-2xs">
           <Link href="/" className="inline-flex items-center gap-2.5">
             <Image 
               src="/images/auth/akwaaba-emblem.png" 
@@ -800,13 +800,13 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
 
         {/* Mobile Card Area */}
         <div className="flex-1 flex flex-col items-center justify-center p-4">
-          <div className="w-full max-w-[420px] bg-white rounded-2xl p-6 shadow-md border border-zinc-200/80">
+          <div className="w-full max-w-[420px] bg-[#FFFFFF] rounded-2xl p-6 shadow-md border border-zinc-200/80">
             {renderCardContent('mobile')}
           </div>
         </div>
 
         {/* Mobile Footer */}
-        <div className="py-4 text-center text-[11px] text-zinc-500 font-medium border-t border-zinc-200/50 bg-white">
+        <div className="py-4 text-center text-[11px] text-zinc-500 font-medium border-t border-zinc-200/50 bg-[#FFFFFF]">
           &copy; {new Date().getFullYear()} AkwaabaHomes Ghana Ltd. | Admin Portal
         </div>
       </div>
@@ -814,7 +814,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
       {/* ── Trouble Signing In / Forgot Password Modal ── */}
       {showRecoveryModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-          <div className="max-w-md w-full rounded-3xl bg-white border border-zinc-200 p-6 sm:p-7 space-y-4 shadow-xl relative text-left">
+          <div className="max-w-md w-full rounded-3xl bg-[#FFFFFF] border border-zinc-200 p-6 sm:p-7 space-y-4 shadow-xl relative text-left">
             <button
               onClick={() => setShowRecoveryModal(false)}
               className="absolute top-5 right-5 p-1 rounded-lg text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
