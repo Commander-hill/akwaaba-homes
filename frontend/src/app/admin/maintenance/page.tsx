@@ -1422,8 +1422,171 @@ export default function AdminMaintenancePage() {
           </div>
         </div>
 
-        {/* Table Content */}
-        <div className="overflow-x-auto">
+        {/* Mobile Stacked Card View (< md) */}
+        <div className="md:hidden divide-y divide-zinc-100 dark:divide-zinc-800/80">
+          {isLoadingHistory ? (
+            <div className="py-12 text-center text-zinc-400 text-xs">
+              <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#16A34A]" />
+              Loading maintenance audit log...
+            </div>
+          ) : isHistoryError ? (
+            <div className="p-4">
+              <QueryErrorFallback
+                title="Unable to load maintenance audit log"
+                onRetry={() => refetchHistory()}
+              />
+            </div>
+          ) : filteredHistory.length === 0 ? (
+            <div className="py-12 text-center text-zinc-500 text-xs px-4">
+              No maintenance audit events match your current filters.
+            </div>
+          ) : (
+            filteredHistory.map((record, idx) => {
+              const newObj = parseAuditPayload(record.newData);
+              const oldObj = parseAuditPayload(record.oldData) || {};
+              const meta = getEventDisplayMeta(record.action, newObj);
+              const actorName = record.user
+                ? `${record.user.firstName} ${record.user.lastName}`.trim()
+                : 'System Admin';
+              const isExpanded = expandedAuditId === record.id;
+              const showRawJson = Boolean(showRawJsonIds[record.id]);
+              const structuredRows = computeStructuredDiffRows(record.oldData, record.newData);
+              const rowNum = (historyPage - 1) * 8 + idx + 1;
+
+              return (
+                <div key={record.id} className="p-4 space-y-2.5 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] text-zinc-400">#{rowNum}</span>
+                        <span className="font-bold text-zinc-900 dark:text-white truncate">
+                          {meta.eventLabel}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                        {new Date(record.createdAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}{' '}
+                        &bull; {actorName}
+                      </p>
+                    </div>
+                    <span
+                      className={clsx(
+                        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0',
+                        meta.statusClass
+                      )}
+                    >
+                      <span className={clsx('w-1.5 h-1.5 rounded-full', meta.dotClass)} />
+                      {meta.statusLabel}
+                    </span>
+                  </div>
+
+                  <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed break-words">
+                    {meta.description}
+                  </p>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedAuditId(isExpanded ? null : record.id)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:text-[#16A34A] transition cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{isExpanded ? 'Hide Diff' : 'View Diff'}</span>
+                      {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </button>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 overflow-hidden mt-2">
+                      <div className="px-3 py-2 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                          Audit Comparison
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowRawJsonIds((prev) => ({
+                              ...prev,
+                              [record.id]: !prev[record.id],
+                            }))
+                          }
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
+                        >
+                          <Code2 className="w-3.5 h-3.5" />
+                          <span>{showRawJson ? 'Structured' : 'Raw JSON'}</span>
+                        </button>
+                      </div>
+
+                      {showRawJson ? (
+                        <div className="p-3 space-y-2.5 text-[11px]">
+                          <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                            <div className="font-bold text-zinc-500 uppercase tracking-wider text-[10px]">
+                              Previous State
+                            </div>
+                            <pre className="font-mono text-[10.5px] text-zinc-700 dark:text-zinc-300 overflow-x-auto whitespace-pre-wrap break-all">
+                              {Object.keys(oldObj).length > 0 ? JSON.stringify(oldObj, null, 2) : 'No prior state recorded'}
+                            </pre>
+                          </div>
+                          <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                            <div className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-[10px]">
+                              Applied State
+                            </div>
+                            <pre className="font-mono text-[10.5px] text-zinc-700 dark:text-zinc-300 overflow-x-auto whitespace-pre-wrap break-all">
+                              {newObj && Object.keys(newObj).length > 0 ? JSON.stringify(newObj, null, 2) : 'No new state recorded'}
+                            </pre>
+                          </div>
+                        </div>
+                      ) : structuredRows.length === 0 ? (
+                        <div className="p-3 text-xs text-zinc-500">
+                          No structured field parameters recorded for this event.
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70 text-[11px]">
+                          {structuredRows.map((row) => (
+                            <div
+                              key={row.fieldKey}
+                              className={clsx(
+                                'p-3 space-y-1',
+                                row.changed && 'bg-emerald-500/[0.04]'
+                              )}
+                            >
+                              <div className="font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                                <span>{row.label}</span>
+                                {row.changed && (
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                                    Modified
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-zinc-500 dark:text-zinc-400 break-words">
+                                <span className="text-[10px] uppercase font-bold text-zinc-400 mr-1">Before:</span>
+                                <span className={clsx(row.changed && 'line-through opacity-75')}>{row.before}</span>
+                              </div>
+                              <div className="font-semibold text-zinc-900 dark:text-zinc-100 break-words">
+                                <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 mr-1">After:</span>
+                                <span className={clsx(row.changed && 'text-[#0F5132] dark:text-emerald-400')}>
+                                  {row.after}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table Content (>= md) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-zinc-50/80 dark:bg-zinc-900/60 border-b border-zinc-100 dark:border-zinc-800 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
