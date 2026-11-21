@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -137,7 +136,7 @@ export const getExpenses = async (req: Request, res: Response): Promise<void> =>
 export const deleteExpense = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user?.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const expense = await prisma.propertyExpense.findUnique({
       where: { id }

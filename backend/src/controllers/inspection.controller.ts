@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -138,7 +137,7 @@ export const createOrUpdateInspection = async (req: Request, res: Response): Pro
  */
 export const getBookingInspections = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { bookingId } = req.params;
+    const bookingId = String(req.params.bookingId);
     const userId = req.user?.id;
     const userRole = (req.user?.role || '').toUpperCase();
 
@@ -195,7 +194,7 @@ export const getBookingInspections = async (req: Request, res: Response): Promis
  */
 export const getPropertyInventory = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { propertyId } = req.params;
+    const propertyId = String(req.params.propertyId);
     const userId = req.user?.id;
     const userRole = (req.user?.role || '').toUpperCase();
 
@@ -252,7 +251,7 @@ export const getPropertyInventory = async (req: Request, res: Response): Promise
  */
 export const savePropertyInventory = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { propertyId } = req.params;
+    const propertyId = String(req.params.propertyId);
     const userId = req.user?.id;
     const userRole = (req.user?.role || '').toUpperCase();
     const { items } = req.body;
@@ -327,7 +326,7 @@ export const savePropertyInventory = async (req: Request, res: Response): Promis
  */
 export const getPropertyMeterReadings = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { propertyId } = req.params;
+    const propertyId = String(req.params.propertyId);
     const userId = req.user?.id;
     const userRole = (req.user?.role || '').toUpperCase();
 
@@ -382,7 +381,7 @@ export const getPropertyMeterReadings = async (req: Request, res: Response): Pro
  */
 export const savePropertyMeterReading = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { propertyId } = req.params;
+    const propertyId = String(req.params.propertyId);
     const userId = req.user?.id;
     const userRole = (req.user?.role || '').toUpperCase();
     const { reading } = req.body;

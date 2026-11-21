@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import axios from 'axios';
 import prisma from '../utils/prisma';
@@ -14,7 +13,7 @@ import { getRentDueSummary, computeInitialNextRentDueDate } from '../utils/billi
 
 export const downloadAgreementPDF = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     let booking = await prisma.booking.findUnique({
       where: { id },
       include: {
@@ -627,7 +626,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
   try {
     const userId = req.user.id;
     const userRole = req.user.role;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const booking = await prisma.booking.findUnique({
       where: { id },
@@ -841,7 +840,7 @@ export const getLandlordBookings = async (req: Request, res: Response): Promise<
 export const updateBookingStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
     let { status } = req.body;
     const validStatuses = ['APPROVED', 'CONFIRMED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'];
     if (!validStatuses.includes(status)) {
@@ -1056,7 +1055,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
 export const payBooking = async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const booking = await prisma.booking.findUnique({
       where: { id },
@@ -1164,7 +1163,7 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
 export const verifyPayment = async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { reference } = req.body;
 
     if (!reference) {
@@ -1446,7 +1445,7 @@ export const getMyActiveBooking = async (req: Request, res: Response): Promise<v
 export const cancelPendingBooking = async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const booking = await prisma.booking.findUnique({
       where: { id },
@@ -1587,7 +1586,7 @@ export const cancelPendingBooking = async (req: Request, res: Response): Promise
 export const deleteBooking = async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const booking = await prisma.booking.findUnique({
       where: { id }

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { logAudit } from '../utils/auditLogger';
@@ -446,7 +445,7 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
 
 export const getPropertyById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const includeRelations = {
       landlord: {
@@ -639,7 +638,7 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
 export const updateProperty = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { 
       title, type, targetAudience, furnishing, pricePeriod, 
       gateLockTime, visitorPolicy, quietHours, 
@@ -895,7 +894,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
 export const deleteProperty = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user?.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     if (!id) {
       res.status(400).json({ message: 'Property ID is required' });

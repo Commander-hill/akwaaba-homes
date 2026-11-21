@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -108,7 +107,7 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
 
 export const updateRoom = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { roomType, numberOfRooms, price, blockName, gender } = req.body;
     const landlordId = req.user.id;
 
@@ -182,7 +181,7 @@ export const updateRoom = async (req: Request, res: Response): Promise<void> => 
 
 export const deleteRoom = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const landlordId = req.user.id;
 
     const room = await prisma.room.findUnique({
@@ -268,7 +267,7 @@ export const deleteRoom = async (req: Request, res: Response): Promise<void> => 
 
 export const getRoomsByProperty = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { propertyId } = req.params;
+    const propertyId = String(req.params.propertyId);
     const rooms = await prisma.room.findMany({
       where: { propertyId },
       orderBy: { price: 'asc' }

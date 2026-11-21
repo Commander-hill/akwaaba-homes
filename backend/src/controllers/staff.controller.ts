@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -147,7 +146,7 @@ export const getPropertyStaff = async (req: Request, res: Response): Promise<voi
 export const removeStaff = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user?.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const assignment = await prisma.propertyStaff.findUnique({
       where: { id }
@@ -217,7 +216,7 @@ export const getMyStaffAssignments = async (req: Request, res: Response): Promis
       where: {
         OR: [
           { userId },
-          ...(userEmail ? [{ user: { email: { equals: userEmail, mode: 'insensitive' } } }] : [])
+          ...(userEmail ? [{ user: { email: { equals: userEmail, mode: 'insensitive' as const } } }] : [])
         ]
       },
       include: {
