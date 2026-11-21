@@ -299,8 +299,59 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
             No operating expenses logged yet. Click "Log Expense" to track your property bills.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <>
+            {/* Mobile Stacked Card View (< md) */}
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {expensesData.expenses.map((expense) => {
+                const badge = getCategoryBadge(expense.category);
+                return (
+                  <div key={expense.id} className="py-3.5 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                          {expense.title}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                          {expense.property?.title} &bull; {new Date(expense.date).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="font-black text-sm text-red-600 dark:text-red-400">
+                          GHS {expense.amount.toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <span className={clsx("px-2 py-0.5 rounded-full text-[10px] font-bold", badge.color)}>
+                        {badge.label}
+                      </span>
+                      <button
+                        onClick={async () => {
+                          const shouldDelete = await confirm({
+                            title: 'Delete Expense Record',
+                            message: 'Are you sure you want to delete this expense record? This will update your P&L calculations.',
+                            confirmText: 'Delete Record',
+                            type: 'danger',
+                          });
+                          if (shouldDelete) {
+                            deleteExpenseMutation.mutate(expense.id);
+                          }
+                        }}
+                        disabled={deleteExpenseMutation.isPending}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View (>= md) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
               <thead className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold uppercase">
                 <tr>
                   <th className="pb-3">Date</th>
@@ -358,6 +409,7 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 

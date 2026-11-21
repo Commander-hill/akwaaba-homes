@@ -32,6 +32,7 @@ interface AdminDataTableProps<T> {
   emptyAction?: React.ReactNode;
   pagination?: PaginationProps;
   onRowClick?: (row: T) => void;
+  mobileCardRender?: (row: T, index: number) => React.ReactNode;
   className?: string;
 }
 
@@ -46,6 +47,7 @@ export default function AdminDataTable<T>({
   emptyAction,
   pagination,
   onRowClick,
+  mobileCardRender,
   className
 }: AdminDataTableProps<T>) {
   const displayEmptyMessage = emptyMessage ?? emptyDescription ?? 'There are no records matching your selected parameters.';
@@ -75,7 +77,84 @@ export default function AdminDataTable<T>({
 
   return (
     <div className={clsx('w-full rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-2xs', className)}>
-      <div className="overflow-x-auto">
+      {/* Mobile Stacked Card View (< md) */}
+      <div className="md:hidden divide-y divide-zinc-100 dark:divide-zinc-800/60">
+        {data.map((row, index) => {
+          const rowKey = keyExtractor(row);
+          if (mobileCardRender) {
+            return (
+              <div
+                key={rowKey}
+                onClick={() => onRowClick && onRowClick(row)}
+                className={clsx('p-4', onRowClick && 'cursor-pointer active:bg-zinc-50 dark:active:bg-zinc-800/40')}
+              >
+                {mobileCardRender(row, index)}
+              </div>
+            );
+          }
+
+          const primaryCol = columns[0];
+          const actionCols = columns.filter(
+            (c, i) => i > 0 && (c.key.toLowerCase() === 'actions' || c.header.toLowerCase() === 'actions' || c.header.trim() === '')
+          );
+          const detailCols = columns.filter(
+            (c, i) => i > 0 && !(c.key.toLowerCase() === 'actions' || c.header.toLowerCase() === 'actions' || c.header.trim() === '')
+          );
+
+          return (
+            <div
+              key={rowKey}
+              onClick={() => onRowClick && onRowClick(row)}
+              className={clsx(
+                'p-4 space-y-3 transition-colors',
+                onRowClick && 'cursor-pointer active:bg-zinc-50 dark:active:bg-zinc-800/40'
+              )}
+            >
+              {primaryCol && (
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1 text-sm font-semibold text-zinc-900 dark:text-white break-words">
+                    {primaryCol.render ? primaryCol.render(row, index) : (row as any)[primaryCol.key]}
+                  </div>
+                </div>
+              )}
+
+              {detailCols.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  {detailCols.map((col) => {
+                    const content = col.render ? col.render(row, index) : (row as any)[col.key];
+                    return (
+                      <div key={col.key} className="flex items-start justify-between gap-3 text-xs">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 shrink-0 pt-0.5">
+                          {col.header}
+                        </span>
+                        <div className="text-right text-zinc-700 dark:text-zinc-200 min-w-0 break-words">
+                          {content}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {actionCols.length > 0 && (
+                <div
+                  className="pt-2.5 border-t border-zinc-100 dark:border-zinc-800/60 flex flex-wrap items-center justify-end gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {actionCols.map((col) => (
+                    <div key={col.key}>
+                      {col.render ? col.render(row, index) : (row as any)[col.key]}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop Table View (>= md) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="bg-zinc-50/80 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-800 text-[11px] font-bold uppercase tracking-wider text-zinc-500">

@@ -254,7 +254,145 @@ export default function LandlordTenantsPage() {
               )}
             </div>
           ) : (
-            <table className="w-full text-left text-xs border-collapse">
+            <>
+              {/* Mobile Stacked Card View (< md) */}
+              <div className="md:hidden divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
+                {filteredBookings.map((booking: any) => {
+                  const t = booking.tenant;
+                  const isApproved = ['APPROVED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN', 'COMPLETED'].includes(booking.status);
+
+                  return (
+                    <div key={booking.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center font-bold text-zinc-700 dark:text-zinc-300 shrink-0 overflow-hidden text-xs">
+                            {t?.avatarUrl ? (
+                              <img decoding="async" src={getImageUrl(t.avatarUrl)} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              `${t?.firstName?.[0] || 'U'}${t?.lastName?.[0] || ''}`
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-zinc-950 dark:text-white text-sm truncate">
+                              {t?.firstName || 'Unknown'} {t?.lastName || 'Tenant'}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                              {t?.gender && (
+                                <span className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-500 font-medium">
+                                  {t.gender}
+                                </span>
+                              )}
+                              {t?.studentId && (
+                                <span className="flex items-center gap-1 text-[10px] text-zinc-500">
+                                  <GraduationCap className="w-3 h-3 text-zinc-400" /> {t.studentId}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <span className={clsx(
+                          "inline-flex items-center px-2.5 py-0.5 rounded-full font-bold text-[10px] border tracking-wide shrink-0",
+                          booking.status === 'APPROVED' || booking.status === 'CONFIRMED' ? "bg-emerald-50 text-[#0F5132] border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60" :
+                          booking.status === 'PENDING' ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60" :
+                          booking.status === 'ACTIVE' || booking.status === 'CHECKED_IN' ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60" :
+                          booking.status === 'COMPLETED' ? "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700" :
+                          "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/60"
+                        )}>
+                          {booking.status}
+                        </span>
+                      </div>
+
+                      <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl p-3 border border-zinc-200/60 dark:border-zinc-800/60 space-y-2 text-xs">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider shrink-0">Property</span>
+                          <div className="text-right min-w-0">
+                            <Link href={`/dashboard/landlord/bookings/${booking.id}`} className="font-bold text-zinc-900 dark:text-white hover:text-[#16A34A] block truncate">
+                              {booking.property?.title || 'Unknown Property'}
+                            </Link>
+                            <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                              {formatBookingUnitLabel(booking.property?.type, booking.room?.roomType, booking.room?.blockName)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider shrink-0">Term</span>
+                          <div className="text-right">
+                            <span className="text-zinc-900 dark:text-white font-medium">
+                              {new Date(booking.startDate).toLocaleDateString()} &rarr; {new Date(booking.endDate).toLocaleDateString()}
+                            </span>
+                            {booking.rentDueSummary && (
+                              <div className="mt-1">
+                                <span
+                                  className={clsx(
+                                    'inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold',
+                                    booking.rentDueSummary.isOverdue
+                                      ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                                      : booking.rentDueSummary.isDueSoon
+                                        ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                                        : 'bg-emerald-50 text-[#0F5132] dark:bg-emerald-950/40 dark:text-emerald-300'
+                                  )}
+                                >
+                                  {booking.rentDueSummary.isOverdue
+                                    ? `Overdue (${Math.abs(booking.rentDueSummary.daysUntilDue)}d)`
+                                    : `Due ${new Date(booking.rentDueSummary.nextDueDate).toLocaleDateString()}`}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider shrink-0">Contact</span>
+                          <div className="text-right">
+                            {isApproved ? (
+                              <div className="flex flex-col items-end gap-0.5">
+                                {t?.email && (
+                                  <a href={`mailto:${t.email}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#16A34A] break-all">
+                                    <Mail className="w-3 h-3 text-zinc-400 shrink-0" /> {t.email}
+                                  </a>
+                                )}
+                                {t?.phoneNumber && (
+                                  <a href={`tel:${t.phoneNumber}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#16A34A]">
+                                    <Phone className="w-3 h-3 text-zinc-400 shrink-0" /> {t.phoneNumber}
+                                  </a>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-zinc-400 italic">Protected until approval</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <Link href={`/dashboard/landlord/bookings/${booking.id}`} className="text-[10px] font-mono text-zinc-400 hover:text-[#16A34A]">
+                          Ref: #{String(booking.id || '').substring(0, 8)}
+                        </Link>
+                        <div className="inline-flex items-center gap-1.5">
+                          {isApproved && t?.id && (
+                            <Link
+                              href={`/dashboard/messages?partnerId=${t.id}`}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-[#16A34A] hover:text-[#16A34A] transition-colors"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                              Message
+                            </Link>
+                          )}
+                          <Link
+                            href={`/dashboard/landlord/bookings/${booking.id}`}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-[#16A34A] hover:text-white transition-colors"
+                          >
+                            View
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table View (>= md) */}
+              <table className="hidden md:table w-full text-left text-xs border-collapse">
               <thead className="sticky top-0 bg-[#14A248] text-white uppercase text-[10px] font-bold tracking-wider z-10">
                 <tr>
                   <th className="px-6 py-3.5">Resident / Tenant</th>
@@ -398,6 +536,7 @@ export default function LandlordTenantsPage() {
                 })}
               </tbody>
             </table>
+            </>
           )}
         </div>
       </div>
