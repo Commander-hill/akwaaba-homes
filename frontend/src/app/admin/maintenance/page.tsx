@@ -693,6 +693,7 @@ export default function AdminMaintenancePage() {
             src="/images/admin/dashboard-hero-building.webp"
             alt="Maintenance Dashboard"
             fill
+            sizes="(max-width: 640px) 100vw, 56vw"
             unoptimized
             priority
             className="object-cover object-center"

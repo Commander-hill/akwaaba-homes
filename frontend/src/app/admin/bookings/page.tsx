@@ -510,6 +510,7 @@ export default function AdminBookingsPage() {
             src="/images/admin/dashboard-hero-building.webp"
             alt="Modern Residential Architecture"
             fill
+            sizes="(max-width: 640px) 67vw, 50vw"
             unoptimized
             className="object-cover object-right [mask-image:linear-gradient(to_left,black_25%,transparent_100%)]"
           />
