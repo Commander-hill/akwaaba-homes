@@ -3,8 +3,7 @@ import '@/app/secondary.css';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { Mail, Clock, Lock, ArrowRight, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
+import { Mail, Clock, ArrowRight, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { invalidatePublicResource } from '@/lib/publicFetch';
@@ -191,7 +190,7 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
         </div>
 
         {/* Footer Actions & Emergency Support */}
-        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs">
+        <div className="pt-4 flex items-center justify-center text-xs">
           <a
             href="https://wa.me/233000000000"
             target="_blank"
@@ -200,15 +199,6 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
           >
             <MessageSquare className="w-4 h-4 text-emerald-400" /> Need urgent booking help? Chat Support
           </a>
-
-          <span className="hidden sm:inline text-zinc-700">•</span>
-
-          <Link
-            href="/login"
-            className="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition-colors"
-          >
-            <Lock className="w-4 h-4" /> Admin Access Login
-          </Link>
         </div>
 
       </div>

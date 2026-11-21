@@ -375,12 +375,6 @@ function PublicMaintenanceContent() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link
-            href="/admin/login"
-            className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition font-medium"
-          >
-            Administrator Login
-          </Link>
           <span>© {new Date().getFullYear()} Akwaaba Homes Ghana</span>
         </div>
       </footer>
