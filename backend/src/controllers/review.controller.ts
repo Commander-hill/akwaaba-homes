@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -103,7 +102,7 @@ export const createReview = async (req: Request, res: Response): Promise<void> =
 
 export const getPropertyReviews = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { propertyId } = req.params;
+    const propertyId = String(req.params.propertyId);
 
     const reviews = await prisma.review.findMany({
       where: {
@@ -142,7 +141,7 @@ export const getPropertyReviews = async (req: Request, res: Response): Promise<v
 export const flagReview = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { reason } = req.body;
 
     if (!userId) {
@@ -198,7 +197,7 @@ export const flagReview = async (req: Request, res: Response): Promise<void> => 
 export const submitAppeal = async (req: Request, res: Response): Promise<void> => {
   try {
     const authorId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { appealNote } = req.body;
 
     if (!appealNote) {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -135,7 +134,7 @@ export const getLandlordRenewals = async (req: Request, res: Response): Promise<
 export const respondLeaseRenewal = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user?.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { status, landlordResponse } = req.body;
 
     const validStatuses = ['ACCEPTED', 'DECLINED', 'NEGOTIATING'];

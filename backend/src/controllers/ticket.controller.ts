@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -183,7 +182,7 @@ export const updateTicketStatus = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { status, scheduledDate, repairCost, completionImageUrl, resolutionNotes } = req.body;
 
     const validStatuses = ['PENDING', 'SCHEDULED', 'IN_PROGRESS', 'RESOLVED', 'REJECTED', 'ESCALATED'];
@@ -421,7 +420,7 @@ export const getTicketById = async (req: Request, res: Response): Promise<void> 
       res.status(401).json({ message: 'Authentication required' });
       return;
     }
-    const { id } = req.params;
+    const id = String(req.params.id);
     const ticket = await prisma.maintenanceTicket.findUnique({
       where: { id },
       include: {
@@ -452,7 +451,7 @@ export const addTicketNote = async (req: Request, res: Response): Promise<void> 
       res.status(401).json({ message: 'Authentication required' });
       return;
     }
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { note } = req.body;
     if (!note || !note.trim()) {
       res.status(400).json({ message: 'Note content is required' });

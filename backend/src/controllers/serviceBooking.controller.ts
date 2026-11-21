@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -166,7 +165,7 @@ export const getPropertyServiceBookings = async (req: Request, res: Response): P
  */
 export const updateServiceBookingStatus = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { status, technicianName, technicianPhone, notes } = req.body;
     const userId = req.user?.id;
     const userRole = (req.user?.role || '').toUpperCase();
@@ -265,7 +264,7 @@ export const getTenantServiceBookings = async (req: Request, res: Response): Pro
 export const cancelServiceBooking = async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantId = req.user?.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const booking = await prisma.serviceBooking.findUnique({
       where: { id },

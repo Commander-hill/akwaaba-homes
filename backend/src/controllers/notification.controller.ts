@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { notifyAdminAnnouncement } from '../utils/notification.service';
@@ -27,7 +26,7 @@ export const getMyNotifications = async (req: Request, res: Response): Promise<v
 export const markAsRead = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     await prisma.notification.updateMany({
       where: { id, userId },
@@ -64,7 +63,7 @@ export const markAllAsRead = async (req: Request, res: Response): Promise<void> 
 export const deleteNotification = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     await prisma.notification.deleteMany({
       where: { id, userId }

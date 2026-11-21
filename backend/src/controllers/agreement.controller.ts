@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import crypto from 'crypto';
@@ -7,7 +6,7 @@ import { getIO } from '../socket';
 
 export const getAgreementByBooking = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { bookingId } = req.params;
+    const bookingId = String(req.params.bookingId);
     const userId = req.user?.id;
     const role = req.user?.role;
 
@@ -233,7 +232,7 @@ export const getLandlordAgreements = async (req: Request, res: Response): Promis
 
 export const signAgreement = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { bookingId } = req.params;
+    const bookingId = String(req.params.bookingId);
     const { signature } = req.body;
     const userId = req.user?.id;
     const role = req.user?.role;

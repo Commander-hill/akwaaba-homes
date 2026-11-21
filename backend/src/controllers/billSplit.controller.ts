@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -122,7 +121,7 @@ export const getTenantBillSplits = async (req: Request, res: Response): Promise<
  */
 export const toggleParticipantPaidStatus = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { participantId } = req.params;
+    const participantId = String(req.params.participantId);
     const { isPaid } = req.body;
 
     const participant = await prisma.billSplitParticipant.findUnique({
@@ -239,7 +238,7 @@ export const toggleParticipantPaidStatus = async (req: Request, res: Response): 
  */
 export const deleteBillSplit = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const userId = req.user?.id;
     const userRole = req.user?.role;
 
@@ -299,7 +298,7 @@ export const deleteBillSplit = async (req: Request, res: Response): Promise<void
  */
 export const getPropertyBillSplits = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { propertyId } = req.params;
+    const propertyId = String(req.params.propertyId);
     const userId = req.user?.id;
     const userRole = (req.user?.role || '').toUpperCase();
 

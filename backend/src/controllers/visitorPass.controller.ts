@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import crypto from 'crypto';
@@ -112,7 +111,7 @@ export const getTenantVisitorPasses = async (req: Request, res: Response): Promi
 export const revokeVisitorPass = async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantId = req.user?.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const pass = await prisma.visitorPass.findUnique({ where: { id } });
     if (!pass) {
@@ -239,7 +238,7 @@ export const verifyGatePass = async (req: Request, res: Response): Promise<void>
  */
 export const checkOutVisitorPass = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const userId = req.user?.id;
     const userRole = req.user?.role;
 
@@ -322,7 +321,7 @@ export const checkOutVisitorPass = async (req: Request, res: Response): Promise<
  */
 export const getPropertyVisitorPasses = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { propertyId } = req.params;
+    const propertyId = String(req.params.propertyId);
     const userId = req.user?.id;
     const userRole = req.user?.role;
 
