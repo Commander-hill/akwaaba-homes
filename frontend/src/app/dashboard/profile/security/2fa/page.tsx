@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface TwoFactorStatusResponse {
   twoFactorEnabled: boolean;
@@ -75,7 +76,13 @@ function TwoFactorStudioContent() {
   const smsInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // 1. Fetch current 2FA status
-  const { data: statusData, isLoading: isLoadingStatus, refetch: refetchStatus } = useQuery<TwoFactorStatusResponse>({
+  const {
+    data: statusData,
+    isLoading: isLoadingStatus,
+    isError: isStatusError,
+    refetch: refetchStatus,
+    isFetching: isFetchingStatus
+  } = useQuery<TwoFactorStatusResponse>({
     queryKey: ['2fa-status'],
     queryFn: async () => {
       const res = await api.get('/auth/2fa/status');
@@ -93,7 +100,13 @@ function TwoFactorStudioContent() {
   });
 
   // 3. Query or initialize 2FA Setup
-  const { data: setupData, isLoading: isLoadingSetup, refetch: refetchSetup } = useQuery<SetupData>({
+  const {
+    data: setupData,
+    isLoading: isLoadingSetup,
+    isError: isSetupError,
+    refetch: refetchSetup,
+    isFetching: isFetchingSetup
+  } = useQuery<SetupData>({
     queryKey: ['2fa-setup-data'],
     queryFn: async () => {
       const res = await api.post('/auth/2fa/setup');
@@ -325,6 +338,11 @@ function TwoFactorStudioContent() {
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0F5132] dark:text-emerald-400" />
                 <span>Checking status...</span>
               </div>
+            ) : isStatusError ? (
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 rounded-full text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                <span>Status Unavailable</span>
+              </div>
             ) : isEnrolled ? (
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-full text-xs font-bold">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -340,7 +358,7 @@ function TwoFactorStudioContent() {
         </div>
 
         {/* 3-Step Segmented Bar (Active during onboarding) */}
-        {!isEnrolled && (
+        {!isLoadingStatus && !isStatusError && !isEnrolled && (
           <div className="grid grid-cols-3 gap-2 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs">
             {[
               { step: 1, label: '1. Connect App' },
@@ -373,8 +391,17 @@ function TwoFactorStudioContent() {
         )}
       </div>
 
+      {/* ── STATUS LOAD ERROR ── */}
+      {isStatusError && (
+        <QueryErrorFallback
+          title="Unable to load two-factor authentication status"
+          onRetry={() => refetchStatus()}
+          isRetrying={isFetchingStatus}
+        />
+      )}
+
       {/* ── ENROLLED STATE WORKSTATION ── */}
-      {isEnrolled && (
+      {!isStatusError && isEnrolled && (
         <div className="space-y-6 print:hidden">
           {/* Active Protection Card */}
           <div className="bg-white dark:bg-[#12151D] border border-emerald-300 dark:border-emerald-800/80 rounded-2xl p-6 sm:p-8 shadow-xs space-y-5">
@@ -499,24 +526,19 @@ function TwoFactorStudioContent() {
       )}
 
       {/* ── ONBOARDING WORKSTATION (NOT ENROLLED) ── */}
-      {!isEnrolled && (
+      {!isLoadingStatus && !isStatusError && !isEnrolled && (
         <div className="space-y-6 print:hidden">
           {isLoadingSetup ? (
             <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-[#0F5132] dark:text-emerald-400" />
               <span className="text-xs text-zinc-500 font-medium">Preparing your security setup...</span>
             </div>
-          ) : !setupData ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-12 text-center space-y-4">
-              <p className="text-xs text-rose-500 font-semibold">Could not load 2FA setup details. Please try again.</p>
-              <button
-                type="button"
-                onClick={() => refetchSetup()}
-                className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-              >
-                Retry Setup
-              </button>
-            </div>
+          ) : isSetupError || !setupData ? (
+            <QueryErrorFallback
+              title="Unable to load 2FA setup details"
+              onRetry={() => refetchSetup()}
+              isRetrying={isFetchingSetup}
+            />
           ) : (
             <>
               {/* STEP 1: SCAN QR CODE & SECRET */}

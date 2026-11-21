@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 // Human-friendly label mappers
 const CLEANLINESS_MAP: Record<string, { label: string; desc: string }> = {
@@ -64,7 +65,13 @@ export default function RoommatesPage() {
   }, [userResponse, router]);
 
   // Fetch roommate profile & matches with campus and gender filters
-  const { data: matchResponse, isLoading: isLoadingMatches } = useQuery({
+  const {
+    data: matchResponse,
+    isLoading: isLoadingMatches,
+    isError: isMatchesError,
+    refetch: refetchMatches,
+    isFetching: isFetchingMatches,
+  } = useQuery({
     queryKey: ['roommateMatches', campusFilter, genderFilter],
     queryFn: async () => {
       const params: any = {};
@@ -77,7 +84,12 @@ export default function RoommatesPage() {
   });
 
   // Fetch invitations
-  const { data: inviteResponse, isLoading: isLoadingInvites } = useQuery({
+  const {
+    data: inviteResponse,
+    isError: isInvitesError,
+    refetch: refetchInvites,
+    isFetching: isFetchingInvites,
+  } = useQuery({
     queryKey: ['roommateInvitations'],
     queryFn: async () => {
       const { data } = await api.get('/roommates/invitations');
@@ -158,6 +170,18 @@ export default function RoommatesPage() {
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
         <p className="text-xs font-bold text-zinc-400">Loading co-living compatibility studio...</p>
+      </div>
+    );
+  }
+
+  if (isMatchesError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load roommate matches"
+          onRetry={() => refetchMatches()}
+          isRetrying={isFetchingMatches}
+        />
       </div>
     );
   }
@@ -533,6 +557,13 @@ export default function RoommatesPage() {
         </>
       ) : (
         /* INVITATIONS TAB */
+        isInvitesError ? (
+          <QueryErrorFallback
+            title="Unable to load lease invitations"
+            onRetry={() => refetchInvites()}
+            isRetrying={isFetchingInvites}
+          />
+        ) : (
         <div className="space-y-4">
           <div className="bg-white dark:bg-[#12151D] rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 space-y-3">
             <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -627,6 +658,7 @@ export default function RoommatesPage() {
             )}
           </div>
         </div>
+        )
       )}
 
       {/* ── CO-LIVING LEASE INVITATION MODAL ── */}

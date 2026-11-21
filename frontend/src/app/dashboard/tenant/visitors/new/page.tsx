@@ -23,6 +23,7 @@ import {
   HeartHandshake
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface PropertyOption {
   id: string;
@@ -103,7 +104,13 @@ function NewVisitorPassContent() {
     }
   });
 
-  const { data: bookingsData, isLoading: loadingProperties } = useQuery({
+  const {
+    data: bookingsData,
+    isLoading: loadingProperties,
+    isError: isBookingsError,
+    refetch: refetchBookings,
+    isFetching: isFetchingBookings
+  } = useQuery({
     queryKey: ['tenant', 'bookings'],
     queryFn: async () => {
       const res = await api.get('/bookings/me');
@@ -276,6 +283,12 @@ function NewVisitorPassContent() {
               </label>
               {loadingProperties ? (
                 <div className="h-11 bg-zinc-100 dark:bg-zinc-800 rounded-xl animate-pulse" />
+              ) : isBookingsError ? (
+                <QueryErrorFallback
+                  title="Unable to load residential properties"
+                  onRetry={() => refetchBookings()}
+                  isRetrying={isFetchingBookings}
+                />
               ) : propertyList.length === 0 ? (
                 <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 space-y-2">
                   <p className="font-bold">No active residence booking found.</p>

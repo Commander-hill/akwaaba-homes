@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import { useDialog } from '@/providers/DialogProvider';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   Loader2,
   Save,
@@ -116,7 +117,7 @@ function ProfileWorkspaceInner({
     businessRegistrationNumber: '',
   });
 
-  const { data: session, isLoading } = useQuery({
+  const { data: session, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
@@ -342,6 +343,18 @@ function ProfileWorkspaceInner({
     return (
       <div className="flex justify-center p-12">
         <Loader2 className="w-7 h-7 animate-spin text-[#0B3B24]" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load profile"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }

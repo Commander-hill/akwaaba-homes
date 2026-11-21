@@ -38,6 +38,7 @@ import { useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '@/lib/utils';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface Partner {
   id: string;
@@ -402,17 +403,19 @@ function MessagesContent() {
   const currentUserInitials = getInitials(currentUser?.firstName, currentUser?.lastName);
 
   // 2. Fetch Real Conversations from Backend
-  const { data: liveConversations = [], isLoading: isLoadingConversations } = useQuery<Conversation[]>({
+  const {
+    data: liveConversations = [],
+    isLoading: isLoadingConversations,
+    isError: isConversationsError,
+    refetch: refetchConversations,
+    isFetching: isFetchingConversations,
+  } = useQuery<Conversation[]>({
     queryKey: ['conversations'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/chat/conversations');
-        if (Array.isArray(data)) return data;
-        if (Array.isArray((data as any)?.conversations)) return (data as any).conversations;
-        return [];
-      } catch {
-        return [];
-      }
+      const { data } = await api.get('/chat/conversations');
+      if (Array.isArray(data)) return data;
+      if (Array.isArray((data as any)?.conversations)) return (data as any).conversations;
+      return [];
     },
   });
 
@@ -484,19 +487,20 @@ function MessagesContent() {
   }, [mergedConversations, activeConversationId]);
 
   // 4. Fetch Full Chat History for the Active Conversation (Resolves Anomaly 1)
-  const { data: serverMessages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
+  const {
+    data: serverMessages = [],
+    isLoading: isLoadingMessages,
+    isError: isMessagesError,
+    refetch: refetchMessages,
+    isFetching: isFetchingMessages,
+  } = useQuery<Message[]>({
     queryKey: ['conversationMessages', activeConversation?.id],
     queryFn: async () => {
       if (!activeConversation?.id) return [];
-      try {
-        const { data } = await api.get(`/chat/${activeConversation.id}/messages`);
-        if (Array.isArray(data)) return data;
-        if (Array.isArray((data as any)?.messages)) return (data as any).messages;
-        return [];
-      } catch (err) {
-        console.error('Failed to fetch conversation history:', err);
-        return [];
-      }
+      const { data } = await api.get(`/chat/${activeConversation.id}/messages`);
+      if (Array.isArray(data)) return data;
+      if (Array.isArray((data as any)?.messages)) return (data as any).messages;
+      return [];
     },
     enabled: !!activeConversation?.id,
   });
@@ -951,6 +955,14 @@ function MessagesContent() {
                 <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
                 <p className="text-xs font-medium">Loading conversations...</p>
               </div>
+            ) : isConversationsError ? (
+              <div className="p-4">
+                <QueryErrorFallback
+                  title="Unable to load conversations"
+                  onRetry={() => refetchConversations()}
+                  isRetrying={isFetchingConversations}
+                />
+              </div>
             ) : mergedConversations.length === 0 ? (
               // Empty State for Zero Conversations (Resolves Anomaly 2)
               <div className="p-8 text-center flex flex-col items-center justify-center space-y-3 h-full">
@@ -1255,6 +1267,14 @@ function MessagesContent() {
                 {isLoadingMessages ? (
                   <div className="flex items-center justify-center h-48">
                     <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+                  </div>
+                ) : isMessagesError ? (
+                  <div className="py-8 max-w-md mx-auto">
+                    <QueryErrorFallback
+                      title="Unable to load messages"
+                      onRetry={() => refetchMessages()}
+                      isRetrying={isFetchingMessages}
+                    />
                   </div>
                 ) : activeMessages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-48 text-center space-y-2">

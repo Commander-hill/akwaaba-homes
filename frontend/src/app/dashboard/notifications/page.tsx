@@ -19,6 +19,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { EmptyState, StatusBadge } from '@/components/tenant-ui/primitives';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface NotificationItem {
   id: string;
@@ -34,7 +35,7 @@ export default function NotificationsPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'ALL' | 'UNREAD' | 'BOOKING' | 'PAYMENT' | 'SECURITY'>('ALL');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
       const res = await api.get('/notifications');
@@ -203,6 +204,12 @@ export default function NotificationsPage() {
             </div>
           ))}
         </div>
+      ) : isError ? (
+        <QueryErrorFallback
+          title="Unable to load notifications"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       ) : filteredNotifications.length === 0 ? (
         <EmptyState
           icon={<Bell className="w-6 h-6" />}

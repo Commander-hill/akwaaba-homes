@@ -8,6 +8,7 @@ import {
   Clock, AlertTriangle, KeyRound, ArrowRight, CheckCircle2 
 } from 'lucide-react';
 import AlertBanner from '@/components/AlertBanner';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface Session {
   id: string;
@@ -23,7 +24,7 @@ interface Session {
 export default function SecurityPage() {
   const queryClient = useQueryClient();
 
-  const { data: sessionsData, isLoading } = useQuery({
+  const { data: sessionsData, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['sessions'],
     queryFn: async () => {
       const res = await api.get('/auth/sessions');
@@ -126,6 +127,12 @@ export default function SecurityPage() {
           <div className="flex justify-center p-12">
             <Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" />
           </div>
+        ) : isError ? (
+          <QueryErrorFallback
+            title="Unable to load active sessions"
+            onRetry={() => refetch()}
+            isRetrying={isFetching}
+          />
         ) : !sessionsData || sessionsData.length === 0 ? (
           <div className="p-8 text-center text-xs text-zinc-500 dark:text-zinc-400 bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-xl">
             No active sessions found.

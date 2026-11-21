@@ -23,6 +23,7 @@ import api from '@/lib/axios';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function VerificationPage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function VerificationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  const { data: session, refetch } = useQuery({
+  const { data: session, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
@@ -208,7 +209,19 @@ export default function VerificationPage() {
     }
   };
 
-  if (!session || (session.role !== 'LANDLORD' && session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load verification status"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (isLoading || !session || (session.role !== 'LANDLORD' && session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
         <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />

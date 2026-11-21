@@ -20,6 +20,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import SignaturePad from '@/components/SignaturePad';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import toast from 'react-hot-toast';
 
 /**
@@ -68,7 +69,7 @@ export default function AgreementPage() {
   const [signatureData, setSignatureData] = useState<string | null>(null);
 
   // Fetch agreement details
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['agreement', bookingId],
     queryFn: async () => {
       const { data } = await api.get(`/agreements/booking/${bookingId}`);
@@ -110,7 +111,19 @@ export default function AgreementPage() {
     );
   }
 
-  if (error || !data) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load tenancy agreement"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!data) {
     return (
       <div className="max-w-2xl mx-auto my-12 p-8 rounded-2xl bg-white dark:bg-[#16161D] border border-rose-500/20 text-center space-y-4 shadow-xl">
         <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto" />

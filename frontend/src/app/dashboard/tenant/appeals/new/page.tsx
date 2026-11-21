@@ -17,6 +17,7 @@ import {
   Check
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 const APPEAL_REASONS = [
   {
@@ -59,7 +60,13 @@ function NewAppealContent() {
   const [evidenceSummary, setEvidenceSummary] = useState('');
   const [requestMediation, setRequestMediation] = useState(true);
 
-  const { data: myReviewsData, isLoading: loadingReviews } = useQuery({
+  const {
+    data: myReviewsData,
+    isLoading: loadingReviews,
+    isError: isReviewsError,
+    refetch: refetchReviews,
+    isFetching: isFetchingReviews
+  } = useQuery({
     queryKey: ['myReviews'],
     queryFn: async () => {
       const res = await api.get('/reviews/mine');
@@ -212,6 +219,12 @@ function NewAppealContent() {
               </label>
               {loadingReviews ? (
                 <div className="h-11 bg-zinc-100 dark:bg-zinc-800 rounded-xl animate-pulse" />
+              ) : isReviewsError ? (
+                <QueryErrorFallback
+                  title="Unable to load tenancy records"
+                  onRetry={() => refetchReviews()}
+                  isRetrying={isFetchingReviews}
+                />
               ) : !Array.isArray(reviews) || reviews.length === 0 ? (
                 <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-xl text-xs text-amber-800 dark:text-amber-300">
                   No active tenancy review records eligible for appeal were found on your profile.

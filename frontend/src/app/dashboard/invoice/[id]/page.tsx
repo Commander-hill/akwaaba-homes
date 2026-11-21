@@ -17,6 +17,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { generateQRCodeSvg } from '@/lib/qr';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function InvoicePage() {
   const params = useParams();
@@ -41,7 +42,7 @@ export default function InvoicePage() {
     }
   };
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['transaction', transactionId],
     queryFn: async () => {
       try {
@@ -99,7 +100,19 @@ export default function InvoicePage() {
     );
   }
 
-  if (error || !data) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load receipt"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!data) {
     return (
       <div className="max-w-xl mx-auto my-16 p-8 text-center bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xs">
         <div className="w-12 h-12 mx-auto rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center mb-3">

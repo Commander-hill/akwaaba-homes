@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AlertBanner from '@/components/AlertBanner';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 const CATEGORIES = [
   {
@@ -171,7 +172,13 @@ function ReportIssueContent() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: bookingsData } = useQuery({
+  const {
+    data: bookingsData,
+    isLoading: loadingBookings,
+    isError: isBookingsError,
+    refetch: refetchBookings,
+    isFetching: isFetchingBookings
+  } = useQuery({
     queryKey: ['bookings', 'tenant'],
     queryFn: async () => {
       const res = await api.get('/bookings/me');
@@ -405,7 +412,15 @@ function ReportIssueContent() {
               </p>
             </div>
 
-            {activeBookings.length > 0 && (
+            {loadingBookings ? (
+              <div className="h-11 bg-zinc-100 dark:bg-zinc-800 rounded-xl animate-pulse" />
+            ) : isBookingsError ? (
+              <QueryErrorFallback
+                title="Unable to load rented residences"
+                onRetry={() => refetchBookings()}
+                isRetrying={isFetchingBookings}
+              />
+            ) : activeBookings.length > 0 ? (
               <div>
                 <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
                   Rented Residence / Unit *
@@ -422,7 +437,7 @@ function ReportIssueContent() {
                   ))}
                 </select>
               </div>
-            )}
+            ) : null}
 
             <div>
               <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2.5">

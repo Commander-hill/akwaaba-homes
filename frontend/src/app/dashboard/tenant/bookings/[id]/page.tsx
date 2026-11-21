@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { Button, StatusBadge, formatCedis } from '@/components/tenant-ui/primitives';
 import { getImageUrl } from '@/lib/utils';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function TenantBookingDetailsPage() {
   const params = useParams();
@@ -45,7 +46,7 @@ export default function TenantBookingDetailsPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['booking-detail', bookingId],
     queryFn: async () => {
       const res = await api.get(`/bookings/${bookingId}`);
@@ -153,7 +154,19 @@ export default function TenantBookingDetailsPage() {
     );
   }
 
-  if (isError || !booking) {
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load booking"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!booking) {
     return (
       <div className="max-w-3xl mx-auto py-12">
         <div className="bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-8 text-center space-y-4">

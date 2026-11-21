@@ -20,6 +20,7 @@ import {
   BadgeCheck
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 const RATING_CRITERIA = [
   { id: 'water', label: 'Water Supply & Polytank Storage', icon: Droplets, desc: 'Reliability of running water and backup storage' },
@@ -61,7 +62,13 @@ function NewReviewContent() {
     value: 5
   });
 
-  const { data: bookingsData, isLoading: loadingBookings } = useQuery({
+  const {
+    data: bookingsData,
+    isLoading: loadingBookings,
+    isError: isBookingsError,
+    refetch: refetchBookings,
+    isFetching: isFetchingBookings
+  } = useQuery({
     queryKey: ['bookings', 'tenant'],
     queryFn: async () => {
       const res = await api.get('/bookings/me');
@@ -234,6 +241,12 @@ function NewReviewContent() {
               </label>
               {loadingBookings ? (
                 <div className="h-11 bg-zinc-100 dark:bg-zinc-800 rounded-xl animate-pulse" />
+              ) : isBookingsError ? (
+                <QueryErrorFallback
+                  title="Unable to load verified stays"
+                  onRetry={() => refetchBookings()}
+                  isRetrying={isFetchingBookings}
+                />
               ) : eligibleBookings.length === 0 ? (
                 <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-xl text-xs text-amber-800 dark:text-amber-300">
                   No verified completed or active tenancies found to review.
