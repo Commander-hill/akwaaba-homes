@@ -9,6 +9,7 @@
     "db:start": "node scripts/ensure-postgres.js",
     "build": "prisma generate && tsc",
     "test:admin": "npx tsx --test tests/admin.rbac-smoke.test.ts",
+    "test:landlord": "npx tsx --test tests/landlord.rbac-smoke.test.ts",
     "postinstall": "prisma generate --schema=prisma/schema.prisma || true",
     "start": "node dist/server.js"
   },
