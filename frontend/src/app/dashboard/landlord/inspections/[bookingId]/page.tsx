@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface ChecklistItem {
   id: string;
@@ -63,7 +64,13 @@ export default function InspectionDetailPage({
   const [deductionReason, setDeductionReason] = useState('');
 
   // Fetch Landlord Bookings to find this booking
-  const { data: landlordBookingsData, isLoading: isBookingLoading } = useQuery({
+  const {
+    data: landlordBookingsData,
+    isLoading: isBookingLoading,
+    isError: isBookingError,
+    refetch: refetchBooking,
+    isFetching: isBookingFetching,
+  } = useQuery({
     queryKey: ['bookings', 'landlord'],
     queryFn: async () => {
       const res = await api.get('/bookings/landlord');
@@ -75,7 +82,13 @@ export default function InspectionDetailPage({
   const booking = bookingsList.find((b: any) => b.id === bookingId);
 
   // Fetch Existing Inspections for this booking
-  const { data: inspectionData, isLoading: isInspectionLoading } = useQuery({
+  const {
+    data: inspectionData,
+    isLoading: isInspectionLoading,
+    isError: isInspectionError,
+    refetch: refetchInspection,
+    isFetching: isInspectionFetching,
+  } = useQuery({
     queryKey: ['inspections', bookingId],
     queryFn: async () => {
       const res = await api.get(`/inspections/booking/${bookingId}`);
@@ -137,10 +150,25 @@ export default function InspectionDetailPage({
   const fairCount = items.filter(i => i.condition === 'FAIR').length;
   const goodCount = items.filter(i => i.condition === 'GOOD').length;
 
-  if (isBookingLoading) {
+  if (isBookingLoading || isInspectionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
+  if (isBookingError || isInspectionError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load inspection"
+          onRetry={() => {
+            if (isBookingError) refetchBooking();
+            if (isInspectionError) refetchInspection();
+          }}
+          isRetrying={isBookingFetching || isInspectionFetching}
+        />
       </div>
     );
   }

@@ -30,6 +30,7 @@ import {
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { useSocket } from '@/providers/SocketProvider';
 
 const MOMO_NETWORKS = [
@@ -325,21 +326,12 @@ export default function LandlordWithdrawalPage() {
       </div>
 
       {isPayoutError && (
-        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-center justify-between gap-3 text-xs text-rose-800 dark:text-rose-200">
-          <div className="flex items-center gap-2">
-            <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
-            <span>Failed to load your payout balance and history.</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold transition cursor-pointer disabled:opacity-50 shrink-0"
-          >
-            <RefreshCw className={clsx('w-3.5 h-3.5', isRefetching && 'animate-spin')} />
-            {isRefetching ? 'Retrying...' : 'Retry'}
-          </button>
-        </div>
+        <QueryErrorFallback
+          title="Unable to load payout balance and history"
+          message="We couldn't fetch your disbursement balance and payout records. Please check your connection and try again."
+          onRetry={() => refetch()}
+          isRetrying={isRefetching}
+        />
       )}
 
       {/* ── Balance Overview Grid ── */}
@@ -898,6 +890,13 @@ export default function LandlordWithdrawalPage() {
                   <Loader2 className="w-6 h-6 animate-spin text-[#0F5132] dark:text-emerald-400" />
                   <span className="text-xs text-zinc-400">Loading payout records...</span>
                 </div>
+              ) : isPayoutError ? (
+                <QueryErrorFallback
+                  title="Unable to load payout history"
+                  message="Could not retrieve your recent withdrawals. Please try again."
+                  onRetry={() => refetch()}
+                  isRetrying={isRefetching}
+                />
               ) : filteredPayouts.length === 0 ? (
                 <div className="py-8 text-center space-y-2">
                   <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center mx-auto">

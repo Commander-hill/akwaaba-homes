@@ -13,6 +13,7 @@ import {
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '@/lib/utils';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function PublishPropertyPage() {
   const params = useParams();
@@ -55,7 +56,7 @@ export default function PublishPropertyPage() {
   }, [session, phonePrefilled, momoPhoneNumber]);
 
   // 2. Fetch Property Details (safely unwrap { property } from backend)
-  const { data: rawPropertyData, isLoading: isLoadingProperty, refetch: refetchProperty } = useQuery({
+  const { data: rawPropertyData, isLoading: isLoadingProperty, isError: isPropertyError, isFetching: isFetchingProperty, refetch: refetchProperty } = useQuery({
     queryKey: ['property', propertyId],
     queryFn: async () => {
       const res = await api.get(`/properties/${propertyId}`);
@@ -174,6 +175,18 @@ export default function PublishPropertyPage() {
       <div className="w-full min-h-[60vh] flex flex-col items-center justify-center space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
         <p className="text-xs text-zinc-500 font-medium">Loading property details...</p>
+      </div>
+    );
+  }
+
+  if (isPropertyError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load property"
+          onRetry={() => refetchProperty()}
+          isRetrying={isFetchingProperty}
+        />
       </div>
     );
   }

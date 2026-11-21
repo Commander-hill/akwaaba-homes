@@ -18,6 +18,7 @@ import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import AlertBanner from '@/components/AlertBanner';
 import { Button } from '@/components/ui/Button';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   PROPERTY_TYPE_CONFIGS,
   resolvePropertyCategory,
@@ -152,7 +153,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     }, 50);
   };
 
-  const { data: property, isLoading: isFetching } = useQuery({
+  const {
+    data: property,
+    isLoading: isPropertyLoading,
+    isError: isPropertyError,
+    refetch: refetchProperty,
+    isFetching: isPropertyFetching,
+  } = useQuery({
     queryKey: ['property', propertyId],
     queryFn: async () => {
       const res = await api.get(`/properties/${propertyId}`);
@@ -547,11 +554,23 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     updateMutation.mutate(formData);
   };
 
-  if (isFetching) {
+  if (isPropertyLoading) {
     return (
       <div className="flex flex-col items-center justify-center p-20 gap-3">
         <Loader2 className="w-10 h-10 animate-spin text-[#16A34A]" />
         <span className="text-xs font-bold text-zinc-500">Loading property details...</span>
+      </div>
+    );
+  }
+
+  if (isPropertyError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load property"
+          onRetry={() => refetchProperty()}
+          isRetrying={isPropertyFetching}
+        />
       </div>
     );
   }

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import clsx from 'clsx';
 import AlertBanner from '@/components/AlertBanner';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   Building,
   Volume2,
@@ -148,15 +149,16 @@ function NewDisciplinaryIncidentContent() {
   });
 
   // Fetch landlord bookings to resolve tenantId / bookingId for breaches
-  const { data: bookingsData } = useQuery({
+  const {
+    data: bookingsData,
+    isError: isBookingsError,
+    refetch: refetchBookings,
+    isFetching: isFetchingBookings,
+  } = useQuery({
     queryKey: ['bookings', 'landlord', 'disciplinary'],
     queryFn: async () => {
-      try {
-        const res = await api.get('/bookings/landlord');
-        return res.data?.bookings || res.data || [];
-      } catch {
-        return [];
-      }
+      const res = await api.get('/bookings/landlord');
+      return res.data?.bookings || res.data || [];
     },
   });
 
@@ -404,17 +406,12 @@ function NewDisciplinaryIncidentContent() {
                 <Loader2 className="w-4 h-4 animate-spin text-[#0F5132]" /> Loading properties...
               </div>
             ) : isPropsError ? (
-              <div className="p-5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between gap-3">
-                <span className="font-bold">Failed to load your properties. Please try again.</span>
-                <button
-                  type="button"
-                  onClick={() => refetchProps()}
-                  disabled={isFetchingProps}
-                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition cursor-pointer disabled:opacity-50 shrink-0"
-                >
-                  {isFetchingProps ? 'Retrying...' : 'Retry'}
-                </button>
-              </div>
+              <QueryErrorFallback
+                title="Unable to load your properties"
+                message="We couldn't fetch your landlord properties. Please try again to select a target property."
+                onRetry={() => refetchProps()}
+                isRetrying={isFetchingProps}
+              />
             ) : properties.length === 0 ? (
               <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs space-y-2">
                 <p className="font-bold">No active properties found under your landlord account.</p>
@@ -467,7 +464,16 @@ function NewDisciplinaryIncidentContent() {
               </div>
             )}
 
-            {propertyResidents.length > 0 && (
+            {isBookingsError ? (
+              <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <QueryErrorFallback
+                  title="Unable to load active residents"
+                  message="We couldn't fetch your booking roster. You can retry or enter the resident's details manually below."
+                  onRetry={() => refetchBookings()}
+                  isRetrying={isFetchingBookings}
+                />
+              </div>
+            ) : propertyResidents.length > 0 && (
               <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
                   Select Active Resident (Auto-fills particulars)

@@ -14,6 +14,7 @@ import {
 import api from '@/lib/axios';
 import { formatBookingUnitLabel, isHostelProperty } from '@/components/landlord-ui/propertyConfig';
 import { Button } from '@/components/ui/Button';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 
@@ -183,7 +184,7 @@ export default function BookingDetailPage() {
   const [pendingAction, setPendingAction] = useState<TenancyAction | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
-  const { data: booking, isLoading, isError, refetch } = useQuery({
+  const { data: booking, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['landlord', 'booking', id],
     queryFn: async () => {
       const res = await api.get(`/bookings/${id}`);
@@ -207,25 +208,7 @@ export default function BookingDetailPage() {
     },
   });
 
-  if (isError) {
-    return (
-      <div className="max-w-xl mx-auto my-16 p-8 bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-xl text-center space-y-4 shadow-xs">
-        <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
-        <h2 className="text-base font-bold text-zinc-900 dark:text-white">Unable to Load Tenancy Record</h2>
-        <p className="text-xs text-zinc-500 leading-relaxed">
-          The tenancy record could not be loaded. It may not exist, or you may not have authorization to view it.
-        </p>
-        <div className="flex gap-2 justify-center pt-2">
-          <Link href="/dashboard/landlord/bookings">
-            <Button variant="outline" size="sm">Back to Tenancies</Button>
-          </Link>
-          <Button variant="emerald" size="sm" onClick={() => refetch()}>Retry</Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading || !booking) {
+  if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto space-y-6 pb-16 animate-pulse">
         <div className="h-4 w-48 bg-zinc-200 dark:bg-zinc-800 rounded" />
@@ -234,6 +217,35 @@ export default function BookingDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="h-96 bg-zinc-200 dark:bg-zinc-800 rounded-xl lg:col-span-7" />
           <div className="h-96 bg-zinc-200 dark:bg-zinc-800 rounded-xl lg:col-span-5" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4">
+        <QueryErrorFallback
+          title="Unable to load booking"
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="max-w-xl mx-auto my-16 p-8 bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-xl text-center space-y-4 shadow-xs">
+        <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
+        <h2 className="text-base font-bold text-zinc-900 dark:text-white">Tenancy Record Not Found</h2>
+        <p className="text-xs text-zinc-500 leading-relaxed">
+          The tenancy record could not be found, or you may not have authorization to view it.
+        </p>
+        <div className="flex gap-2 justify-center pt-2">
+          <Link href="/dashboard/landlord/bookings">
+            <Button variant="outline" size="sm">Back to Tenancies</Button>
+          </Link>
         </div>
       </div>
     );

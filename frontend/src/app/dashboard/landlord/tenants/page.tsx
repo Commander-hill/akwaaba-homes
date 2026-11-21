@@ -4,18 +4,19 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { formatBookingUnitLabel } from '@/components/landlord-ui/propertyConfig';
-import { AlertCircle, Building, Download, ExternalLink, Filter, GraduationCap, Mail, MapPin, MessageSquare, Phone, RefreshCw, Search, User } from 'lucide-react';
+import { Building, Download, ExternalLink, Filter, GraduationCap, Mail, MapPin, MessageSquare, Phone, Search, User } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { getImageUrl } from '@/lib/utils';
 import SkeletonTable from '@/components/SkeletonTable';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function LandlordTenantsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [propertyFilter, setPropertyFilter] = useState('ALL');
 
-  const { data: bookingsResponse, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data: bookingsResponse, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: ['bookings', 'landlord'],
     queryFn: async () => {
       const { data } = await api.get('/bookings/landlord');
@@ -228,20 +229,12 @@ export default function LandlordTenantsPage() {
           {isLoading ? (
             <SkeletonTable rows={5} columns={6} />
           ) : isError ? (
-            <div className="flex flex-col h-full items-center justify-center text-center p-12 space-y-3">
-              <AlertCircle className="w-10 h-10 text-rose-500" />
-              <h3 className="text-sm font-bold text-zinc-950 dark:text-white">Failed to Load Resident Records</h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm">
-                Could not fetch your tenant directory. Please try again.
-              </p>
-              <button
-                onClick={() => refetch()}
-                disabled={isFetching}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <RefreshCw className={clsx('w-3.5 h-3.5', isFetching && 'animate-spin')} />
-                {isFetching ? 'Retrying...' : 'Retry'}
-              </button>
+            <div className="p-6">
+              <QueryErrorFallback
+                title="Unable to load tenants"
+                onRetry={() => refetch()}
+                isRetrying={isRefetching}
+              />
             </div>
           ) : filteredBookings.length === 0 ? (
             <div className="flex flex-col h-full items-center justify-center text-center p-12 space-y-2">

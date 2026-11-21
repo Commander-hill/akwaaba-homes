@@ -5,14 +5,12 @@ import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
-  AlertCircle,
   BellRing,
   Building,
   Filter,
   Loader2,
   Megaphone,
   Plus,
-  RefreshCw,
   Search,
   Trash2
 } from 'lucide-react';
@@ -20,6 +18,7 @@ import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import { useDialog } from '@/providers/DialogProvider';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 interface NoticeItem {
   id: string;
@@ -190,24 +189,12 @@ export default function LandlordNoticesPage() {
           </p>
         </div>
       ) : isError ? (
-        <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-rose-200 dark:border-rose-900/50 space-y-3">
-          <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
-          <h4 className="text-base font-bold text-zinc-950 dark:text-white">
-            Failed to Load Resident Notices
-          </h4>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
-            Could not fetch your published announcements. Please try again.
-          </p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={clsx('w-3.5 h-3.5', isFetching && 'animate-spin')} />
-            {isFetching ? 'Retrying...' : 'Retry'}
-          </button>
-        </div>
+        <QueryErrorFallback
+          title="Unable to load resident notices"
+          message="Could not fetch your published announcements. Please check your connection and try again."
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       ) : filteredNotices.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-dashed border-zinc-200 dark:border-zinc-800 space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center mx-auto">

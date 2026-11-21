@@ -7,13 +7,14 @@ import SkeletonTable from '@/components/SkeletonTable';
 import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import { 
   CreditCard, CheckCircle, AlertCircle, Calendar, Building, 
-  MapPin, RefreshCw
+  MapPin
 } from 'lucide-react';
 import clsx from 'clsx';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 
 export default function LandlordSubscriptionPage() {
 
-  const { data: overviewData, isLoading, isError, isFetching, refetch } = useQuery({
+  const { data: overviewData, isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: ['subscriptions', 'overview'],
     queryFn: async () => {
       const res = await api.get('/subscriptions/overview');
@@ -89,20 +90,12 @@ export default function LandlordSubscriptionPage() {
             <SkeletonTable rows={4} columns={5} />
           </div>
         ) : isError ? (
-          <div className="p-12 text-center space-y-3">
-            <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
-            <p className="text-xs font-bold text-zinc-900 dark:text-white">
-              Failed to load subscription billing overview.
-            </p>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={clsx('w-3.5 h-3.5', isFetching && 'animate-spin')} />
-              {isFetching ? 'Retrying...' : 'Retry'}
-            </button>
+          <div className="p-6">
+            <QueryErrorFallback
+              title="Unable to load subscriptions"
+              onRetry={() => refetch()}
+              isRetrying={isRefetching}
+            />
           </div>
         ) : properties.length === 0 ? (
           <div className="p-12 text-center text-xs text-zinc-500">

@@ -26,6 +26,7 @@ import AcademicInstallmentTab from '@/components/landlord/AcademicInstallmentTab
 import RoomAssetInventoryTab from '@/components/landlord/RoomAssetInventoryTab';
 import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
 import AlertBanner from '@/components/AlertBanner';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import toast from 'react-hot-toast';
 
 import { getImageUrl } from '@/lib/utils';
@@ -161,102 +162,110 @@ function LandlordDashboardContent() {
   const session = sessionData?.user || sessionData;
 
   // Fetch Bookings
-  const { data: bookingsResponse, isLoading: isLoadingBookings, refetch: refetchBookings } = useQuery({
+  const {
+    data: bookingsResponse,
+    isLoading: isLoadingBookings,
+    isError: isBookingsError,
+    isRefetching: isRefetchingBookings,
+    refetch: refetchBookings,
+  } = useQuery({
     queryKey: ['bookings', 'landlord'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/bookings/landlord');
-        return data;
-      } catch (err) {
-        console.warn('Could not fetch bookings:', err);
-        return { bookings: [] };
-      }
+      const { data } = await api.get('/bookings/landlord');
+      return data;
     }
   });
 
   // Fetch Landlord Properties
-  const { data: propertiesData, isLoading: isLoadingProperties, refetch: refetchProperties } = useQuery({
+  const {
+    data: propertiesData,
+    isLoading: isLoadingProperties,
+    isError: isPropertiesError,
+    isRefetching: isRefetchingProperties,
+    refetch: refetchProperties,
+  } = useQuery({
     queryKey: ['properties', 'landlord', 'mine'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/properties/landlord/mine');
-        return data?.data || [];
-      } catch (err) {
-        return [];
-      }
+      const { data } = await api.get('/properties/landlord/mine');
+      return data?.data || [];
     }
   });
   const myProperties = propertiesData || [];
 
   // Fetch Landlord Agreements
-  const { data: agreementsResponse, isLoading: isLoadingAgreements, refetch: refetchAgreements } = useQuery({
+  const {
+    data: agreementsResponse,
+    isLoading: isLoadingAgreements,
+    isError: isAgreementsError,
+    isRefetching: isRefetchingAgreements,
+    refetch: refetchAgreements,
+  } = useQuery({
     queryKey: ['agreements', 'landlord'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/agreements/landlord');
-        return data;
-      } catch (err) {
-        console.warn('Could not fetch agreements:', err);
-        return { agreements: [] };
-      }
+      const { data } = await api.get('/agreements/landlord');
+      return data;
     },
   });
 
   // Fetch Tickets
-  const { data: ticketsResponse, isLoading: isLoadingTickets, refetch: refetchTickets } = useQuery({
+  const {
+    data: ticketsResponse,
+    isLoading: isLoadingTickets,
+    isError: isTicketsError,
+    isRefetching: isRefetchingTickets,
+    refetch: refetchTickets,
+  } = useQuery({
     queryKey: ['tickets', 'landlord'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/tickets/landlord');
-        return data;
-      } catch (err) {
-        console.warn('Could not fetch tickets:', err);
-        return { tickets: [] };
-      }
+      const { data } = await api.get('/tickets/landlord');
+      return data;
     },
   });
 
   // Fetch Subscriptions Overview
-  const { data: subOverviewResponse, isLoading: isLoadingSubs, refetch: refetchSubs } = useQuery({
+  const {
+    data: subOverviewResponse,
+    isLoading: isLoadingSubs,
+    isError: isSubsError,
+    isRefetching: isRefetchingSubs,
+    refetch: refetchSubs,
+  } = useQuery({
     queryKey: ['subscriptions', 'overview'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/subscriptions/overview');
-        return data;
-      } catch (err) {
-        console.warn('Could not fetch subscriptions overview:', err);
-        return { stats: { totalProperties: 0, activeSubscriptions: 0, expiringSoon: 0, unsubscribedOrExpired: 0 }, properties: [] };
-      }
+      const { data } = await api.get('/subscriptions/overview');
+      return data;
     },
   });
 
   // Fetch Landlord Tenant Reviews
-  const { data: landlordReviewsResponse, isLoading: isLoadingLandlordReviews } = useQuery({
+  const {
+    data: landlordReviewsResponse,
+    isLoading: isLoadingLandlordReviews,
+    isError: isReviewsError,
+    isRefetching: isRefetchingReviews,
+    refetch: refetchReviews,
+  } = useQuery({
     queryKey: ['reviews', 'landlord'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/reviews/landlord');
-        return data?.reviews || [];
-      } catch (err) {
-        console.warn('Could not fetch landlord reviews:', err);
-        return [];
-      }
+      const { data } = await api.get('/reviews/landlord');
+      return data?.reviews || [];
     },
     enabled: activeSubTab === 'reviews'
   });
   const landlordReviews = landlordReviewsResponse || [];
 
   // Fetch Detailed Earnings Report
-  const { data: earningsReport, isLoading: isLoadingEarnings, refetch: refetchEarnings } = useQuery({
+  const {
+    data: earningsReport,
+    isLoading: isLoadingEarnings,
+    isError: isEarningsError,
+    isRefetching: isRefetchingEarnings,
+    refetch: refetchEarnings,
+  } = useQuery({
     queryKey: ['transactions', 'landlord', 'report'],
     queryFn: async () => {
-      try {
-        const { data } = await api.get('/transactions/landlord/report');
-        return data;
-      } catch (err) {
-        console.warn('Could not fetch earnings report:', err);
-        return { summary: { totalGrossEarnings: 0, totalCommissionDeducted: 0, totalNetEarnings: 0, thisMonthNetEarnings: 0, platformCommissionPercent: 5 }, monthlyTrends: [], recentCashflows: [] };
-      }
+      const { data } = await api.get('/transactions/landlord/report');
+      return data;
     },
     enabled: activeSubTab === 'payouts' || activePillar === 'financials'
   });
@@ -875,6 +884,12 @@ function LandlordDashboardContent() {
                     </div>
                   ))}
                 </div>
+              ) : isPropertiesError ? (
+                <QueryErrorFallback
+                  title="Unable to load properties"
+                  onRetry={() => refetchProperties()}
+                  isRetrying={isRefetchingProperties}
+                />
               ) : filteredProperties.length === 0 ? (
                 <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4">
                   <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-100 dark:border-emerald-800/40">
@@ -1082,6 +1097,14 @@ function LandlordDashboardContent() {
 
                 {isLoadingEarnings ? (
                   <div className="p-8 text-center text-xs text-zinc-400">Loading disbursement cashflows...</div>
+                ) : isEarningsError ? (
+                  <div className="p-6">
+                    <QueryErrorFallback
+                      title="Unable to load earnings"
+                      onRetry={() => refetchEarnings()}
+                      isRetrying={isRefetchingEarnings}
+                    />
+                  </div>
                 ) : cashflows.length === 0 ? (
                   <div className="p-12 text-center space-y-2">
                     <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto" />
@@ -1172,6 +1195,12 @@ function LandlordDashboardContent() {
 
               {isLoadingSubs ? (
                 <div className="p-8 text-center text-xs text-zinc-400">Loading listing subscriptions...</div>
+              ) : isSubsError ? (
+                <QueryErrorFallback
+                  title="Unable to load subscriptions"
+                  onRetry={() => refetchSubs()}
+                  isRetrying={isRefetchingSubs}
+                />
               ) : subProperties.length === 0 ? (
                 <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
                   <Sparkles className="w-10 h-10 text-zinc-400 mx-auto" />
@@ -1336,6 +1365,14 @@ function LandlordDashboardContent() {
 
                 {isLoadingBookings ? (
                   <div className="p-8 text-center text-xs text-zinc-400">Loading reservations...</div>
+                ) : isBookingsError ? (
+                  <div className="p-6">
+                    <QueryErrorFallback
+                      title="Unable to load reservations"
+                      onRetry={() => refetchBookings()}
+                      isRetrying={isRefetchingBookings}
+                    />
+                  </div>
                 ) : bookings.length === 0 ? (
                   <div className="p-12 text-center space-y-2">
                     <Users className="w-10 h-10 text-zinc-400 mx-auto" />
@@ -1468,6 +1505,12 @@ function LandlordDashboardContent() {
 
               {isLoadingAgreements ? (
                 <div className="p-8 text-center text-xs text-zinc-400">Loading statutory leases...</div>
+              ) : isAgreementsError ? (
+                <QueryErrorFallback
+                  title="Unable to load agreements"
+                  onRetry={() => refetchAgreements()}
+                  isRetrying={isRefetchingAgreements}
+                />
               ) : agreements.length === 0 ? (
                 <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
                   <FileSignature className="w-10 h-10 text-zinc-400 mx-auto" />
@@ -1547,6 +1590,12 @@ function LandlordDashboardContent() {
 
               {isLoadingLandlordReviews ? (
                 <div className="p-8 text-center text-xs text-zinc-400">Loading reviews...</div>
+              ) : isReviewsError ? (
+                <QueryErrorFallback
+                  title="Unable to load reviews"
+                  onRetry={() => refetchReviews()}
+                  isRetrying={isRefetchingReviews}
+                />
               ) : landlordReviews.length === 0 ? (
                 <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
                   <Star className="w-10 h-10 text-amber-500 mx-auto" />
@@ -1605,6 +1654,12 @@ function LandlordDashboardContent() {
 
               {isLoadingTickets ? (
                 <div className="p-8 text-center text-xs text-zinc-400">Loading work orders...</div>
+              ) : isTicketsError ? (
+                <QueryErrorFallback
+                  title="Unable to load maintenance tickets"
+                  onRetry={() => refetchTickets()}
+                  isRetrying={isRefetchingTickets}
+                />
               ) : tickets.length === 0 ? (
                 <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
                   <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto" />

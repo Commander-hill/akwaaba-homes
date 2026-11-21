@@ -17,6 +17,7 @@ import { compressImageFiles } from '@/lib/imageCompression';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import AlertBanner from '@/components/AlertBanner';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import { Button } from '@/components/ui/Button';
 import {
   PROPERTY_TYPE_CONFIGS,
@@ -177,7 +178,13 @@ export default function NewPropertyPage() {
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [error, setError] = useState('');
 
-  const { data: session, isLoading: sessionLoading } = useQuery({
+  const {
+    data: session,
+    isLoading: sessionLoading,
+    isError: isSessionError,
+    refetch: refetchSession,
+    isFetching: isFetchingSession,
+  } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
@@ -460,6 +467,19 @@ export default function NewPropertyPage() {
 
   if (sessionLoading) {
     return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" /></div>;
+  }
+
+  if (isSessionError) {
+    return (
+      <div className="max-w-2xl mx-auto my-12">
+        <QueryErrorFallback
+          title="Unable to verify your account session"
+          message="We couldn't load your landlord profile and verification status. Please check your connection and try again."
+          onRetry={() => refetchSession()}
+          isRetrying={isFetchingSession}
+        />
+      </div>
+    );
   }
 
   if (isListingBlocked) {

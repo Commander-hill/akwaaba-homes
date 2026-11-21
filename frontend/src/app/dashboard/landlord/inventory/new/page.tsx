@@ -8,6 +8,7 @@ import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import AlertBanner from '@/components/AlertBanner';
+import QueryErrorFallback from '@/components/ui/QueryErrorFallback';
 import {
   Armchair,
   ArrowLeft,
@@ -381,17 +382,12 @@ export default function NewInventoryAssetPage() {
                 <Loader2 className="w-4 h-4 animate-spin text-[#0F5132]" /> Loading your properties...
               </div>
             ) : isPropsError ? (
-              <div className="p-5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between gap-3">
-                <span className="font-bold">Failed to load your properties. Please try again.</span>
-                <button
-                  type="button"
-                  onClick={() => refetchProps()}
-                  disabled={isFetchingProps}
-                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition cursor-pointer disabled:opacity-50 shrink-0"
-                >
-                  {isFetchingProps ? 'Retrying...' : 'Retry'}
-                </button>
-              </div>
+              <QueryErrorFallback
+                title="Unable to load your properties"
+                message="We couldn't fetch your landlord properties. Please try again to select a target property."
+                onRetry={() => refetchProps()}
+                isRetrying={isFetchingProps}
+              />
             ) : propertyList.length === 0 ? (
               <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs space-y-2">
                 <p className="font-bold">No active properties found under your landlord account.</p>
