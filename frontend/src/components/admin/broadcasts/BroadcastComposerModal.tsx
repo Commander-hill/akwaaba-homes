@@ -180,16 +180,15 @@ export default function BroadcastComposerModal({
   };
 
   const toggleChannel = (ch: 'IN_APP' | 'SOCKET' | 'EMAIL') => {
-    setChannels((prev) => {
-      if (prev.includes(ch)) {
-        if (prev.length === 1) {
-          toast.error('At least one delivery channel must be selected.');
-          return prev;
-        }
-        return prev.filter((c) => c !== ch);
+    if (channels.includes(ch)) {
+      if (channels.length === 1) {
+        toast.error('At least one delivery channel must be selected.');
+        return;
       }
-      return [...prev, ch];
-    });
+      setChannels((prev) => prev.filter((c) => c !== ch));
+      return;
+    }
+    setChannels((prev) => (prev.includes(ch) ? prev : [...prev, ch]));
   };
 
   const insertFormat = (prefix: string, suffix = '') => {
@@ -488,7 +487,6 @@ export default function BroadcastComposerModal({
                     return (
                       <label
                         key={ch.id}
-                        onClick={() => toggleChannel(ch.id)}
                         className={clsx(
                           'p-3 rounded-xl border cursor-pointer transition flex items-start gap-2.5',
                           isChecked
@@ -499,8 +497,8 @@ export default function BroadcastComposerModal({
                         <input
                           type="checkbox"
                           checked={isChecked}
-                          readOnly
-                          className="rounded border-zinc-300 text-[#127337] focus:ring-[#127337] mt-0.5"
+                          onChange={() => toggleChannel(ch.id)}
+                          className="rounded border-zinc-300 text-[#127337] focus:ring-[#127337] mt-0.5 cursor-pointer"
                         />
                         <div className="space-y-0.5 min-w-0">
                           <div className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
