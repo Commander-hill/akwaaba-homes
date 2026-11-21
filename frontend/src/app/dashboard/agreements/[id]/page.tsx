@@ -369,48 +369,50 @@ export default function AgreementPage() {
             <div className="text-xs font-bold uppercase tracking-widest text-[#1C1917] mb-2">
               Schedule of Tenancy Particulars
             </div>
-            <table className="w-full border-collapse border border-[#A8A29E] text-[13px] text-left">
-              <tbody>
-                <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] w-2/5 border-r border-[#A8A29E]">
-                    1. Description &amp; Location of Premises
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">
-                    <strong>{property.title}</strong>, situated at {property.location}
-                  </td>
-                </tr>
-                <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E]">
-                    2. Unit / Accommodation Category
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">{unitDescription}</td>
-                </tr>
-                <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E]">
-                    3. Term of Tenancy
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">
-                    From <strong>{formatStandardLegalDate(booking.startDate)}</strong> to{' '}
-                    <strong>{formatStandardLegalDate(booking.endDate)}</strong>
-                  </td>
-                </tr>
-                <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E]">
-                    4. Agreed Rent for the Term
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">
-                    <strong>GHS {Number(property.price).toLocaleString('en-GH', { minimumFractionDigits: 2 })}</strong>{' '}
-                    (Ghana Cedis)
-                  </td>
-                </tr>
-                <tr>
-                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E]">
-                    5. Permitted Use
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">Private Residential Occupation Only</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="overflow-x-auto touch-scroll print:overflow-visible">
+              <table className="w-full border-collapse border border-[#A8A29E] text-[13px] text-left">
+                <tbody>
+                  <tr className="border-b border-[#A8A29E]">
+                    <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] w-2/5 border-r border-[#A8A29E] align-top">
+                      1. Description &amp; Location of Premises
+                    </th>
+                    <td className="py-2.5 px-3.5 text-[#1C1917] break-words">
+                      <strong>{property.title}</strong>, situated at {property.location}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-[#A8A29E]">
+                    <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E] align-top">
+                      2. Unit / Accommodation Category
+                    </th>
+                    <td className="py-2.5 px-3.5 text-[#1C1917] break-words">{unitDescription}</td>
+                  </tr>
+                  <tr className="border-b border-[#A8A29E]">
+                    <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E] align-top">
+                      3. Term of Tenancy
+                    </th>
+                    <td className="py-2.5 px-3.5 text-[#1C1917] break-words">
+                      From <strong>{formatStandardLegalDate(booking.startDate)}</strong> to{' '}
+                      <strong>{formatStandardLegalDate(booking.endDate)}</strong>
+                    </td>
+                  </tr>
+                  <tr className="border-b border-[#A8A29E]">
+                    <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E] align-top">
+                      4. Agreed Rent for the Term
+                    </th>
+                    <td className="py-2.5 px-3.5 text-[#1C1917] break-words">
+                      <strong>GHS {Number(property.price).toLocaleString('en-GH', { minimumFractionDigits: 2 })}</strong>{' '}
+                      (Ghana Cedis)
+                    </td>
+                  </tr>
+                  <tr>
+                    <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E] align-top">
+                      5. Permitted Use
+                    </th>
+                    <td className="py-2.5 px-3.5 text-[#1C1917] break-words">Private Residential Occupation Only</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Clause 1: Grant of Tenancy */}
