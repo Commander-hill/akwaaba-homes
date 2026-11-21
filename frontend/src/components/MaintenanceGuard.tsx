@@ -53,7 +53,13 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
 
   if (isMaintenanceActive) {
     const endTime = config?.maintenanceEndTime ? new Date(config.maintenanceEndTime) : undefined;
-    return <MaintenanceScreen estimatedEndTime={endTime} />;
+    return (
+      <MaintenanceScreen
+        estimatedEndTime={endTime}
+        contactEmail={config?.maintenanceContactEmail}
+        contactPhone={config?.maintenanceContactPhone}
+      />
+    );
   }
 
   return <>{children}</>;

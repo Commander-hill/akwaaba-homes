@@ -11,10 +11,21 @@ import { getRegisteredQueryClient } from '@/lib/queryRegistry';
 
 interface MaintenanceScreenProps {
   estimatedEndTime?: Date;
+  contactEmail?: string;
+  contactPhone?: string;
   onAdminBypass?: () => void;
 }
 
-export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScreenProps) {
+export default function MaintenanceScreen({
+  estimatedEndTime,
+  contactEmail,
+  contactPhone,
+}: MaintenanceScreenProps) {
+  const supportEmail = (contactEmail || 'support@akwaabahomes.com').trim();
+  const rawPhoneDigits = (contactPhone || '+233 24 000 0000').replace(/\D/g, '');
+  const whatsappDigits = rawPhoneDigits.startsWith('0')
+    ? `233${rawPhoneDigits.slice(1)}`
+    : rawPhoneDigits || '233240000000';
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const queryClient = getRegisteredQueryClient();
@@ -171,7 +182,7 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full pl-10 pr-3 py-2.5 bg-transparent text-xs sm:text-sm text-white placeholder-zinc-500 outline-none disabled:opacity-60"
+                  className="w-full pl-10 pr-3 py-2.5 bg-transparent text-xs sm:text-sm text-white placeholder-zinc-400 outline-none disabled:opacity-60"
                 />
               </div>
               <button
@@ -190,14 +201,23 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
         </div>
 
         {/* Footer Actions & Emergency Support */}
-        <div className="pt-4 flex items-center justify-center text-xs">
+        <div className="pt-4 flex flex-wrap items-center justify-center gap-4 text-xs">
           <a
-            href="https://wa.me/233000000000"
+            href={`https://wa.me/${whatsappDigits}?text=${encodeURIComponent('Hello AkwaabaHomes Support, I need urgent assistance during scheduled maintenance.')}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors underline font-medium"
+            className="text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors underline font-medium"
           >
             <MessageSquare className="w-4 h-4 text-emerald-400" /> Need urgent booking help? Chat Support
+          </a>
+
+          <span className="hidden sm:inline text-zinc-700">&bull;</span>
+
+          <a
+            href={`mailto:${supportEmail}?subject=${encodeURIComponent('Urgent Support Request (Maintenance Window)')}`}
+            className="text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors underline font-medium"
+          >
+            <Mail className="w-3.5 h-3.5 text-emerald-400" /> {supportEmail}
           </a>
         </div>
 
