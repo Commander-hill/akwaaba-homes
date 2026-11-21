@@ -52,6 +52,29 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
   }
 
   if (isMaintenanceActive) {
+    const scope = config?.maintenanceScope || 'GLOBAL';
+    const userRole = currentUser?.role;
+
+    // Mirror backend selective scope enforcement:
+    // TENANTS_ONLY: permit Landlords, Caretakers, and Staff
+    if (
+      scope === 'TENANTS_ONLY' &&
+      (userRole === 'LANDLORD' || userRole === 'CARETAKER' || userRole === 'STAFF')
+    ) {
+      return <>{children}</>;
+    }
+
+    // LANDLORDS_ONLY: permit Tenants and public property browsing (only block Landlord/Caretaker roles or landlord routes)
+    if (scope === 'LANDLORDS_ONLY') {
+      const isLandlordOrStaff =
+        userRole === 'LANDLORD' || userRole === 'CARETAKER' || userRole === 'STAFF';
+      const isLandlordRoute =
+        pathname?.startsWith('/dashboard/landlord') || pathname?.startsWith('/dashboard/caretaker');
+      if (!isLandlordOrStaff && !isLandlordRoute) {
+        return <>{children}</>;
+      }
+    }
+
     const endTime = config?.maintenanceEndTime ? new Date(config.maintenanceEndTime) : undefined;
     return (
       <MaintenanceScreen

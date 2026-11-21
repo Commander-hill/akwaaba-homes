@@ -8,14 +8,17 @@ import { verifyAccessToken } from '../utils/jwt';
  */
 export const checkMaintenanceMode = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // Exempt health check, admin endpoints, login, getMe, and public config from maintenance mode
+    // Exempt health check, admin endpoints, login, getMe, public config, and HMAC-verified payment webhooks
     const path = req.path;
     const isExempt = 
       path.startsWith('/health') || 
       path.startsWith('/v1/admin') || 
       path.startsWith('/v1/config') || 
       path.startsWith('/v1/auth/login') ||
-      path.startsWith('/v1/auth/me');
+      path.startsWith('/v1/auth/me') ||
+      path.startsWith('/v1/transactions/webhook') ||
+      path.startsWith('/v1/payouts/webhook') ||
+      path.startsWith('/v1/subscriptions/webhook');
 
     if (isExempt) {
       return next();

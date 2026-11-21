@@ -379,4 +379,12 @@ describe('Maintenance Scope Email Targeting Tests', () => {
     assert.deepEqual(getMaintenanceTargetRoles('GLOBAL'), ['TENANT', 'LANDLORD', 'CARETAKER', 'STAFF']);
     assert.deepEqual(getMaintenanceTargetRoles(undefined), ['TENANT', 'LANDLORD', 'CARETAKER', 'STAFF']);
   });
+
+  it('exempts HMAC-verified payment webhooks from maintenance 503 blocking', () => {
+    const mwPath = path.resolve(__dirname, '../src/middleware/config.middleware.ts');
+    const content = fs.readFileSync(mwPath, 'utf-8');
+    assert.ok(content.includes("'/v1/transactions/webhook'"), 'Expected transactions webhook exemption');
+    assert.ok(content.includes("'/v1/payouts/webhook'"), 'Expected payouts webhook exemption');
+    assert.ok(content.includes("'/v1/subscriptions/webhook'"), 'Expected subscriptions webhook exemption');
+  });
 });
