@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import crypto from 'crypto';
 import { getIO } from '../socket';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Generate a 1-Time Digital Visitor Gate Pass
@@ -28,7 +29,7 @@ export const createVisitorPass = async (req: Request, res: Response): Promise<vo
 
     // Verify tenant has an active or approved tenancy at this property
     const userRole = req.user?.role;
-    if (userRole !== 'ADMIN') {
+    if (!isAdminRole(userRole)) {
       const activeBooking = await prisma.booking.findFirst({
         where: {
           tenantId,
@@ -119,7 +120,7 @@ export const revokeVisitorPass = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    if (pass.tenantId !== tenantId && req.user?.role !== 'ADMIN') {
+    if (pass.tenantId !== tenantId && !isAdminRole(req.user?.role)) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -261,7 +262,7 @@ export const checkOutVisitorPass = async (req: Request, res: Response): Promise<
 
     const isLandlord = pass.property.landlordId === userId;
     const isTenant = pass.tenantId === userId;
-    const isAdmin = userRole === 'ADMIN';
+    const isAdmin = isAdminRole(userRole);
 
     if (!isLandlord && !isTenant && !isAdmin && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not have permission to checkout this visitor' });
@@ -338,7 +339,7 @@ export const getPropertyVisitorPasses = async (req: Request, res: Response): Pro
       where: { propertyId, userId }
     });
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
       return;
     }

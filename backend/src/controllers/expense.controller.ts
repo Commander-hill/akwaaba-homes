@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
 import { getSystemConfig } from '../utils/config.service';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Log a new Property Operating Expense
@@ -29,7 +30,7 @@ export const createExpense = async (req: Request, res: Response): Promise<void> 
       where: { propertyId, userId: landlordId }
     });
 
-    if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== landlordId && !isAdminRole(req.user?.role) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not have permission to log expenses for this property' });
       return;
     }
@@ -90,7 +91,7 @@ export const getExpenses = async (req: Request, res: Response): Promise<void> =>
       });
       const staffPropertyIds = staffAssignments.map(s => s.propertyId);
       where.propertyId = { in: staffPropertyIds };
-    } else if (userRole !== 'ADMIN') {
+    } else if (!isAdminRole(userRole)) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -151,7 +152,7 @@ export const deleteExpense = async (req: Request, res: Response): Promise<void> 
       where: { propertyId: expense.propertyId, userId: landlordId }
     });
 
-    if (expense.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
+    if (expense.landlordId !== landlordId && !isAdminRole(req.user?.role) && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -201,7 +202,7 @@ export const getFinancialAnalytics = async (req: Request, res: Response): Promis
       });
       const staffPropertyIds = staffAssignments.map(s => s.propertyId);
       bookingWhere.propertyId = { in: staffPropertyIds };
-    } else if (userRole !== 'ADMIN') {
+    } else if (!isAdminRole(userRole)) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }

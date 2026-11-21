@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Assign Staff (Caretaker/Porter/Manager) to a Property by Email
@@ -24,7 +25,7 @@ export const assignStaff = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
+    if (property.landlordId !== landlordId && !isAdminRole(req.user?.role)) {
       res.status(403).json({ message: 'Forbidden: You do not own this property' });
       return;
     }
@@ -157,7 +158,7 @@ export const removeStaff = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    if (assignment.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
+    if (assignment.landlordId !== landlordId && !isAdminRole(req.user?.role)) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }

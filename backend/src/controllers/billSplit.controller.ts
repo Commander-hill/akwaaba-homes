@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Create a new bill split
@@ -138,7 +139,7 @@ export const toggleParticipantPaidStatus = async (req: Request, res: Response): 
     const userRole = req.user?.role;
     const isCreator = participant.billSplit.creatorId === userId;
     const isParticipantSelf = participant.userId === userId;
-    const isAdmin = userRole === 'ADMIN';
+    const isAdmin = isAdminRole(userRole);
 
     if (!isCreator && !isParticipantSelf && !isAdmin) {
       res.status(403).json({ message: 'Forbidden: You do not have permission to modify this bill split payment status' });
@@ -252,7 +253,7 @@ export const deleteBillSplit = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    if (billSplit.creatorId !== userId && userRole !== 'ADMIN') {
+    if (billSplit.creatorId !== userId && !isAdminRole(userRole)) {
       res.status(403).json({ message: 'Forbidden: Only the creator or an admin can delete this bill split' });
       return;
     }
@@ -263,7 +264,7 @@ export const deleteBillSplit = async (req: Request, res: Response): Promise<void
     }
 
     const hasPaidParticipants = (billSplit.participants || []).some((p: any) => p.isPaid);
-    if (hasPaidParticipants && userRole !== 'ADMIN') {
+    if (hasPaidParticipants && !isAdminRole(userRole)) {
       res.status(400).json({ message: 'Cannot delete a bill split where roommates have already submitted paid shares. Settle or adjust the bill instead.' });
       return;
     }
@@ -315,7 +316,7 @@ export const getPropertyBillSplits = async (req: Request, res: Response): Promis
       where: { propertyId, userId }
     });
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
       return;
     }

@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Post a new Compound Broadcast Notice to Residents
@@ -39,7 +40,7 @@ export const createCompoundNotice = async (req: Request, res: Response): Promise
       }
     });
 
-    if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== landlordId && !isAdminRole(req.user?.role) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not own this property or have notice posting permissions' });
       return;
     }
@@ -217,7 +218,7 @@ export const deleteCompoundNotice = async (req: Request, res: Response): Promise
       }
     });
 
-    if (notice.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
+    if (notice.landlordId !== landlordId && !isAdminRole(req.user?.role) && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }

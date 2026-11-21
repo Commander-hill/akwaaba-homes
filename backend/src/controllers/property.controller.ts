@@ -4,6 +4,7 @@ import { logAudit } from '../utils/auditLogger';
 import appCache from '../utils/cache';
 import { safeJsonParse } from '../utils/json';
 import { getIO } from '../socket';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 // Helper to safely parse beds per room from any room type string (e.g. "2 in a room" -> 2)
 export const parseBedsPerRoom = (roomType: string): number => {
@@ -54,7 +55,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
       }
     });
 
-    if (landlord?.isSuspended && req.user.role !== 'ADMIN') {
+    if (landlord?.isSuspended && !isAdminRole(req.user.role)) {
       res.status(403).json({ message: 'Forbidden: Your landlord account is suspended. You cannot list new properties.' });
       return;
     }
@@ -169,7 +170,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
     appCache.del(propertyKeys);
 
     // Alert admins of newly submitted property awaiting approval
-    const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+    const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } }, select: { id: true } });
     if (admins.length > 0) {
       await prisma.notification.createMany({
         data: admins.map(a => ({

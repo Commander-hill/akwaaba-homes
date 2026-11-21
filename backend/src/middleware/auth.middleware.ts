@@ -78,6 +78,55 @@ export const authorizeRole = (roles: string[]) => {
   };
 };
 
+/**
+ * Universal RBAC predicate: verifies whether a role has Administrator privileges (ADMIN or SUPER_ADMIN).
+ */
+export const isAdminRole = (role?: string | null): boolean => {
+  return role === 'ADMIN' || role === 'SUPER_ADMIN';
+};
+
+/**
+ * Optional authentication middleware:
+ * If a valid Bearer token or accessToken cookie is provided, hydrates req.user.
+ * If no token is provided or the token is invalid/expired, proceeds without blocking.
+ */
+export const optionalAuthenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  let token = req.cookies?.accessToken;
+  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) {
+    return next();
+  }
+  try {
+    const decoded = verifyAccessToken(token) as any;
+    if (!decoded || !decoded.id) {
+      return next();
+    }
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (!user || user.isSuspended) {
+      return next();
+    }
+    if ((user.tokenVersion || 0) !== (decoded.tokenVersion || 0)) {
+      return next();
+    }
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      isSuspended: user.isSuspended,
+      isEmailVerified: user.isEmailVerified,
+      twoFactorEnabled: user.twoFactorEnabled,
+      tokenVersion: user.tokenVersion,
+    };
+  } catch {
+    // Continue cleanly if token validation fails during optional auth
+  }
+  next();
+};
+
 export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
     res.status(403).json({ message: 'Access denied: Administrator clearance required.' });

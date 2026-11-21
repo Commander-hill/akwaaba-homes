@@ -3,6 +3,7 @@ import prisma from '../utils/prisma';
 import { getIO } from '../socket';
 import appCache from '../utils/cache';
 import { parseBedsPerRoom } from './property.controller';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 export const createRoom = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -27,7 +28,7 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    if (property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
+    if (property.landlordId !== landlordId && !isAdminRole(req.user.role)) {
       res.status(403).json({ message: 'Forbidden: You do not own this property' });
       return;
     }
@@ -121,7 +122,7 @@ export const updateRoom = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    if (room.property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
+    if (room.property.landlordId !== landlordId && !isAdminRole(req.user.role)) {
       res.status(403).json({ message: 'Forbidden: You do not own this property' });
       return;
     }
@@ -194,7 +195,7 @@ export const deleteRoom = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    if (room.property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
+    if (room.property.landlordId !== landlordId && !isAdminRole(req.user.role)) {
       res.status(403).json({ message: 'Forbidden: You do not own this property' });
       return;
     }

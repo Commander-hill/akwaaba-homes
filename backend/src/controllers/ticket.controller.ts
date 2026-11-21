@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 export const createTicket = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -18,7 +19,7 @@ export const createTicket = async (req: Request, res: Response): Promise<void> =
     }
 
     // Verify user has a booking at this property (Admins bypass)
-    if (role !== 'ADMIN') {
+    if (!isAdminRole(role)) {
       const activeBooking = await prisma.booking.findFirst({
         where: {
           tenantId: req.user.id,
@@ -145,7 +146,7 @@ export const getLandlordTickets = async (req: Request, res: Response): Promise<v
     const staffPropertyIds = staffAssignments.map(s => s.propertyId);
 
     const isStaff = staffPropertyIds.length > 0;
-    if (role !== 'LANDLORD' && role !== 'ADMIN' && !isStaff) {
+    if (role !== 'LANDLORD' && !isAdminRole(role) && !isStaff) {
       res.status(403).json({ message: 'Access denied: Landlord or Caretaker access required' });
       return;
     }
@@ -320,7 +321,7 @@ export const checkAndEscalateTickets = async (req: Request, res: Response): Prom
       // Dispatch real-time in-app notifications and socket alerts
       try {
         const io = getIO();
-        const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+        const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } }, select: { id: true } });
 
         for (const t of overdueTickets) {
           // Notify landlord

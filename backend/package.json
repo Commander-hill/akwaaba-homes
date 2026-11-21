@@ -11,7 +11,8 @@
     "test:admin": "npx tsx --test tests/admin.rbac-smoke.test.ts",
     "test:landlord": "npx tsx --test tests/landlord.rbac-smoke.test.ts",
     "test:resident": "npx tsx --test tests/resident.rbac-smoke.test.ts",
-    "test:all": "npx tsx --test tests/admin.rbac-smoke.test.ts tests/landlord.rbac-smoke.test.ts tests/resident.rbac-smoke.test.ts",
+    "test:platform": "npx tsx --test tests/platform.rbac-smoke.test.ts",
+    "test:all": "npx tsx --test tests/admin.rbac-smoke.test.ts tests/landlord.rbac-smoke.test.ts tests/resident.rbac-smoke.test.ts tests/platform.rbac-smoke.test.ts",
     "postinstall": "prisma generate --schema=prisma/schema.prisma || true",
     "start": "node dist/server.js"
   },

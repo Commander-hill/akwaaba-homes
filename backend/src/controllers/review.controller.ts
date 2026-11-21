@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
 import appCache from '../utils/cache';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 // Helper: recalculate a landlord's reputation score from all reviews across their properties
 const recalculateLandlordReputation = async (landlordId: string) => {
@@ -169,7 +170,7 @@ export const flagReview = async (req: Request, res: Response): Promise<void> => 
     }
 
     // Alert admins that a review is flagged for moderation
-    const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+    const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } }, select: { id: true } });
     if (admins.length > 0) {
       await prisma.notification.createMany({
         data: admins.map(a => ({

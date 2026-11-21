@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Register a resident or guest vehicle
@@ -25,7 +26,7 @@ export const registerVehicle = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    if (req.user?.role !== 'ADMIN') {
+    if (!isAdminRole(req.user?.role)) {
       const activeBooking = await prisma.booking.findFirst({
         where: {
           tenantId,
@@ -131,7 +132,7 @@ export const getPropertyVehicles = async (req: Request, res: Response): Promise<
       where: { propertyId, userId }
     });
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -193,7 +194,7 @@ export const deleteVehicle = async (req: Request, res: Response): Promise<void> 
       where: { propertyId: vehicle.propertyId, userId: tenantId }
     });
 
-    if (vehicle.tenantId !== tenantId && req.user?.role !== 'ADMIN' && !isLandlord && !isStaff) {
+    if (vehicle.tenantId !== tenantId && !isAdminRole(req.user?.role) && !isLandlord && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You are not authorized to deregister this vehicle' });
       return;
     }

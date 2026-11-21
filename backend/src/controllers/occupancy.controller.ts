@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
 import appCache from '../utils/cache';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Get full visual Floorplan & Bed Occupancy Matrix for a property
@@ -61,7 +62,7 @@ export const getPropertyOccupancyMatrix = async (req: Request, res: Response): P
       where: { propertyId, userId }
     });
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
       return;
     }
@@ -199,7 +200,7 @@ export const updateBedStatus = async (req: Request, res: Response): Promise<void
       where: { propertyId: property.id, userId }
     });
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }

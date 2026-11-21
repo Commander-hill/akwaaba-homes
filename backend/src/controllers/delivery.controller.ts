@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Log an incoming package delivery (Porter / Security / Tenant)
@@ -130,7 +131,7 @@ export const getPropertyDeliveries = async (req: Request, res: Response): Promis
       const isStaff = await prisma.propertyStaff.findFirst({
         where: { propertyId: String(propertyId), userId }
       });
-      if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+      if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
         res.status(403).json({ message: 'Forbidden' });
         return;
       }
@@ -138,7 +139,7 @@ export const getPropertyDeliveries = async (req: Request, res: Response): Promis
     } else {
       if (userRole === 'LANDLORD') {
         whereClause.property = { landlordId: userId };
-      } else if (userRole !== 'ADMIN') {
+      } else if (!isAdminRole(userRole)) {
         const staffAssignments = await prisma.propertyStaff.findMany({
           where: { userId },
           select: { propertyId: true }
@@ -200,7 +201,7 @@ export const confirmParcelPickup = async (req: Request, res: Response): Promise<
       where: { propertyId: delivery.propertyId, userId }
     });
 
-    if (!isRecipient && !isLandlord && userRole !== 'ADMIN' && !isStaff) {
+    if (!isRecipient && !isLandlord && !isAdminRole(userRole) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You are not authorized to confirm pickup for this package' });
       return;
     }

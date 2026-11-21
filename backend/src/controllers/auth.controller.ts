@@ -30,6 +30,7 @@ import {
   generateQRCodeSvg
 } from '../utils/totp.service';
 import { sendSMS } from '../utils/sms.service';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 export const checkEmailAvailability = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -1244,7 +1245,7 @@ export const requestProfileUnlock = async (req: Request, res: Response): Promise
     await logAudit(req.user.id, 'REQUEST_PROFILE_UNLOCK', 'User', req.user.id, { reason: reason.trim() }, {}, ipAddress);
 
     // Alert admins of profile unlock request
-    const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+    const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } }, select: { id: true } });
     if (admins.length > 0) {
       await prisma.notification.createMany({
         data: admins.map(a => ({

@@ -3,6 +3,7 @@ import prisma from '../utils/prisma';
 import { getIO } from '../socket';
 import appCache from '../utils/cache';
 import { addBillingPeriod } from '../utils/billingPeriod';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Submit a lease renewal request
@@ -27,7 +28,7 @@ export const requestLeaseRenewal = async (req: Request, res: Response): Promise<
       return;
     }
 
-    if (booking.tenantId !== tenantId && req.user?.role !== 'ADMIN') {
+    if (booking.tenantId !== tenantId && !isAdminRole(req.user?.role)) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -157,7 +158,7 @@ export const respondLeaseRenewal = async (req: Request, res: Response): Promise<
       where: { propertyId: renewal.propertyId, userId: landlordId }
     });
 
-    if (renewal.property.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
+    if (renewal.property.landlordId !== landlordId && !isAdminRole(req.user?.role) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not have permission to manage lease renewals for this property' });
       return;
     }

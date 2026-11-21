@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 const ESTIMATED_RATES: { [key: string]: number } = {
   AC_SERVICING: 250,
@@ -33,7 +34,7 @@ export const createServiceBooking = async (req: Request, res: Response): Promise
       return;
     }
 
-    if (req.user?.role !== 'ADMIN') {
+    if (!isAdminRole(req.user?.role)) {
       const activeBooking = await prisma.booking.findFirst({
         where: {
           tenantId,
@@ -119,7 +120,7 @@ export const getPropertyServiceBookings = async (req: Request, res: Response): P
         where: { propertyId, userId }
       });
 
-      if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+      if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
         res.status(403).json({ message: 'Forbidden' });
         return;
       }
@@ -138,7 +139,7 @@ export const getPropertyServiceBookings = async (req: Request, res: Response): P
         } else {
           whereClause.propertyId = '__none__';
         }
-      } else if (userRole !== 'ADMIN') {
+      } else if (!isAdminRole(userRole)) {
         res.status(403).json({ message: 'Forbidden' });
         return;
       }
@@ -188,7 +189,7 @@ export const updateServiceBookingStatus = async (req: Request, res: Response): P
 
     const isLandlord = booking.property.landlordId === userId;
     const isTenant = booking.tenantId === userId;
-    const isAdmin = userRole === 'ADMIN';
+    const isAdmin = isAdminRole(userRole);
     const isStaff = await prisma.propertyStaff.findFirst({
       where: { propertyId: booking.propertyId, userId }
     });
@@ -275,7 +276,7 @@ export const cancelServiceBooking = async (req: Request, res: Response): Promise
       return;
     }
 
-    if (booking.tenantId !== tenantId && req.user?.role !== 'ADMIN') {
+    if (booking.tenantId !== tenantId && !isAdminRole(req.user?.role)) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
 import { safeJsonParse } from '../utils/json';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 /**
  * Submit or Update Move-In / Move-Out Inspection Checklist
@@ -37,7 +38,7 @@ export const createOrUpdateInspection = async (req: Request, res: Response): Pro
       }
     });
 
-    if (booking.property.landlordId !== inspectorId && booking.tenantId !== inspectorId && req.user?.role !== 'ADMIN' && !isStaff) {
+    if (booking.property.landlordId !== inspectorId && booking.tenantId !== inspectorId && !isAdminRole(req.user?.role) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You are not authorized for this inspection' });
       return;
     }
@@ -161,7 +162,7 @@ export const getBookingInspections = async (req: Request, res: Response): Promis
       }
     });
 
-    if (booking.tenantId !== userId && booking.property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (booking.tenantId !== userId && booking.property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -212,7 +213,7 @@ export const getPropertyInventory = async (req: Request, res: Response): Promise
     });
 
     // Tenants with a booking at this property, landlords, caretakers, and admins can read inventory
-    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       const tenantBooking = await prisma.booking.findFirst({
         where: {
           propertyId,
@@ -274,7 +275,7 @@ export const savePropertyInventory = async (req: Request, res: Response): Promis
       where: { propertyId, userId }
     });
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: Only landlords or caretakers can update property assets' });
       return;
     }
@@ -343,7 +344,7 @@ export const getPropertyMeterReadings = async (req: Request, res: Response): Pro
       where: { propertyId, userId }
     });
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       const tenantBooking = await prisma.booking.findFirst({
         where: {
           propertyId,
@@ -404,7 +405,7 @@ export const savePropertyMeterReading = async (req: Request, res: Response): Pro
       where: { propertyId, userId }
     });
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+    if (property.landlordId !== userId && !isAdminRole(userRole) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: Only landlords or caretakers can log meter readings' });
       return;
     }

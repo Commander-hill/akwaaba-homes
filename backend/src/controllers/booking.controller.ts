@@ -10,6 +10,7 @@ import appCache from '../utils/cache';
 import { cleanupExpiredBookings, releaseUnitGenderLockIfEmpty } from '../utils/bookingCleanup';
 import { generateTenancyAgreementPDF } from '../utils/pdf.service';
 import { getRentDueSummary, computeInitialNextRentDueDate } from '../utils/billingPeriod';
+import { isAdminRole } from '../middleware/auth.middleware';
 
 export const downloadAgreementPDF = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -869,7 +870,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
       }
     });
 
-    if (booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN' && !isStaff) {
+    if (booking.property.landlordId !== landlordId && !isAdminRole(req.user.role) && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
       return;
     }
@@ -1176,7 +1177,7 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       include: { property: true, room: true, tenant: { select: { firstName: true, lastName: true, email: true } } }
     });
 
-    if (!booking || (booking.tenantId !== tenantId && req.user.role !== 'ADMIN')) {
+    if (!booking || (booking.tenantId !== tenantId && !isAdminRole(req.user.role))) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -1461,7 +1462,7 @@ export const cancelPendingBooking = async (req: Request, res: Response): Promise
       return;
     }
 
-    if (booking.tenantId !== tenantId && req.user.role !== 'ADMIN') {
+    if (booking.tenantId !== tenantId && !isAdminRole(req.user.role)) {
       res.status(403).json({ message: 'Unauthorized' });
       return;
     }
@@ -1597,7 +1598,7 @@ export const deleteBooking = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (booking.tenantId !== tenantId && req.user.role !== 'ADMIN') {
+    if (booking.tenantId !== tenantId && !isAdminRole(req.user.role)) {
       res.status(403).json({ message: 'Unauthorized' });
       return;
     }
