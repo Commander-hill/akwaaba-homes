@@ -26,7 +26,6 @@ import Image from 'next/image';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
 import { publicGet } from '@/lib/publicFetch';
-import AlertBanner from '@/components/AlertBanner';
 import toast from 'react-hot-toast';
 
 function AdminLoginForm() {
@@ -288,15 +287,40 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
     <>
       {/* Shield Icon Badge */}
       <div className="flex justify-center mb-3">
-        <div className="w-16 h-16 xl:w-20 xl:h-20 relative flex items-center justify-center">
-          <Image 
-            src="/images/auth/admin-shield-icon.png" 
-            alt="Admin Security" 
-            width={76} 
-            height={76} 
-            className="object-contain drop-shadow-sm" fetchPriority="high" decoding="sync" quality={65} sizes="76px" 
-            priority 
-          />
+        <div className="w-16 h-16 xl:w-[72px] xl:h-[72px] rounded-2xl bg-gradient-to-br from-[#DCFCE7] via-[#BBF7D0] to-[#A7F3D0] flex items-center justify-center shadow-[0_10px_25px_-8px_rgba(22,163,74,0.35)]">
+          <svg
+            viewBox="0 0 64 64"
+            className="w-11 h-11 xl:w-12 xl:h-12 drop-shadow-[0_4px_8px_rgba(5,150,105,0.28)]"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Admin Security"
+          >
+            <defs>
+              <linearGradient id="adminShieldGrad" x1="12" y1="8" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#16A34A" />
+                <stop offset="100%" stopColor="#065F46" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M32 6L12 14V30C12 43.2 20.5 54.4 32 58C43.5 54.4 52 43.2 52 30V14L32 6Z"
+              fill="url(#adminShieldGrad)"
+            />
+            <path
+              d="M32 10L16 16.4V30C16 40.8 22.8 50.1 32 53.6C41.2 50.1 48 40.8 48 30V16.4L32 10Z"
+              stroke="#FFFFFF"
+              strokeOpacity="0.22"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M25 28V24C25 20.134 28.134 17 32 17C35.866 17 39 20.134 39 24V28"
+              stroke="#FFFFFF"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+            />
+            <rect x="21.5" y="27.5" width="21" height="16.5" rx="4" fill="#FFFFFF" />
+            <circle cx="32" cy="34.5" r="2.3" fill="#065F46" />
+            <path d="M32 36.2V39.5" stroke="#065F46" strokeWidth="2.4" strokeLinecap="round" />
+          </svg>
         </div>
       </div>
 
@@ -312,20 +336,26 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
 
       {/* Session Timeout Banner */}
       {!error && isTimeout && (
-        <AlertBanner
-          type="warning"
-          message="Administrative session timed out. Re-authenticate to access the console."
-          className="mb-4 text-xs"
-        />
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3.5 py-2.5 flex items-start gap-2.5 text-xs font-semibold text-[#92400E]"
+        >
+          <AlertCircle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+          <span className="leading-relaxed">
+            Administrative session timed out. Re-authenticate to access the console.
+          </span>
+        </div>
       )}
 
       {/* Error Notice */}
       {error && (
-        <AlertBanner
-          type="error"
-          message={error}
-          className="mb-4 text-xs"
-        />
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3.5 py-2.5 flex items-start gap-2.5 text-xs font-semibold text-[#B91C1C]"
+        >
+          <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
+          <span className="leading-relaxed">{error}</span>
+        </div>
       )}
 
       {requireSetup ? (
