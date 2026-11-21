@@ -13,6 +13,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 import { isAdminRole, optionalAuthenticate, authenticate, authorizeRole } from '../src/middleware/auth.middleware';
 import { createRateLimitStore, isRedisAvailable } from '../src/utils/redis';
+import { getMaintenanceTargetRoles } from '../src/utils/notification.service';
 import { loginRateLimiter, apiRateLimiter } from '../src/middleware/rateLimiter.middleware';
 import bookingRoutes from '../src/routes/booking.routes';
 import ticketRoutes from '../src/routes/ticket.routes';
@@ -368,5 +369,14 @@ describe('Content Security Policy (CSP) & Cryptographic Nonce Tests', () => {
     assert.ok(nonce1, 'Expected nonce1 to be extracted');
     assert.ok(nonce2, 'Expected nonce2 to be extracted');
     assert.notEqual(nonce1, nonce2, 'Expected each HTTP request to receive a distinct cryptographic nonce');
+  });
+});
+
+describe('Maintenance Scope Email Targeting Tests', () => {
+  it('maps maintenance scopes to the exact affected user role groups', () => {
+    assert.deepEqual(getMaintenanceTargetRoles('TENANTS_ONLY'), ['TENANT']);
+    assert.deepEqual(getMaintenanceTargetRoles('LANDLORDS_ONLY'), ['LANDLORD', 'CARETAKER', 'STAFF']);
+    assert.deepEqual(getMaintenanceTargetRoles('GLOBAL'), ['TENANT', 'LANDLORD', 'CARETAKER', 'STAFF']);
+    assert.deepEqual(getMaintenanceTargetRoles(undefined), ['TENANT', 'LANDLORD', 'CARETAKER', 'STAFF']);
   });
 });

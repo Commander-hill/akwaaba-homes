@@ -5,6 +5,7 @@ import { safeJsonParse } from '../../utils/json';
 import { getSystemConfig, invalidateConfigCache } from '../../utils/config.service';
 import { emitToAll } from '../../socket';
 import { fulfillBookingPayment } from '../transaction.controller';
+import { notifyMaintenanceNotice, notifyMaintenanceEnded } from '../../utils/notification.service';
 
 export const getAuditLogs = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -245,6 +246,7 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
       maintenanceReason,
       maintenanceContactEmail,
       maintenanceContactPhone,
+      notifyAffectedUsers,
     } = req.body;
     
     const feeUpdates: Record<string, number> = {};
@@ -365,10 +367,32 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
       req.ip || req.socket.remoteAddress
     );
 
+    // Dispatch non-blocking maintenance advisory / restoration emails
+    const shouldNotifyUsers = notifyAffectedUsers !== false;
+    let emailDispatch: 'queued' | 'skipped' = 'skipped';
+
+    if ((auditAction === 'MAINTENANCE_ACTIVATED' || auditAction === 'MAINTENANCE_SCHEDULED') && shouldNotifyUsers) {
+      emailDispatch = 'queued';
+      notifyMaintenanceNotice({
+        mode: auditAction === 'MAINTENANCE_SCHEDULED' ? 'SCHEDULED' : 'ACTIVATED',
+        scope: updatedConfig.maintenanceScope || 'GLOBAL',
+        title: updatedConfig.maintenanceTitle || 'Scheduled Platform Maintenance',
+        message: updatedConfig.maintenanceMessage || 'AkwaabaHomes is undergoing scheduled maintenance.',
+        reason: updatedConfig.maintenanceReason,
+        startTime: updatedConfig.maintenanceStartTime,
+        endTime: updatedConfig.maintenanceEndTime,
+        contactEmail: updatedConfig.maintenanceContactEmail,
+      }).catch((err) => console.error('Error dispatching maintenance notice emails:', err));
+    } else if (auditAction === 'MAINTENANCE_DEACTIVATED') {
+      emailDispatch = 'queued';
+      notifyMaintenanceEnded().catch((err) => console.error('Error dispatching maintenance ended emails:', err));
+    }
+
     res.status(200).json({ 
       message: 'Configuration updated successfully', 
       config: updatedConfig,
-      action: auditAction 
+      action: auditAction,
+      emailDispatch,
     });
   } catch (error) {
     console.error('Error updating config:', error);

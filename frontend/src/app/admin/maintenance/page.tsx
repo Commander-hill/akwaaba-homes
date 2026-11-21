@@ -329,6 +329,8 @@ export default function AdminMaintenancePage() {
   // ── Confirmation Modal State ──
   const [impactModalOpen, setImpactModalOpen] = useState(false);
   const [confirmPhraseInput, setConfirmPhraseInput] = useState('');
+  const [notifyAffectedUsers, setNotifyAffectedUsers] = useState(true);
+  const [graceDelayMinutes, setGraceDelayMinutes] = useState<0 | 5 | 10 | 15>(5);
   const [actionInProgress, setActionInProgress] = useState<'ACTIVATE' | 'DEACTIVATE' | 'SAVE' | null>(null);
 
   useEffect(() => {
@@ -409,12 +411,13 @@ export default function AdminMaintenancePage() {
       setConfirmPhraseInput('');
       setActionInProgress(null);
 
+      const emailNote = data?.emailDispatch === 'queued' ? ' Advisory emails queued for affected users.' : '';
       if (data?.config?.maintenanceMode) {
-        toast.success('Maintenance Mode is now ACTIVE across selected platform scope.');
+        toast.success(`Maintenance Mode is now ACTIVE across selected platform scope.${emailNote}`);
       } else if (data?.action === 'MAINTENANCE_DEACTIVATED') {
-        toast.success('Maintenance Mode deactivated. Normal platform operations fully restored.');
+        toast.success('Maintenance Mode deactivated. Normal platform operations restored & waiting subscribers notified.');
       } else if (data?.action === 'MAINTENANCE_SCHEDULED') {
-        toast.success('Maintenance window scheduled successfully.');
+        toast.success(`Maintenance countdown/window scheduled.${emailNote}`);
       } else {
         toast.success('Maintenance configuration saved successfully.');
       }
@@ -463,6 +466,7 @@ export default function AdminMaintenancePage() {
       maintenanceStartTime: startTime ? new Date(startTime).toISOString() : null,
       maintenanceEndTime: endTime ? new Date(endTime).toISOString() : null,
       maintenanceScheduled: Boolean(startTime && new Date(startTime) > new Date()),
+      notifyAffectedUsers,
     });
   };
 
@@ -503,18 +507,25 @@ export default function AdminMaintenancePage() {
       return;
     }
 
+    const nowMs = Date.now();
+    const isGraceDelay = graceDelayMinutes > 0;
+    const effectiveStart = new Date(nowMs + graceDelayMinutes * 60 * 1000);
+    const parsedEnd = endTime ? new Date(endTime) : null;
+    const validEnd = parsedEnd && parsedEnd.getTime() > effectiveStart.getTime() ? parsedEnd.toISOString() : null;
+
     setActionInProgress('ACTIVATE');
     updateConfigMutation.mutate({
-      maintenanceMode: true,
-      maintenanceScheduled: false,
+      maintenanceMode: !isGraceDelay,
+      maintenanceScheduled: isGraceDelay,
       maintenanceTitle: title.trim(),
       maintenanceMessage: message.trim(),
       maintenanceScope: scope,
       maintenanceReason: reason.trim() || 'Urgent platform infrastructure maintenance',
       maintenanceContactEmail: contactEmail.trim(),
       maintenanceContactPhone: contactPhone.trim(),
-      maintenanceStartTime: new Date().toISOString(),
-      maintenanceEndTime: endTime ? new Date(endTime).toISOString() : null,
+      maintenanceStartTime: effectiveStart.toISOString(),
+      maintenanceEndTime: validEnd,
+      notifyAffectedUsers,
     });
   };
 
@@ -1720,6 +1731,48 @@ export default function AdminMaintenancePage() {
               </div>
             </div>
 
+            {/* Grace Delay & Email Notification Controls */}
+            <div className="space-y-3 p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40">
+              <div className="space-y-1.5">
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300">
+                  Grace Window (Advance Warning Before Lock)
+                </span>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {([0, 5, 10, 15] as const).map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setGraceDelayMinutes(mins)}
+                      className={clsx(
+                        'py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer',
+                        graceDelayMinutes === mins
+                          ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
+                          : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-amber-400'
+                      )}
+                    >
+                      {mins === 0 ? 'Immediate' : `${mins}m Notice`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="flex items-start gap-2.5 pt-1 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={notifyAffectedUsers}
+                  onChange={(e) => setNotifyAffectedUsers(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-[#16A34A] focus:ring-[#16A34A] cursor-pointer"
+                />
+                <span className="text-xs text-zinc-700 dark:text-zinc-300 leading-snug">
+                  <strong className="font-bold text-zinc-900 dark:text-white">
+                    Email affected user group
+                  </strong>{' '}
+                  ({scope === 'GLOBAL' ? 'Students, Tenants & Landlords' : scope === 'TENANTS_ONLY' ? 'Students & Tenants' : 'Landlords & Property Staff'}){' '}
+                  {graceDelayMinutes > 0 ? `now — ${graceDelayMinutes} min before HTTP 503 lock.` : 'immediately upon activation.'}
+                </span>
+              </label>
+            </div>
+
             <div className="space-y-2">
               <label className="block text-xs font-bold text-zinc-900 dark:text-white">
                 To confirm downtime, please type <span className="font-mono text-rose-600 dark:text-rose-400 uppercase select-all">ENABLE MAINTENANCE</span> below:
@@ -1757,7 +1810,11 @@ export default function AdminMaintenancePage() {
                 ) : (
                   <Power className="w-4 h-4" />
                 )}
-                <span>Confirm &amp; Activate Downtime</span>
+                <span>
+                  {graceDelayMinutes > 0
+                    ? `Notify & Lock in ${graceDelayMinutes}m`
+                    : 'Confirm & Activate Downtime'}
+                </span>
               </button>
             </div>
           </div>

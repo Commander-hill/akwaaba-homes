@@ -536,6 +536,153 @@ export const notifyAgreementCompleted = async (opts: {
   }
 };
 
+export interface MaintenanceNoticeParams {
+  mode: 'SCHEDULED' | 'ACTIVATED';
+  scope: string;
+  title: string;
+  message: string;
+  reason?: string | null;
+  startTime?: Date | null;
+  endTime?: Date | null;
+  contactEmail?: string | null;
+}
+
+export const getMaintenanceTargetRoles = (scope?: string | null): string[] => {
+  if (scope === 'TENANTS_ONLY') return ['TENANT'];
+  if (scope === 'LANDLORDS_ONLY') return ['LANDLORD', 'CARETAKER', 'STAFF'];
+  return ['TENANT', 'LANDLORD', 'CARETAKER', 'STAFF'];
+};
+
+export const notifyMaintenanceNotice = async (opts: MaintenanceNoticeParams): Promise<{ recipientCount: number; sentCount: number }> => {
+  try {
+    const targetRoles = getMaintenanceTargetRoles(opts.scope);
+    const scopeLabel =
+      opts.scope === 'TENANTS_ONLY'
+        ? 'Students & Tenants'
+        : opts.scope === 'LANDLORDS_ONLY'
+          ? 'Landlords & Property Staff'
+          : 'All Platform Users (Students, Tenants & Landlords)';
+
+    const users = await prisma.user.findMany({
+      where: {
+        role: { in: targetRoles },
+        isSuspended: false,
+        email: { not: '' },
+      },
+      select: { id: true, email: true, firstName: true },
+    });
+
+    if (users.length === 0) {
+      return { recipientCount: 0, sentCount: 0 };
+    }
+
+    const startLabel = opts.startTime
+      ? new Date(opts.startTime).toLocaleString('en-GH', { dateStyle: 'medium', timeStyle: 'short' })
+      : 'Immediate';
+    const endLabel = opts.endTime
+      ? new Date(opts.endTime).toLocaleString('en-GH', { dateStyle: 'medium', timeStyle: 'short' })
+      : 'Until further notice';
+    const isScheduled = opts.mode === 'SCHEDULED';
+
+    // Create in-app notifications for active users before/during maintenance
+    await prisma.notification.createMany({
+      data: users.map((u) => ({
+        userId: u.id,
+        type: 'SYSTEM_ALERT',
+        title: isScheduled ? `Scheduled Maintenance: ${opts.title}` : `Platform Maintenance Active: ${opts.title}`,
+        message: isScheduled
+          ? `Maintenance is scheduled to begin at ${startLabel}. ${opts.message}`
+          : opts.message,
+        link: '/',
+      })),
+    }).catch((err) => console.error('Failed to create maintenance in-app notifications:', err));
+
+    const transporter = getTransporter();
+    const frontendUrl = getFrontendUrl();
+    const subject = isScheduled
+      ? `[Advance Notice] ${opts.title} — AkwaabaHomes`
+      : `[Maintenance Notice] ${opts.title} — AkwaabaHomes`;
+
+    const metaRows: Array<{ label: string; value: string }> = [
+      { label: 'Affected Portal', value: scopeLabel },
+      { label: 'Maintenance Window Start', value: startLabel },
+      { label: 'Expected Restoration', value: endLabel },
+    ];
+    if (opts.reason) {
+      metaRows.push({ label: 'Reason', value: opts.reason });
+    }
+    if (opts.contactEmail) {
+      metaRows.push({ label: 'Support Contact', value: opts.contactEmail });
+    }
+
+    const bodyHtml = `
+      <div style="margin-bottom:20px;">
+        <div style="margin-bottom:10px;">
+          ${emailBadgeHtml({
+            label: 'Status',
+            value: isScheduled ? 'Advance Notice' : 'Maintenance Active',
+            variant: isScheduled ? 'gold' : 'rose',
+          })}
+        </div>
+        <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+          ${opts.title}
+        </h2>
+        <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+          ${opts.message}
+        </p>
+      </div>
+
+      ${emailMetaTableHtml(metaRows)}
+
+      ${emailButtonHtml({
+        label: 'Visit AkwaabaHomes',
+        url: frontendUrl,
+        variant: 'primary',
+      })}
+    `;
+
+    const emailHtml = renderInstitutionalEmail({
+      title: opts.title,
+      preheader: isScheduled
+        ? `Advance notice: ${opts.title} starts at ${startLabel}.`
+        : `${opts.title} — AkwaabaHomes maintenance notice.`,
+      categoryTag: isScheduled ? 'ADVANCE MAINTENANCE NOTICE' : 'SYSTEM MAINTENANCE',
+      bodyHtml,
+    });
+
+    let sentCount = 0;
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < users.length; i += BATCH_SIZE) {
+      const batch = users.slice(i, i + BATCH_SIZE);
+      await Promise.allSettled(
+        batch.map(async (u) => {
+          if (transporter) {
+            try {
+              await transporter.sendMail({
+                from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
+                to: u.email,
+                subject,
+                html: emailHtml,
+              });
+              sentCount++;
+            } catch (err) {
+              console.error(`Failed to send maintenance notice email to ${u.email}:`, err);
+            }
+          } else {
+            sentCount++;
+            console.log(`[Maintenance Email Mock] → ${u.email}: ${subject}`);
+          }
+        })
+      );
+    }
+
+    return { recipientCount: users.length, sentCount };
+  } catch (err) {
+    console.error('Error sending maintenance notice emails:', err);
+    return { recipientCount: 0, sentCount: 0 };
+  }
+};
+
 export const notifyMaintenanceEnded = async () => {
   try {
     const subscribers = await prisma.maintenanceSubscriber.findMany({
