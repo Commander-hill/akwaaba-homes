@@ -145,6 +145,12 @@ app.use((req: Request, res: Response, next) => {
   next();
 });
 
+// ─── Per-Request Cryptographic Nonce for CSP & Subresource Integrity ────────
+app.use((req: Request, res: Response, next) => {
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
 // ─── HTTP Security Headers (Helmet + OWASP Standards) ─────────────────────────
 app.use(
   helmet({
@@ -153,16 +159,25 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", 'https://js.paystack.co'],
+        scriptSrc: [
+          "'self'",
+          'https://js.paystack.co',
+          (req: Request, res: any) => `'nonce-${res.locals.cspNonce}'`,
+        ],
         frameSrc: ["'self'", 'https://checkout.paystack.com', 'https://*.paystack.co'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', 'https://*.tile.openstreetmap.org', 'https://*.openstreetmap.org'],
         connectSrc: ["'self'", 'wss:', 'ws:', 'https://checkout.paystack.com', 'https://api.paystack.co'],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        styleSrc: [
+          "'self'",
+          (req: Request, res: any) => `'nonce-${res.locals.cspNonce}'`,
+          'https://fonts.googleapis.com',
+        ],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
         frameAncestors: ["'none'"], // Anti-clickjacking
+        upgradeInsecureRequests: [],
       },
     },
     hsts: {

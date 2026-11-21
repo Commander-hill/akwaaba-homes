@@ -6,6 +6,8 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'node:path';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
+import helmet from 'helmet';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -59,6 +61,38 @@ before(async () => {
   const app = express();
   app.use(cookieParser());
   app.use(express.json());
+
+  // Mount CSP nonce generation and Helmet mirroring server.ts production configuration
+  app.use((req, res, next) => {
+    res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+    next();
+  });
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            'https://js.paystack.co',
+            (req: any, res: any) => `'nonce-${res.locals.cspNonce}'`,
+          ],
+          styleSrc: [
+            "'self'",
+            (req: any, res: any) => `'nonce-${res.locals.cspNonce}'`,
+            'https://fonts.googleapis.com',
+          ],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+    })
+  );
+
   app.use('/api/bookings', bookingRoutes);
   app.use('/api/tickets', ticketRoutes);
   app.use('/api/auth', authRoutes);
@@ -300,5 +334,39 @@ describe('Distributed Redis Rate Limiting Architecture Tests', () => {
   it('rate limiters with Redis store support export valid express middleware functions', () => {
     assert.equal(typeof loginRateLimiter, 'function');
     assert.equal(typeof apiRateLimiter, 'function');
+  });
+});
+
+describe('Content Security Policy (CSP) & Cryptographic Nonce Tests', () => {
+  it('statically verifies server.ts closes inline-style vector and binds per-request nonces', () => {
+    const serverPath = path.resolve(__dirname, '../src/server.ts');
+    const content = fs.readFileSync(serverPath, 'utf-8');
+
+    assert.ok(content.includes('res.locals.cspNonce'), 'Expected res.locals.cspNonce generation in server.ts');
+    assert.ok(content.includes("'nonce-${res.locals.cspNonce}'"), 'Expected dynamic nonce injection in CSP directives');
+
+    const styleSrcMatch = content.match(/styleSrc:\s*\[([\s\S]*?)\]/);
+    assert.ok(styleSrcMatch, 'Expected styleSrc block in server.ts');
+    assert.ok(!styleSrcMatch[1].includes("'unsafe-inline'"), "CRITICAL: styleSrc MUST NOT contain 'unsafe-inline'");
+  });
+
+  it('serves dynamic high-entropy nonce in style-src and script-src on every HTTP response', async () => {
+    const res1 = await request('GET', '/api/bookings/my-active');
+    const csp1 = res1.headers.get('content-security-policy') || '';
+
+    assert.ok(csp1.includes('style-src'), 'Expected style-src directive in CSP');
+    assert.ok(!csp1.includes("'unsafe-inline'"), "CSP MUST NOT permit 'unsafe-inline'");
+    assert.match(csp1, /style-src[^;]*'nonce-[A-Za-z0-9+/=]+'/, 'Expected cryptographic nonce in style-src');
+    assert.match(csp1, /script-src[^;]*'nonce-[A-Za-z0-9+/=]+'/, 'Expected cryptographic nonce in script-src');
+
+    // Make second request and verify nonces are unique per request (never re-used)
+    const res2 = await request('GET', '/api/bookings/my-active');
+    const csp2 = res2.headers.get('content-security-policy') || '';
+    const nonce1 = csp1.match(/'nonce-([A-Za-z0-9+/=]+)'/)?.[1];
+    const nonce2 = csp2.match(/'nonce-([A-Za-z0-9+/=]+)'/)?.[1];
+
+    assert.ok(nonce1, 'Expected nonce1 to be extracted');
+    assert.ok(nonce2, 'Expected nonce2 to be extracted');
+    assert.notEqual(nonce1, nonce2, 'Expected each HTTP request to receive a distinct cryptographic nonce');
   });
 });
