@@ -1358,6 +1358,22 @@ export default function AdminMaintenancePage() {
                   <span>Schedule Maintenance</span>
                 </button>
               </div>
+
+              <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={notifyAffectedUsers}
+                  disabled={!isSuperAdmin}
+                  onChange={(e) => setNotifyAffectedUsers(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-[#16A34A] focus:ring-[#16A34A] cursor-pointer disabled:opacity-50"
+                />
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                  <strong className="font-bold text-zinc-800 dark:text-zinc-200">
+                    Email affected user group
+                  </strong>{' '}
+                  ({scope === 'GLOBAL' ? 'Students, Tenants & Landlords' : scope === 'TENANTS_ONLY' ? 'Students & Tenants' : 'Landlords & Property Staff'}) with advance notice when scheduled.
+                </span>
+              </label>
             </div>
           </div>
         </div>
