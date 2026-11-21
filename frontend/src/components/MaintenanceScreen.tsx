@@ -178,7 +178,7 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-[#5B4CFF] hover:bg-[#4B3DEE] disabled:opacity-70 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg transition-all shrink-0 active:scale-95"
+                className="bg-[#16A34A] hover:bg-[#15803D] cursor-pointer disabled:opacity-70 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg transition-all shrink-0 active:scale-95"
               >
                 {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <>Notify Me <ArrowRight className="w-3.5 h-3.5" /></>}
               </button>
@@ -205,7 +205,7 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
 
           <Link
             href="/login"
-            className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 transition-colors"
+            className="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition-colors"
           >
             <Lock className="w-4 h-4" /> Admin Access Login
           </Link>
