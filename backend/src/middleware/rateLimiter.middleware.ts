@@ -1,5 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import slowDown from 'express-slow-down';
+import { createRateLimitStore } from '../utils/redis';
 
 // ─── Login brute-force guard (5 attempts per 15 mins per IP in prod) ──────────
 export const loginRateLimiter = rateLimit({
@@ -9,6 +10,7 @@ export const loginRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  store: createRateLimitStore('login'),
 });
 
 // ─── General auth routes: registration & refresh guard ─────────────────────
@@ -19,6 +21,7 @@ export const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  store: createRateLimitStore('auth'),
 });
 
 // ─── Check email availability limiter (generous to support debounced typing) ───
@@ -29,6 +32,7 @@ export const checkEmailRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  store: createRateLimitStore('check-email'),
 });
 
 // ─── Password reset: protect email-flooding & token brute-force ───────────────
@@ -39,6 +43,7 @@ export const passwordResetRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  store: createRateLimitStore('password-reset'),
 });
 
 // ─── OTP & Email Verification Rate Limiter (5 attempts / 15 mins) ─────────────
@@ -49,6 +54,7 @@ export const otpRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  store: createRateLimitStore('otp'),
 });
 
 // ─── Admin-only routes: tighter ceiling ───────────────────────────────────────
@@ -59,6 +65,7 @@ export const adminRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  store: createRateLimitStore('admin'),
 });
 
 // ─── Upload routes: prevent bandwidth abuse (POST/PUT uploads only) ─────────
@@ -70,6 +77,7 @@ export const uploadRateLimiter = rateLimit({
   legacyHeaders: false,
   statusCode: 429,
   skip: (req) => req.method === 'GET' || req.method === 'OPTIONS',
+  store: createRateLimitStore('upload'),
 });
 
 // ─── General API limiter: all other routes (Safe DDoS Protection, No artificial lag) ─────
@@ -81,6 +89,7 @@ export const apiRateLimiter = rateLimit({
   legacyHeaders: false,
   statusCode: 429,
   skip: (req) => req.path.startsWith('/api/health') || req.method === 'OPTIONS',
+  store: createRateLimitStore('api'),
 });
 
 // ─── Chat Message Rate Limiter (Prevent automated spamming & flood attacks) ──
@@ -91,6 +100,7 @@ export const chatRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  store: createRateLimitStore('chat'),
 });
 
 // ─── KYC Document Submission Rate Limiter ────────────────────────────────────
@@ -101,6 +111,7 @@ export const kycRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  store: createRateLimitStore('kyc'),
 });
 
 // ─── Public Contact & Maintenance Subscription Rate Limiter ──────────────────
@@ -111,4 +122,5 @@ export const contactRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  store: createRateLimitStore('contact'),
 });

@@ -10,6 +10,8 @@ import fs from 'node:fs';
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 import { isAdminRole, optionalAuthenticate, authenticate, authorizeRole } from '../src/middleware/auth.middleware';
+import { createRateLimitStore, isRedisAvailable } from '../src/utils/redis';
+import { loginRateLimiter, apiRateLimiter } from '../src/middleware/rateLimiter.middleware';
 import bookingRoutes from '../src/routes/booking.routes';
 import ticketRoutes from '../src/routes/ticket.routes';
 import authRoutes from '../src/routes/auth.routes';
@@ -271,5 +273,32 @@ describe('Super Admin & Admin Controller Parity Tests', () => {
       const resSuper = await request('GET', '/api/bookings/landlord', { token: tokens.SUPER_ADMIN });
       assert.notEqual(resSuper.status, 403, `SUPER_ADMIN should not be 403 on /bookings/landlord, got ${resSuper.status}`);
     }
+  });
+});
+
+describe('Distributed Redis Rate Limiting Architecture Tests', () => {
+  it('falls back to memory store when REDIS_URL is unconfigured', () => {
+    const store = createRateLimitStore('test-unconfigured');
+    assert.equal(store, undefined, 'Expected createRateLimitStore to return undefined (memory store) when Redis is unset');
+  });
+
+  it('creates an initialized RedisStore instance when a Redis client is supplied', () => {
+    const mockClient = {
+      call: async () => ['1', '1000'],
+    };
+    const store = createRateLimitStore('test-cluster', mockClient);
+    assert.ok(store, 'Expected RedisStore instance to be created');
+    assert.equal(typeof (store as any).init, 'function');
+    assert.equal((store as any).prefix, 'rl:test-cluster:');
+  });
+
+  it('isRedisAvailable returns boolean without throwing error', () => {
+    const available = isRedisAvailable();
+    assert.equal(typeof available, 'boolean');
+  });
+
+  it('rate limiters with Redis store support export valid express middleware functions', () => {
+    assert.equal(typeof loginRateLimiter, 'function');
+    assert.equal(typeof apiRateLimiter, 'function');
   });
 });

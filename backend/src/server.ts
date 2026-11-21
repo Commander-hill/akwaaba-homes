@@ -309,6 +309,8 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
+import { isRedisAvailable, disconnectRedis } from './utils/redis';
+
 app.get('/api/health', (req: Request, res: Response) => {
   const mem = process.memoryUsage();
   const uploadsDir = path.resolve(process.cwd(), 'public/uploads');
@@ -324,6 +326,10 @@ app.get('/api/health', (req: Request, res: Response) => {
     storage: {
       localUploadsReady: storageReady,
       provider: process.env.CLOUDINARY_URL ? 'cloudinary' : 'local-filesystem'
+    },
+    rateLimiting: {
+      store: isRedisAvailable() ? 'distributed-redis' : 'in-memory-fallback',
+      distributed: isRedisAvailable(),
     },
     memory: {
       rssMb: Math.round(mem.rss / (1024 * 1024)),
@@ -346,6 +352,7 @@ app.get('/api/health/ready', async (req: Request, res: Response) => {
       status: 'ready',
       database: 'connected',
       dbLatencyMs: latencyMs,
+      rateLimiterStore: isRedisAvailable() ? 'redis' : 'memory',
       activeUsersOnline: getOnlineUsersCount(),
       timestamp: new Date().toISOString(),
       uptime: Math.round(process.uptime()),
@@ -521,11 +528,14 @@ const shutdownGracefully = (signal: string) => {
 
   httpServer.close(async () => {
     try {
-      await prisma.$disconnect();
-      console.log('[SHUTDOWN] HTTP server & Prisma disconnected cleanly.');
+      await Promise.allSettled([
+        prisma.$disconnect(),
+        disconnectRedis(),
+      ]);
+      console.log('[SHUTDOWN] HTTP server, Prisma & Redis disconnected cleanly.');
       process.exit(0);
     } catch (err) {
-      console.error('[SHUTDOWN] Error disconnecting Prisma during shutdown:', err);
+      console.error('[SHUTDOWN] Error during graceful shutdown cleanup:', err);
       process.exit(1);
     }
   });
