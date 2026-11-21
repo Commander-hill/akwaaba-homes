@@ -12,19 +12,21 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import { isAdminRole, optionalAuthenticate, authenticate, authorizeRole } from '../src/middleware/auth.middleware';
 import bookingRoutes from '../src/routes/booking.routes';
 import ticketRoutes from '../src/routes/ticket.routes';
+import authRoutes from '../src/routes/auth.routes';
 import prisma from '../src/utils/prisma';
-import { generateAccessToken } from '../src/utils/jwt';
+import { generateAccessToken, generateRefreshToken } from '../src/utils/jwt';
 
 let server: http.Server;
 let baseUrl = '';
 let dbAvailable = false;
 
 const tokens: Partial<Record<'TENANT' | 'LANDLORD' | 'ADMIN' | 'SUPER_ADMIN', string>> = {};
+let sampleUser: any = null;
 
 async function request(
   method: string,
   routePath: string,
-  options?: { token?: string; body?: unknown; headers?: Record<string, string> }
+  options?: { token?: string; body?: unknown; headers?: Record<string, string>; cookie?: string }
 ) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -32,6 +34,9 @@ async function request(
   };
   if (options?.token) {
     headers['Authorization'] = `Bearer ${options.token}`;
+  }
+  if (options?.cookie) {
+    headers['Cookie'] = options.cookie;
   }
   const res = await fetch(`${baseUrl}${routePath}`, {
     method,
@@ -44,7 +49,8 @@ async function request(
   } catch {
     json = null;
   }
-  return { status: res.status, json };
+  const setCookie = res.headers.get('set-cookie');
+  return { status: res.status, json, headers: res.headers, setCookie };
 }
 
 before(async () => {
@@ -53,6 +59,7 @@ before(async () => {
   app.use(express.json());
   app.use('/api/bookings', bookingRoutes);
   app.use('/api/tickets', ticketRoutes);
+  app.use('/api/auth', authRoutes);
 
   await new Promise<void>((resolve) => {
     server = app.listen(0, '127.0.0.1', () => {
@@ -74,6 +81,7 @@ before(async () => {
         select: { id: true, email: true, role: true, tokenVersion: true },
       });
       if (user) {
+        if (!sampleUser) sampleUser = user;
         tokens[role] = generateAccessToken({
           id: user.id,
           email: user.email,
@@ -125,7 +133,6 @@ describe('Platform RBAC Utility Unit Tests', () => {
           const content = fs.readFileSync(fullPath, 'utf-8');
           const lines = content.split('\n');
           lines.forEach((line, idx) => {
-            // Exclude portal === 'ADMIN' or fallback string assignment or lines already checking SUPER_ADMIN
             if (rawPattern.test(line) && !line.includes('SUPER_ADMIN') && !line.includes('portal')) {
               violations.push(`${entry.name}:${idx + 1}: ${line.trim()}`);
             }
@@ -135,6 +142,63 @@ describe('Platform RBAC Utility Unit Tests', () => {
     }
     scanDir(controllerDir);
     assert.deepEqual(violations, [], `Found raw role equality checks without SUPER_ADMIN: ${violations.join('\n')}`);
+  });
+});
+
+describe('Token Hardening & Anti-XSS Cookie Isolation Tests', () => {
+  it('verifies zero controllers return refreshToken in response JSON payloads (AST / static scan)', () => {
+    const controllerDir = path.resolve(__dirname, '../src/controllers');
+    const violations: string[] = [];
+    const responseJsonRegex = /res(?:\.[a-zA-Z0-9_]+)*\.json\s*\(\s*\{[\s\S]*?refreshToken[\s\S]*?\}\s*\)/g;
+    
+    function scanDir(dir: string) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          scanDir(fullPath);
+        } else if (entry.isFile() && entry.name.endsWith('.ts')) {
+          const content = fs.readFileSync(fullPath, 'utf-8');
+          const matches = content.match(responseJsonRegex);
+          if (matches) {
+            violations.push(`${entry.name}: ${matches.join(' | ')}`);
+          }
+        }
+      }
+    }
+    scanDir(controllerDir);
+    assert.deepEqual(violations, [], `Found exposed refreshToken in response JSON: ${violations.join('\n')}`);
+  });
+
+  it('token refresh rotates session and omits refreshToken from JSON response while setting HttpOnly cookie', async (t) => {
+    if (!sampleUser) return t.skip('No user available in DB for session creation');
+    
+    // Create a real session in DB
+    const testRefreshToken = generateRefreshToken({ id: sampleUser.id, tokenVersion: sampleUser.tokenVersion || 0 });
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    
+    await prisma.session.create({
+      data: {
+        userId: sampleUser.id,
+        refreshToken: testRefreshToken,
+        ipAddress: '127.0.0.1',
+        userAgent: 'test-agent',
+        deviceFamily: 'Desktop',
+        osFamily: 'Windows',
+        expiresAt
+      }
+    });
+
+    const res = await request('POST', '/api/auth/refresh', {
+      cookie: `refreshToken=${testRefreshToken}`
+    });
+
+    assert.equal(res.status, 200, `Expected 200 on refresh, got ${res.status}`);
+    assert.ok(res.json?.accessToken, 'Expected accessToken in JSON body');
+    assert.equal(res.json?.refreshToken, undefined, 'CRITICAL: refreshToken MUST NOT be present in JSON body');
+    assert.ok(res.setCookie, 'Expected Set-Cookie header on refresh response');
+    assert.match(res.setCookie || '', /refreshToken=[^;]+/, 'Expected refreshToken cookie to be set');
+    assert.match(res.setCookie || '', /HttpOnly/i, 'Expected refreshToken cookie to have HttpOnly flag');
   });
 });
 

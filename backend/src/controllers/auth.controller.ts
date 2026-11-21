@@ -848,7 +848,8 @@ const establishUserSessionAndRespond = async (
   res.status(200).json({
     message,
     accessToken,
-    refreshToken,
+    // refreshToken is intentionally omitted from the JSON payload and transmitted
+    // exclusively via httpOnly, Secure cookie to prevent XSS exfiltration (OWASP ASVS §3.4.1)
     user: {
       id: user.id,
       email: user.email,
@@ -1028,8 +1029,8 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({ 
       message: 'Token refreshed and rotated successfully',
-      accessToken,
-      refreshToken: newRefreshToken
+      accessToken
+      // newRefreshToken is transmitted exclusively via httpOnly, Secure cookie
     });
   } catch (error) {
     console.error('Refresh error:', error);
